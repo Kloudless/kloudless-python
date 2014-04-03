@@ -11,7 +11,7 @@ def read(fname):
 
 
 install_requires=[
-    'requests',
+    'requests>=1.0',
     'python-dateutil',
     ]
 setup(
@@ -21,7 +21,7 @@ setup(
     author='Kloudless',
     author_email='hello@kloudless.com',
     version=kloudless.__version__,
-    description = "Python library for Kloudless",
+    description = "Python library for the Kloudless API",
     long_description=read('README.md'),
     url='https://developers.kloudless.com/',
     install_requires=install_requires,
@@ -31,8 +31,8 @@ setup(
         'Intended Audience :: Developers',
         'Natural Language :: English',
         "License :: OSI Approved :: MIT License",
+        "Development Status :: 4 - Beta",
         ],
     package_data={'': ['LICENSE']},
     zip_safe=False,
-    entry_points=entry_points
     )

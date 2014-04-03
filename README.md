@@ -1,5 +1,5 @@
-Python library for Kloudless
-=================================
+Python library for the Kloudless API
+=====================================
 
 Python library for the [Kloudless API](https://developers.kloudless.com)
 
@@ -14,7 +14,5 @@ pip install kloudless
 To install from source, clone the repository and run:
 
 ```bash
-python setup.py sdist
-pip install dist/*.tar.gz
-rm -r dist
+python setup.py install
 ```
