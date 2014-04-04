@@ -7,14 +7,15 @@ class KloudlessException(Exception):
         self.status = None
         if response is not None:
             self.status = response.status_code
+            message += ' Error data: ' + response.text
             try:
                 self.error_data = response.json()
             except ValueError:
                 pass
             else:
                 if 'id' in self.error_data:
-                    self.message = '[Request ID: %s] %s' % (
-                        self.error_data['id'], self.message)
+                    message = '[Request ID: %s] %s' % (
+                        self.error_data['id'], message)
 
         super(KloudlessException, self).__init__(message)
 

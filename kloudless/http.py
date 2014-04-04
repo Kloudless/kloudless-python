@@ -3,6 +3,7 @@ from . import config
 from . import exceptions
 
 import functools
+import json
 
 class APIKeyAuth(object):
     def __init__(self, api_key):
@@ -29,7 +30,11 @@ def request(method, path, configuration=None, **kwargs):
     kwargs['auth'] = APIKeyAuth(configuration['api_key'])
 
     headers = kwargs.setdefault('headers', {})
-    headers.setdefault('Content-Type', 'application/json')
+
+    if kwargs.get('data') and not kwargs.get('files'):
+        ctype = headers.setdefault('Content-Type', 'application/json')
+        if ctype.lower() == 'application/json':
+            kwargs['data'] = json.dumps(kwargs['data'])
 
     requestor = functools.partial(method, url, **kwargs)
     response = _request(requestor)

@@ -2,8 +2,13 @@ from .util import to_datetime, to_iso, logger
 from .http import request
 from . import config
 
-import requests
+try:
+    import requests
+except ImportError:
+    requests = None
+
 import inspect
+import json
 
 class BaseResource(dict):
 
@@ -53,6 +58,10 @@ class BaseResource(dict):
         id = self['id']
         self.clear()
 
+        for k, v in data.items():
+            if k in self._serializers:
+                data[k] = self._serializers[k][1](v)
+
         for k, v in data.iteritems():
             super(BaseResource, self).__setitem__(
                 k, self.__class__.create_from_data(
@@ -63,7 +72,7 @@ class BaseResource(dict):
             self['id'] = id
 
         # Update our state.
-        self._previous_data = data
+        self._previous_data = self.serialize()
 
     @classmethod
     def create_from_data(cls, data, parent_resource=None, configuration=None):
@@ -77,10 +86,6 @@ class BaseResource(dict):
                     configuration=configuration) for d in data]
         elif isinstance(data, dict) and not isinstance(data, BaseResource):
             data = data.copy()
-
-            for k, v in data.iteritems():
-                if k in cls._serializers:
-                    data[k] = cls._serializers[k][1](v)
 
             klass = cls
             if data.get('type') in resource_types:
@@ -193,7 +198,7 @@ class ListMixin(object):
 class RetrieveMixin(object):
     @classmethod
     @allow_proxy
-    def get(cls, id, parent_resource=None, configuration=None, **params):
+    def retrieve(cls, id, parent_resource=None, configuration=None, **params):
         instance = cls(id=id, parent_resource=parent_resource,
                        configuration=configuration)
         response = request(requests.get, instance.detail_path(),
@@ -215,6 +220,12 @@ class CreateMixin(object):
             configuration=configuration)
 
 class UpdateMixin(object):
+    def _data_to_save(self, new_data):
+        """
+        Override this for any specific checks or additions to data.
+        """
+        return new_data
+        
     def save(self):
         params = self.serialize()
 
@@ -224,14 +235,17 @@ class UpdateMixin(object):
                 # Attribute is new or was updated
                 new_data[k] = v
 
-        response = request(requests.patch, cls.detail_path(),
-                           configuration=instance._configuration, data=new_data)
-        self.populate(response.json())
+        new_data = self._data_to_save(new_data)
+
+        if new_data:
+            response = request(requests.patch, self.detail_path(),
+                               configuration=self._configuration, data=new_data)
+            self.populate(response.json())
 
 class DeleteMixin(object):
-    def delete(self):
-        response = request(requests.delete, cls.detail_path(),
-                           configuration=instance._configuration)
+    def delete(self, **params):
+        response = request(requests.delete, self.detail_path(),
+                           configuration=self._configuration, params=params)
         self.populate({})
 
 class WriteMixin(CreateMixin, UpdateMixin, DeleteMixin):
@@ -291,9 +305,7 @@ class ResourceProxy(object):
     def __getattr__(self, name):
         method = getattr(self.klass, name, None)
 
-        import pdb; pdb.set_trace()
         def proxy_method(self, *args, **kwargs):
-            import pdb; pdb.set_trace()
             self.update_kwargs(kwargs)
             return method(*args, **kwargs)
 
@@ -336,16 +348,21 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin):
 
     def contents(self):
         response = request(requests.get, "%s/contents" % self.detail_path(),
-                           configuration=instance._configuration)
+                           configuration=self._configuration)
         return response.content
 
     @classmethod
+    @allow_proxy
     def create(cls, file_name='', parent_id='root', file_data='',
                overwrite=False, parent_resource=None, configuration=None):
+        """
+        This handles file uploads.
+        `file_data` can be either a string with file data in it or a file-like object.
+        """
         data = {
             'metadata': json.dumps({
                     'name': file_name,
-                    'parent_id': parent_folder_id,
+                    'parent_id': parent_id,
                     })
             }
         files = {'file': (file_name, file_data)}
@@ -356,7 +373,26 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin):
             response.json(), parent_resource=parent_resource,
             configuration=configuration)
 
-class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin):
+    def contents(self):
+        """
+        This handles file downloads. It returns a requests.Response object
+        with contens:
+
+            from contextlib import closing
+
+            with closing(account.files.get(file_id)) as r:
+                # Do things with response here
+                data = r.content
+
+        For more information, see the documentation for requests.Response's
+        Body content workflow.
+        """
+        response = request(requests.get, "%s/contents" % self.detail_path(),
+                           configuration=self._configuration, stream=True)
+        return response
+
+class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
+             CreateMixin):
     _path_segment = 'folders'
 
     def __init__(self, *args, **kwargs):
