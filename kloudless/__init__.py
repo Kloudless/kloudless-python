@@ -1,4 +1,5 @@
-__version__ = '0.1'
+from .version import VERSION
+__version__ = VERSION
 
 from .config import configure, configuration
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
-import kloudless
+import re
 
 def read(fname):
     contents = ''
@@ -9,6 +9,10 @@ def read(fname):
         contents = f.read()
     return contents
 
+def version():
+    text = read('kloudless/version.py')
+    matches = re.findall("('|\")(\S+)('|\")", text)
+    return matches[0][1]
 
 install_requires=[
     'requests>=1.0',
@@ -20,7 +24,7 @@ setup(
     include_package_data=True,
     author='Kloudless',
     author_email='hello@kloudless.com',
-    version=kloudless.__version__,
+    version=version(),
     description = "Python library for the Kloudless API",
     long_description=read('README.md'),
     url='https://developers.kloudless.com/',
