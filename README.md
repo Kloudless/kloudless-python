@@ -61,7 +61,7 @@ Here is an example retrieving metadata on a folder in an account:
 
 ## Examples using the Python SDK
 
-* https://github.com/vinodc/cloud-text-editor uses create folder and file upload.
+* https://github.com/vinodc/cloud-text-editor creates folders and uploads files via the Kloudless API.
 
 ## TODO
 
