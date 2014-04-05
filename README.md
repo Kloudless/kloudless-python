@@ -24,19 +24,19 @@ There are four models:
 * `Folder`
 * `Link`
  
-Each have the following methods where applicable:
+Each class have the following methods where applicable:
 
 * `create(**params)` makes a POST request to create a resource of that type.
-* `all()` makes a GET request to list all resources
-* `retrieve(id)` makes a GET request to retrieve metadata for that resource.
+* `all(**params)` makes a GET request to list all resources
+* `retrieve(id, **params)` makes a GET request to retrieve metadata for that resource.
 
 In addition, instances have the methods below where applicable:
 
 * `save()` makes a PATCH request to update the resource after attributes on it
   have been modified.
-* `delete()` makes a DELETE request to delete the resource.
+* `delete(**params)` makes a DELETE request to delete the resource.
 
-The `Account` model has some helper attributes to make using class:
+The `Account` model has some helper attributes to make using class methods easier:
 
 * `links` references the Link class
 * `files` references the File class
