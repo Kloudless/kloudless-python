@@ -59,6 +59,10 @@ Here is an example retrieving metadata on a folder in an account:
 >>> kloudless.Folder.retrieve(id=child_folder.id, parent_resource=account)
 ```
 
+## Examples using the Python SDK
+
+* https://github.com/vinodc/cloud-text-editor uses create folder and file upload.
+
 ## TODO
 
 * Tests!
