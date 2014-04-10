@@ -17,30 +17,37 @@ python setup.py install
 See the [Kloudless API Docs](https://developers.kloudless.com/docs) for the official reference.
 You can obtain an API Key at the [Developer Portal](https://developers.kloudless.com).
 
-There are four models:
+Here are the resource classes available:
 
 * `Account`
 * `File`
 * `Folder`
 * `Link`
+* `Key`
  
-Each class have the following methods where applicable:
+Each class has the following methods where applicable:
 
-* `create(**params)` makes a POST request to create a resource of that type.
+* `create(**data)` makes a POST request to create a resource of that type.
 * `all(**params)` makes a GET request to list all resources
 * `retrieve(id, **params)` makes a GET request to retrieve metadata for that resource.
 
 In addition, instances have the methods below where applicable:
 
-* `save()` makes a PATCH request to update the resource after attributes on it
+* `save(**params)` makes a PATCH request to update the resource after attributes on it
   have been modified.
 * `delete(**params)` makes a DELETE request to delete the resource.
+
+Parameters mentioned above:
+`id`: The ID of the resource.
+`params`: Keyword arguments that will be converted into query parameters for the request.
+`data`: Keyword arguments that will be converted into a JSON string sent in the body of the request.
 
 The `Account` model has some helper attributes to make using class methods easier:
 
 * `links` references the Link class
 * `files` references the File class
 * `folders` references the Folder class
+* `keys` references the Key class
 
 Here is an example retrieving metadata on a folder in an account:
 
@@ -57,6 +64,15 @@ Here is an example retrieving metadata on a folder in an account:
 
 # Retrieve the child folder a different way
 >>> kloudless.Folder.retrieve(id=child_folder.id, parent_resource=account)
+```
+
+Another example retrieving key informatino:
+
+```python
+# A few different ways
+>>> key = kloudless.Key.all(parent_resource=account)[0]
+>>> key = account.keys.retrieve(id=key.id)
+>>> key = kloudless.Key.retrieve(id=key.id, parent_resource=account)
 ```
 
 ## Examples using the Python SDK
