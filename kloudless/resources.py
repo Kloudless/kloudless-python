@@ -347,11 +347,6 @@ class AccountBaseResource(BaseResource):
 class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin):
     _path_segment = 'files'
 
-    def contents(self):
-        response = request(requests.get, "%s/contents" % self.detail_path(),
-                           configuration=self._configuration)
-        return response.content
-
     @classmethod
     @allow_proxy
     def create(cls, file_name='', parent_id='root', file_data='',
