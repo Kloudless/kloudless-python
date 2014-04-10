@@ -66,7 +66,7 @@ Here is an example retrieving metadata on a folder in an account:
 >>> kloudless.Folder.retrieve(id=child_folder.id, parent_resource=account)
 ```
 
-Another example retrieving key informatino:
+Another example retrieving key information:
 
 ```python
 # A few different ways
