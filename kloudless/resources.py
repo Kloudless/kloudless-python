@@ -215,9 +215,9 @@ class ReadMixin(RetrieveMixin, ListMixin):
 class CreateMixin(object):
     @classmethod
     @allow_proxy
-    def create(cls, parent_resource=None, configuration=None, **params):
+    def create(cls, parent_resource=None, configuration=None, **data):
         response = request(requests.post, cls.list_path(parent_resource),
-                           configuration=configuration, data=params)
+                           configuration=configuration, data=data)
         return cls.create_from_data(
             response.json(), parent_resource=parent_resource,
             configuration=configuration)
