@@ -2,13 +2,9 @@ from .util import to_datetime, to_iso, logger
 from .http import request
 from . import config
 
-try:
-    import requests
-except ImportError:
-    requests = None
-
 import inspect
 import json
+import requests
 
 class BaseResource(dict):
 
@@ -76,10 +72,6 @@ class BaseResource(dict):
 
     @classmethod
     def create_from_data(cls, data, parent_resource=None, configuration=None):
-        resource_types = {
-            'account': Account, 'file': File, 'folder': Folder, 'link': Link
-            }
-
         if isinstance(data, list):
             return [cls.create_from_data(
                     d, parent_resource=parent_resource,
@@ -88,8 +80,8 @@ class BaseResource(dict):
             data = data.copy()
 
             klass = cls
-            if data.get('type') in resource_types:
-                klass = resource_types[data['type']]
+            if data.get('type') in resources:
+                klass = resources[data['type']]
 
             instance = klass(id=data.get('id'), parent_resource=parent_resource,
                              configuration=configuration)
@@ -169,6 +161,9 @@ class AnnotatedList(list):
     of this AnnotatedList object.
     """
     def __init__(self, all_data):
+        if isinstance(all_data, list):
+            return all_data
+
         objects = None
         for k, v in all_data.iteritems():
             if k == 'objects' and isinstance(v, list):
@@ -206,6 +201,14 @@ class RetrieveMixin(object):
         instance.populate(response.json())
         return instance
 
+    def refresh(self):
+        """
+        Retrieves and sets new metadata for the resource.
+        """
+        response = request(requests.get, self.detail_path(),
+                           configuration=self._configuration)
+        self.populate(response.json())
+
 class ReadMixin(RetrieveMixin, ListMixin):
     pass
 
@@ -226,11 +229,11 @@ class UpdateMixin(object):
         """
         return new_data
         
-    def save(self):
-        params = self.serialize()
+    def save(self, **params):
+        data = self.serialize()
 
         new_data = {}
-        for k, v in params.iteritems():
+        for k, v in data.iteritems():
             if k not in self._previous_data or self._previous_data[k] != v:
                 # Attribute is new or was updated
                 new_data[k] = v
@@ -239,7 +242,8 @@ class UpdateMixin(object):
 
         if new_data:
             response = request(requests.patch, self.detail_path(),
-                               configuration=self._configuration, data=new_data)
+                               configuration=self._configuration, data=new_data,
+                               params=params)
             self.populate(response.json())
 
 class DeleteMixin(object):
@@ -251,52 +255,15 @@ class DeleteMixin(object):
 class WriteMixin(CreateMixin, UpdateMixin, DeleteMixin):
     pass
 
-
-class Account(BaseResource, ReadMixin, DeleteMixin):
-    def __init__(self, *args, **kwargs):
-        super(Account, self).__init__(*args, **kwargs)
-
-        self._link_proxy = None
-        self._file_proxy = None
-        self._folder_proxy = None
-
-    @classmethod
-    def list_path(cls, parent_resource):
-        return 'accounts'
-
-    @property
-    def links(self):
-        """
-        Create a proxy object. Whenever a function is called on it
-        that is present on the underlying model, we attempt to call
-        the underlying model, but throw in the parent_resource if it
-        has not been specified yet.
-        """
-        if self._link_proxy is None:
-            self._link_proxy = ResourceProxy(
-                Link, parent_resource=self,
-                configuration=self._configuration)
-        return self._link_proxy
-
-    @property
-    def files(self):
-        if self._file_proxy is None:
-            self._file_proxy = ResourceProxy(
-                File,
-                parent_resource=self,
-                configuration=self._configuration)
-        return self._file_proxy
-
-    @property
-    def folders(self):
-        if self._folder_proxy is None:
-            self._folder_proxy = ResourceProxy(
-                Folder,
-                parent_resource=self,
-                configuration=self._configuration)
-        return self._folder_proxy
-
 class ResourceProxy(object):
+    """
+    Create a proxy object. Whenever a function is called on it
+    that is present on the underlying model, we attempt to call
+    the underlying model. This is useful because resources can add in
+    parameters like the parent_resource if it has not been specified yet.
+    The Account resource does this.
+    """
+
     def __init__(self, klass, parent_resource=None, configuration=None):
         self.klass = klass
         self.parent_resource = parent_resource
@@ -327,6 +294,40 @@ class ResourceProxy(object):
         if not kwargs.has_key('configuration'):
             kwargs['configuration'] = self.configuration
 
+class Account(BaseResource, ReadMixin, DeleteMixin):
+    def __init__(self, *args, **kwargs):
+        super(Account, self).__init__(*args, **kwargs)
+
+        self._proxies = {}
+
+    @classmethod
+    def list_path(cls, parent_resource):
+        return 'accounts'
+
+    def _get_proxy(self, resource_name):
+        resource = resources[resource_name]
+        if self._proxies.get(resource_name) is None:
+            self._proxies[resource_name] = ResourceProxy(
+                resource, parent_resource=self,
+                configuration=self._configuration)
+        return self._proxies[resource_name]
+    
+    @property
+    def links(self):
+        return self._get_proxy('link')
+
+    @property
+    def files(self):
+        return self._get_proxy('file')
+
+    @property
+    def folders(self):
+        return self._get_proxy('folder')
+
+    @property
+    def keys(self):
+        return self._get_proxy('key')
+
 class AccountBaseResource(BaseResource):
     _parent_resource_class = Account
 
@@ -354,7 +355,7 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin):
     @classmethod
     @allow_proxy
     def create(cls, file_name='', parent_id='root', file_data='',
-               overwrite=False, parent_resource=None, configuration=None):
+               parent_resource=None, configuration=None, **params):
         """
         This handles file uploads.
         `file_data` can be either a string with file data in it or a file-like object.
@@ -367,7 +368,7 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin):
             }
         files = {'file': (file_name, file_data)}
         response = request(requests.post, cls.list_path(parent_resource),
-                           data=data, files=files,
+                           data=data, files=files, params=params,
                            configuration=configuration)
         return cls.create_from_data(
             response.json(), parent_resource=parent_resource,
@@ -409,3 +410,14 @@ class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
 
 class Link(AccountBaseResource, ReadMixin, WriteMixin):
     _path_segment = 'links'
+
+class Key(AccountBaseResource, ReadMixin):
+    _path_segment = 'keys'
+
+resources = {
+    'account': Account,
+    'file': File,
+    'folder': Folder,
+    'link': Link,
+    'key': Key,
+    }
