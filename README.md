@@ -38,9 +38,10 @@ In addition, instances have the methods below where applicable:
 * `delete(**params)` makes a DELETE request to delete the resource.
 
 Parameters mentioned above:
-`id`: The ID of the resource.
-`params`: Keyword arguments that will be converted into query parameters for the request.
-`data`: Keyword arguments that will be converted into a JSON string sent in the body of the request.
+
+* `id`: The ID of the resource.
+* `params`: Keyword arguments that will be converted into query parameters for the request.
+* `data`: Keyword arguments that will be converted into a JSON string sent in the body of the request.
 
 The `Account` model has some helper attributes to make using class methods easier:
 
