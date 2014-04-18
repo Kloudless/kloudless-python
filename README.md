@@ -58,12 +58,32 @@ Here is an example retrieving metadata on a folder in an account:
 >>> root_folder = account.folders()
 >>> children = root_folder.contents()
 >>> child_folder = [f for f in children if f.type == 'folder'][0]
+```
 
-# Retrieve the child folder again
->>> account.folders.retrieve(id=child_folder.id)
+The shortcut method `account.folders` is used above,
+but you can also instantiate the classes above independently:
+
+```python
+>>> root_folder = kloudless.Folder(id='root', parent_resource=account) 
+```
+
+There are different ways to retrieve information on a resource, given it's ID.
+Here are some examples, given `account_id` and `child_folder_id` as the account and
+folder IDs respectively.
+
+```python
+# We need to create the account object with an account ID first.
+>>> account = kloudless.Account(id=account_id)
+
+# Get the child folder via the "account.folders" helper method.
+>>> account.folders.retrieve(id=child_folder_id)
 
 # Retrieve the child folder a different way
 >>> kloudless.Folder.retrieve(id=child_folder.id, parent_resource=account)
+
+# Retrieve the child folder another way
+>>> f = kloudless.Folder(id=child_folder.id, parent_resource=account)
+>>> f.refresh()
 ```
 
 Another example retrieving key information:
