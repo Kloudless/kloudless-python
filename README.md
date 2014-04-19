@@ -17,6 +17,8 @@ python setup.py install
 See the [Kloudless API Docs](https://developers.kloudless.com/docs) for the official reference.
 You can obtain an API Key at the [Developer Portal](https://developers.kloudless.com).
 
+### Resources
+
 Here are the resource classes available:
 
 * `Account`
@@ -43,12 +45,16 @@ Parameters mentioned above:
 * `params`: Keyword arguments that will be converted into query parameters for the request.
 * `data`: Keyword arguments that will be converted into a JSON string sent in the body of the request.
 
+#### Accessing nested resources
+
 The `Account` model has some helper attributes to make using class methods easier:
 
 * `links` references the Link class
 * `files` references the File class
 * `folders` references the Folder class
 * `keys` references the Key class
+
+## Examples
 
 Here is an example retrieving metadata on a folder in an account:
 
@@ -96,7 +102,7 @@ Another example retrieving key information:
 >>> key = kloudless.Key.retrieve(id=key.id, parent_resource=account)
 ```
 
-## Examples using the Python SDK
+## Apps using the Python SDK
 
 * https://github.com/vinodc/cloud-text-editor creates folders and uploads files via the Kloudless API.
 
