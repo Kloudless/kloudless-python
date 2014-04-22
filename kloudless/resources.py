@@ -246,6 +246,21 @@ class UpdateMixin(object):
                                params=params)
             self.populate(response.json())
 
+            # For some resources (eg: File/Folder), the parent resource could
+            # be different. Check for that.
+            # This assumes that if the metadata contains an 'account' key,
+            # it maps to the correct Account ID. We update our parent
+            # resource with the ID and it's metadata if it is different.
+            if self._parent_resource:
+                parent_resource_type = resource_types[self._parent_resource_class]
+                if (hasattr(self, parent_resource_type) and
+                    self._parent_resource.id != self[parent_resource_type]):
+                    self._parent_resource.id = self[parent_resource_type]
+                    self._parent_resource.refresh()
+
+            return True
+        return False
+
 class DeleteMixin(object):
     def delete(self, **params):
         response = request(requests.delete, self.detail_path(),
@@ -416,3 +431,4 @@ resources = {
     'link': Link,
     'key': Key,
     }
+resource_types = {v:k for k,v in resources.iteritems()}
