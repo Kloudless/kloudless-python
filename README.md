@@ -105,7 +105,7 @@ Another example retrieving key information a few different ways:
 >>> key = kloudless.Key(id=key.id); key.refresh();
 ```
 
-## Moving a file
+### Moving a file
 
 Here's an example moving a file from one account to a folder in a different account.
 
