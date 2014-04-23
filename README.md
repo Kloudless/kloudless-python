@@ -56,6 +56,8 @@ The `Account` model has some helper attributes to make using class methods easie
 
 ## Examples
 
+### Basics
+
 Here is an example retrieving metadata on a folder in an account:
 
 ```python
@@ -90,16 +92,46 @@ folder IDs respectively.
 
 # Retrieve the child folder another way
 >>> f = kloudless.Folder(id=child_folder.id, parent_resource=account)
->>> f.refresh()
+>>> f.refresh() # Pulls latest metadata given the ID.
 ```
 
-Another example retrieving key information:
+Another example retrieving key information a few different ways:
 
 ```python
 # A few different ways
 >>> key = kloudless.Key.all(parent_resource=account)[0]
 >>> key = account.keys.retrieve(id=key.id)
 >>> key = kloudless.Key.retrieve(id=key.id, parent_resource=account)
+>>> key = kloudless.Key(id=key.id); key.refresh();
+```
+
+## Moving a file
+
+Here's an example moving a file from one account to a folder in a different account.
+
+```python
+# Get two cloud storage accounts.
+>>> accounts = kloudless.Account.all();
+>>> accounts[0].id
+10
+>>> accounts[1].id
+20
+
+# Find a file in the first account.
+>>> root_contents = accounts[0].folders().contents() # Get the root folder contents
+>>> f = [f for f in root_contents if f.type == 'file'][0] # Get a file
+
+# Find a folder in the second account.
+>>> root_contents = accounts[1].folders().contents()
+>>> folder = [folder for folder in root_contents if folder.type == 'folder'][0]
+
+# Update the file with new information
+>>> f.account = accounts[1].id # Moving it to a different account
+>>> f.name = 'new file name.txt'
+>>> f.parent_id = folder.id
+>>> f.save() # Makes the request to move the file.
+
+# 'f' now represents the new file object.
 ```
 
 ## Apps using the Python SDK
