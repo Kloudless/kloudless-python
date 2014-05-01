@@ -13,6 +13,8 @@ class BaseResource(dict):
         'created': (to_iso, to_datetime),
         'modified': (to_iso, to_datetime),
         'expiration': (to_iso, to_datetime),
+        'token_expiry': (to_iso, to_datetime),
+        'refresh_token_expiry': (to_iso, to_datetime),
         }
 
     _path_segment = None
@@ -309,7 +311,7 @@ class ResourceProxy(object):
         if not kwargs.has_key('configuration'):
             kwargs['configuration'] = self.configuration
 
-class Account(BaseResource, ReadMixin, DeleteMixin):
+class Account(BaseResource, ReadMixin, WriteMixin):
     def __init__(self, *args, **kwargs):
         super(Account, self).__init__(*args, **kwargs)
 
