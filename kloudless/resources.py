@@ -14,6 +14,7 @@ class BaseResource(dict):
         'created': (to_iso, to_datetime),
         'modified': (to_iso, to_datetime),
         'expiration': (to_iso, to_datetime),
+        'expiry': (to_iso, to_datetime),
         'token_expiry': (to_iso, to_datetime),
         'refresh_token_expiry': (to_iso, to_datetime),
         }
