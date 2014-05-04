@@ -1,5 +1,6 @@
 from .util import to_datetime, to_iso, logger
 from .http import request
+from .exceptions import KloudlessException as KException
 from . import config
 
 import inspect
@@ -36,15 +37,15 @@ class BaseResource(dict):
         self._parent_resource = parent_resource
         if self._parent_resource_class is not None:
             if self._parent_resource is None:
-                raise Exception(
+                raise KException(
                     "A %s object or ID must be specified as this "
                     "%s object's parent." %
                     (self._parent_resource_class,
                      self.__class__.__name__))
             elif not isinstance(self._parent_resource,
                                 self._parent_resource_class):
-                raise Exception("The parent resource must be a %s object." %
-                                self._parent_resource_class)
+                raise KException("The parent resource must be a %s object." %
+                                 self._parent_resource_class)
 
     def populate(self, data):
         """
@@ -113,8 +114,8 @@ class BaseResource(dict):
 
     def detail_path(self):
         if not self['id']:
-            raise Exception("The detail_path cannot be obtained since the ID "
-                            "is unknown.")
+            raise KException("The detail_path cannot be obtained since the ID "
+                             "is unknown.")
         return "%s/%s" % (self.list_path(self._parent_resource), self['id'])
 
     # Getter/Setter methods
@@ -174,7 +175,7 @@ class AnnotatedList(list):
                 setattr(self, k, v)
 
         if objects is None:
-            raise Exception("No lists were found!")
+            raise KException("No lists were found!")
         list.__init__(self, objects)
 
 def allow_proxy(func):
@@ -243,6 +244,13 @@ class UpdateMixin(object):
         new_data = self._data_to_save(new_data)
 
         if new_data:
+            if self['id'] is None:
+                if hasattr(self.__class__, 'create'):
+                    raise KException("No ID provided. Use create() to create "
+                                     "new resources instead.")
+                else:
+                    raise KException("No ID provided to identify the resource "
+                                     "to update.")
             response = request(requests.patch, self.detail_path(),
                                configuration=self._configuration, data=new_data,
                                params=params)
