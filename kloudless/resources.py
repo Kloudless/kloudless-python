@@ -72,7 +72,7 @@ class BaseResource(dict):
             self['id'] = id
 
         # Update our state.
-        self._previous_data = self.serialize()
+        self._previous_data = self.serialize(self)
 
     @classmethod
     def create_from_data(cls, data, parent_resource=None, configuration=None):
@@ -94,17 +94,20 @@ class BaseResource(dict):
         else:
             return data
 
-    def serialize(self):
+    @classmethod
+    def serialize(cls, resource_data):
         """
         Converts values in the BaseResource object into primitive types.
         This helps convert the entire object to JSON.
+        resource_data: Either the resource object, or a dict with the data
+            to populate the resource.
         """
         serialized = {}
-        for k, v in self.iteritems():
+        for k, v in resource_data.iteritems():
             if isinstance(v, BaseResource):
-                serialized[k] = v.serialize()
-            elif k in self._serializers:
-                serialized[k] = self._serializers[k][0](v)
+                serialized[k] = v.serialize(v)
+            elif k in cls._serializers:
+                serialized[k] = cls._serializers[k][0](v)
             else:
                 serialized[k] = v
         return serialized
@@ -220,6 +223,7 @@ class CreateMixin(object):
     @classmethod
     @allow_proxy
     def create(cls, parent_resource=None, configuration=None, **data):
+        data = cls.serialize(data)
         response = request(requests.post, cls.list_path(parent_resource),
                            configuration=configuration, data=data)
         return cls.create_from_data(
@@ -234,7 +238,7 @@ class UpdateMixin(object):
         return new_data
         
     def save(self, **params):
-        data = self.serialize()
+        data = self.serialize(self)
 
         new_data = {}
         for k, v in data.iteritems():
