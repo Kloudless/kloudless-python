@@ -21,6 +21,7 @@ class BaseResource(dict):
 
     _path_segment = None
     _parent_resource_class = None
+    _api_session = requests.Session()
 
     def __init__(self, id=None, parent_resource=None, configuration=None):
         if not configuration: configuration = {}
@@ -190,7 +191,7 @@ class ListMixin(object):
     @classmethod
     @allow_proxy
     def all(cls, parent_resource=None, configuration=None, **params):
-        response = request(requests.get, cls.list_path(parent_resource),
+        response = request(cls._api_session.get, cls.list_path(parent_resource),
                            configuration=configuration, params=params)
         data = cls.create_from_data(
             response.json(), parent_resource=parent_resource,
@@ -203,7 +204,7 @@ class RetrieveMixin(object):
     def retrieve(cls, id, parent_resource=None, configuration=None, **params):
         instance = cls(id=id, parent_resource=parent_resource,
                        configuration=configuration)
-        response = request(requests.get, instance.detail_path(),
+        response = request(cls._api_session.get, instance.detail_path(),
                            configuration=configuration, params=params)
         instance.populate(response.json())
         return instance
@@ -212,7 +213,7 @@ class RetrieveMixin(object):
         """
         Retrieves and sets new metadata for the resource.
         """
-        response = request(requests.get, self.detail_path(),
+        response = request(self._api_session.get, self.detail_path(),
                            configuration=self._configuration)
         self.populate(response.json())
 
@@ -224,7 +225,7 @@ class CreateMixin(object):
     @allow_proxy
     def create(cls, parent_resource=None, configuration=None, **data):
         data = cls.serialize(data)
-        response = request(requests.post, cls.list_path(parent_resource),
+        response = request(cls._api_session.post, cls.list_path(parent_resource),
                            configuration=configuration, data=data)
         return cls.create_from_data(
             response.json(), parent_resource=parent_resource,
@@ -256,7 +257,7 @@ class UpdateMixin(object):
                 else:
                     raise KException("No ID provided to identify the resource "
                                      "to update.")
-            response = request(requests.patch, self.detail_path(),
+            response = request(self._api_session.patch, self.detail_path(),
                                configuration=self._configuration, data=new_data,
                                params=params)
             self.populate(response.json())
@@ -278,7 +279,7 @@ class UpdateMixin(object):
 
 class DeleteMixin(object):
     def delete(self, **params):
-        response = request(requests.delete, self.detail_path(),
+        response = request(self._api_session.delete, self.detail_path(),
                            configuration=self._configuration, params=params)
         self.populate({})
 
@@ -392,7 +393,7 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin):
                     })
             }
         files = {'file': (file_name, file_data)}
-        response = request(requests.post, cls.list_path(parent_resource),
+        response = request(cls._api_session.post, cls.list_path(parent_resource),
                            data=data, files=files, params=params,
                            configuration=configuration)
         return cls.create_from_data(
@@ -413,7 +414,7 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin):
         For more information, see the documentation for requests.Response's
         Body content workflow.
         """
-        response = request(requests.get, "%s/contents" % self.detail_path(),
+        response = request(self._api_session.get, "%s/contents" % self.detail_path(),
                            configuration=self._configuration, stream=True)
         return response
 
@@ -426,7 +427,7 @@ class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
         super(Folder, self).__init__(*args, **kwargs)
 
     def contents(self):
-        response = request(requests.get, "%s/contents" % self.detail_path(),
+        response = request(self._api_session.get, "%s/contents" % self.detail_path(),
                            configuration=self._configuration)
         data = self.create_from_data(
             response.json(), parent_resource=self._parent_resource,
