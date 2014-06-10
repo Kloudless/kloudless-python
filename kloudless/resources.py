@@ -359,6 +359,10 @@ class Account(BaseResource, ReadMixin, WriteMixin):
     def keys(self):
         return self._get_proxy('key')
 
+    @property
+    def search(self):
+        return self._get_proxy('search')
+
 class AccountBaseResource(BaseResource):
     _parent_resource_class = Account
 
@@ -440,11 +444,15 @@ class Link(AccountBaseResource, ReadMixin, WriteMixin):
 class Key(AccountBaseResource, ReadMixin):
     _path_segment = 'keys'
 
+class Search(AccountBaseResource, ListMixin):
+    _path_segment = 'search'
+    
 resources = {
     'account': Account,
     'file': File,
     'folder': Folder,
     'link': Link,
     'key': Key,
+    'search': Search,
     }
 resource_types = {v:k for k,v in resources.iteritems()}
