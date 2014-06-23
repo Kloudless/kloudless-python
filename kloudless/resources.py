@@ -223,10 +223,15 @@ class ReadMixin(RetrieveMixin, ListMixin):
 class CreateMixin(object):
     @classmethod
     @allow_proxy
-    def create(cls, parent_resource=None, configuration=None, **data):
+    def create(cls, params=None, parent_resource=None, configuration=None,
+               **data):
+        """
+        params: A dict containing query parameters.
+        """
+        if not params: params = {}
         data = cls.serialize(data)
         response = request(cls._api_session.post, cls.list_path(parent_resource),
-                           configuration=configuration, data=data)
+                           configuration=configuration, data=data, params=params)
         return cls.create_from_data(
             response.json(), parent_resource=parent_resource,
             configuration=configuration)
@@ -363,6 +368,10 @@ class Account(BaseResource, ReadMixin, WriteMixin):
     def search(self):
         return self._get_proxy('search')
 
+    @property
+    def multipart(self):
+        return self._get_proxy('multipart')
+
 class AccountBaseResource(BaseResource):
     _parent_resource_class = Account
 
@@ -446,7 +455,40 @@ class Key(AccountBaseResource, ReadMixin):
 
 class Search(AccountBaseResource, ListMixin):
     _path_segment = 'search'
-    
+
+class Multipart(AccountBaseResource, CreateMixin, DeleteMixin):
+    """
+    Multipart Uploads.
+    Create the multipart upload first, prior to uploading chunks of data.
+    Complete the upload once all chunks have been uploaded.
+    """
+    _path_segment = 'multipart'
+
+    def upload_chunk(self, part_number=None, file_data='',
+                     parent_resource=None, configuration=None, **params):
+        """
+        This handles uploading chunks of the file, after a multipart upload has
+        been initiated.
+        `part_number`
+        `file_data` can be either a string with file data in it or a file-like object.
+        """
+        params.update({'part_number': part_number})
+        files = {'file': file_data}
+        response = request(self._api_session.put, self.detail_path(),
+                           files=files, params=params,
+                           configuration=configuration)
+        return True
+
+    def complete(self, **params):
+        """
+        Completes the multipart upload and returns a File object.
+        """
+        response = request(self._api_session.post, "%s/complete" % self.detail_path(),
+                           params=params, configuration=self._configuration)
+        return File.create_from_data(
+            response.json(), parent_resource=self._parent_resource,
+            configuration=self._configuration)
+
 resources = {
     'account': Account,
     'file': File,
@@ -454,5 +496,6 @@ resources = {
     'link': Link,
     'key': Key,
     'search': Search,
+    'multipart': Multipart,
     }
 resource_types = {v:k for k,v in resources.iteritems()}
