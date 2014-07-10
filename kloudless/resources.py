@@ -416,11 +416,11 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin):
     def contents(self):
         """
         This handles file downloads. It returns a requests.Response object
-        with contens:
+        with contents:
 
             from contextlib import closing
 
-            with closing(account.files.get(file_id)) as r:
+            with closing(account.files(id=file_id).contents()) as r:
                 # Do things with response here
                 data = r.content
 
