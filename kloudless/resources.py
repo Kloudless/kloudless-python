@@ -242,7 +242,7 @@ class UpdateMixin(object):
         Override this for any specific checks or additions to data.
         """
         return new_data
-        
+
     def save(self, **params):
         data = self.serialize(self)
 
@@ -347,7 +347,7 @@ class Account(BaseResource, ReadMixin, WriteMixin):
                 resource, parent_resource=self,
                 configuration=self._configuration)
         return self._proxies[resource_name]
-    
+
     @property
     def links(self):
         return self._get_proxy('link')
@@ -367,6 +367,14 @@ class Account(BaseResource, ReadMixin, WriteMixin):
     @property
     def search(self):
         return self._get_proxy('search')
+
+    @property
+    def recent(self):
+        return self._get_proxy('recent')
+
+    @property
+    def events(self):
+        return self._get_proxy('events')
 
     @property
     def multipart(self):
@@ -456,6 +464,12 @@ class Key(AccountBaseResource, ReadMixin):
 class Search(AccountBaseResource, ListMixin):
     _path_segment = 'search'
 
+class Recent(AccountBaseResource, ListMixin):
+    _path_segment = 'recent'
+
+class Events(AccountBaseResource, ListMixin):
+    _path_segment = 'events'
+
 class Multipart(AccountBaseResource, CreateMixin, DeleteMixin):
     """
     Multipart Uploads.
@@ -496,6 +510,8 @@ resources = {
     'link': Link,
     'key': Key,
     'search': Search,
+    'recent': Recent,
+    'events': Events,
     'multipart': Multipart,
     }
 resource_types = {v:k for k,v in resources.iteritems()}
