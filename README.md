@@ -26,6 +26,10 @@ Here are the resource classes available:
 * `Folder`
 * `Link`
 * `Key`
+* `Search`
+* `Recent`
+* `Events`
+* `Multipart`
  
 Each class has the following methods where applicable:
 
@@ -53,6 +57,10 @@ The `Account` model has some helper attributes to make using class methods easie
 * `files` references the File class
 * `folders` references the Folder class
 * `keys` references the Key class
+* `search` references the Search class
+* `recent` references the Recent class
+* `events` references the Events class
+* `multipart` references the Multipart class
 
 ## Examples
 
