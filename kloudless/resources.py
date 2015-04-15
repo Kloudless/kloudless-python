@@ -288,6 +288,17 @@ class DeleteMixin(object):
                            configuration=self._configuration, params=params)
         self.populate({})
 
+class CopyMixin(object):
+    def _copy(self, **data):
+        """
+        Copy the file/folder to another location.
+        """
+        response = request(self._api_session.post, "%s/copy" % self.detail_path(),
+                           configuration=self._configuration, data=data)
+        return self.__class__.create_from_data(
+            response.json(), parent_resource=self._parent_resource,
+            configuration=self._configuration)
+
 class WriteMixin(CreateMixin, UpdateMixin, DeleteMixin):
     pass
 
@@ -396,7 +407,8 @@ class AccountBaseResource(BaseResource):
         account_path = account.detail_path()
         return "%s/%s" % (account_path, cls._path_segment)
 
-class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin):
+class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
+           CopyMixin):
     _path_segment = 'files'
 
     @classmethod
@@ -439,8 +451,11 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin):
                            configuration=self._configuration, stream=True)
         return response
 
+    def copy_file(self, **data):
+        return self._copy(**data)
+
 class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
-             CreateMixin):
+             CreateMixin, CopyMixin):
     _path_segment = 'folders'
 
     def __init__(self, *args, **kwargs):
@@ -454,6 +469,9 @@ class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
             response.json(), parent_resource=self._parent_resource,
             configuration=self._configuration)
         return AnnotatedList(data)
+
+    def copy_folder(self, **data):
+        return self._copy(**data)
 
 class Link(AccountBaseResource, ReadMixin, WriteMixin):
     _path_segment = 'links'
