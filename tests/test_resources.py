@@ -29,7 +29,7 @@ def test_account_retrieve():
         assert isinstance(account, Account)
         for attr in ['id', 'service', 'active', 'account']:
             assert account_data[attr] == getattr(account, attr)
-        mock_req.assert_called_with(requests.get,
+        mock_req.assert_called_with(account._api_session.get,
                                     'accounts/%s' % account_data['id'],
                                     configuration=None,
                                     params={})
@@ -41,10 +41,11 @@ def test_folder_contents():
         resp = Response()
         resp._content = helpers.root_folder_contents
         mock_req.return_value = resp
-        contents = account.folders().contents()
+        folder = account.folders()
+        contents = folder.contents()
         assert len(contents) > 0
         assert all([(isinstance(x, Folder) or isinstance(x, File)) for x in contents])
-        mock_req.assert_called_with(requests.get,
+        mock_req.assert_called_with(folder._api_session.get,
                                     ('accounts/%s/folders/root/contents'
                                         % account.id),
                                     configuration=account._configuration)
@@ -62,7 +63,7 @@ def test_folder_metadata():
         assert isinstance(folder, Folder)
         for attr in ['id', 'name', 'type', 'size', 'account']:
             assert folder_data[attr] == getattr(folder, attr)
-        mock_req.assert_called_with(requests.get,
+        mock_req.assert_called_with(Folder._api_session.get,
                                     ('accounts/%s/folders/%s'
                                         % (account.id, folder_data['id'])),
                                     configuration=None,
@@ -83,9 +84,9 @@ def test_folder_creation():
         assert isinstance(folder, Folder)
         for attr in ['id', 'name', 'type', 'size', 'account']:
             assert folder_data[attr] == getattr(folder, attr)
-        mock_req.assert_called_with(requests.post,
+        mock_req.assert_called_with(Folder._api_session.post,
                                     'accounts/%s/folders' % account.id,
-                                    configuration=None,
+                                    configuration=None, params={},
                                     data={'name': 'TestFolder',
                                           'parent_id': 'root'})
 
@@ -100,7 +101,7 @@ def test_folder_delete():
         folder = Folder.create_from_data(json.loads(helpers.folder_data),
                                          parent_resource=account)
         folder.delete()
-        mock_req.assert_called_with(requests.delete,
+        mock_req.assert_called_with(Folder._api_session.delete,
                                     ('accounts/%s/folders/%s'
                                      % (account.id, folder_data['id'])),
                                     configuration=account._configuration,
@@ -119,7 +120,7 @@ def test_file_metadata():
         assert isinstance(file_obj, File)
         for attr in ['id', 'name', 'type', 'size', 'account']:
             assert file_data[attr] == getattr(file_obj, attr)
-        mock_req.assert_called_with(requests.get,
+        mock_req.assert_called_with(File._api_session.get,
                                     ('accounts/%s/files/%s'
                                         % (account.id, file_data['id'])),
                                     configuration=None,
@@ -136,7 +137,7 @@ def test_file_contents():
         mock_req.return_value = resp
         file_contents = file_obj.contents()
         assert isinstance(file_contents, Response)
-        mock_req.assert_called_with(requests.get,
+        mock_req.assert_called_with(file_obj._api_session.get,
                                     ('accounts/%s/files/%s/contents'
                                         % (account.id, file_data['id'])),
                                     configuration=file_obj._configuration,
@@ -152,7 +153,7 @@ def test_file_delete():
         resp.status_code = 204
         mock_req.return_value = resp
         file_obj.delete()
-        mock_req.assert_called_with(requests.delete,
+        mock_req.assert_called_with(file_obj._api_session.delete,
                                     ('accounts/%s/files/%s'
                                         % (account.id, file_data['id'])),
                                     configuration=file_obj._configuration,
@@ -173,7 +174,7 @@ def test_file_upload():
         assert isinstance(file_obj, File)
         for attr in ['id', 'name', 'type', 'size', 'account']:
             assert file_data[attr] == getattr(file_obj, attr)
-        mock_req.assert_called_with(requests.post,
+        mock_req.assert_called_with(File._api_session.post,
                                     'accounts/%s/files' % account.id,
                                     data={'metadata':json.dumps({
                                                 'name': file_data['name'],
@@ -201,7 +202,7 @@ def test_file_update():
         file_obj.save()
         expected_calls = [
                           # This is updating the file
-                          call(requests.patch,
+                          call(file_obj._api_session.patch,
                                'accounts/%s/files/%s' % (account.id,
                                                          file_data['id']),
                                params={},
@@ -209,8 +210,33 @@ def test_file_update():
                                      'parent_id': 'root'},
                                configuration=file_obj._configuration),
                           # This is refreshing the parent resource
-                          call(requests.get,
+                          call(account._api_session.get,
                                'accounts/%s' % account.id,
                                configuration=account._configuration),
+                         ]
+        mock_req.assert_has_calls(expected_calls)
+
+@helpers.configured_test
+def test_file_copy():
+    account = Account.create_from_data(json.loads(helpers.account))
+    file_data = json.loads(helpers.file_data)
+    file_obj = File.create_from_data(file_data, parent_resource=account)
+    with patch('kloudless.resources.request') as mock_req:
+        resp = Response()
+        new_data = file_data.copy()
+        new_data['name'] = 'NewFileName'
+        resp._content = json.dumps(new_data)
+        account_resp = Response()
+        account_resp._content = helpers.account
+        mock_req.side_effect = (resp,account_resp)
+        file_obj.copy_file(name='NewFileName', parent_id='root')
+        expected_calls = [
+                          # This is copying the file
+                          call(file_obj._api_session.post,
+                               'accounts/%s/files/%s/copy' % (account.id,
+                                                         file_data['id']),
+                               data={'name': u'NewFileName',
+                                     'parent_id': 'root'},
+                               configuration=file_obj._configuration),
                          ]
         mock_req.assert_has_calls(expected_calls)

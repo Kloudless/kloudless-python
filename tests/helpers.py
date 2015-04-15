@@ -11,7 +11,7 @@ def configured_test(f):
     """
     @wraps(f)
     def wrapper(*args, **kwargs):
-        default_config = kloudless.config.configuration
+        default_config = kloudless.config.configure()
         kloudless.configure(**test_configuration)
         result = f(*args, **kwargs)
         kloudless.configure(**default_config)

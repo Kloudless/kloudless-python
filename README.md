@@ -155,7 +155,6 @@ tox
 ```
 ## TODO
 
-* Tests!
 * Flesh out documentation.
 * Distribute via package server.
 * Fix moving files/folders between folders.
