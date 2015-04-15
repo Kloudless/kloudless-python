@@ -12,6 +12,12 @@ To install, clone the repository and run:
 python setup.py install
 ```
 
+You may also install via pip:
+
+```bash
+pip install https://github.com/kloudless/kloudless-python/archive/master.zip
+```
+
 ## Documentation
 
 See the [Kloudless API Docs](https://developers.kloudless.com/docs) for the official reference.
