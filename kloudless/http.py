@@ -5,29 +5,31 @@ from . import exceptions
 import functools
 import json
 
-class APIKeyAuth(object):
-    def __init__(self, api_key):
-        self.api_key = api_key
+class KeyAuth(object):
+    def __init__(self, auth_scheme, auth_key):
+        self.auth_scheme = auth_scheme
+        self.auth_key = auth_key
 
     def __call__(self, request):
-        request.headers['Authorization'] = 'ApiKey %s' % self.api_key
+        request.headers['Authorization'] = '%s %s' % (self.auth_scheme, self.auth_key)
         return request
 
 def request(method, path, configuration=None, **kwargs):
     if configuration is None: configuration = {}
     configuration = config.merge(configuration)
 
-    if not configuration['api_key']:
+    auth_key = configuration['auth_key'] or configuration.get('api_key')
+    if not auth_key:
         raise exceptions.ConfigurationException(
             "An API Key must be provided. You can get one at "
             "https://developers.kloudless.com and set it by calling "
-            "'kloudless.configure(api_key=\"API_KEY\")' prior to making "
+            "'kloudless.configure(auth_key=\"API_KEY\")' prior to making "
             "requests.")
 
     url = "%s/v%s/%s" % (configuration['base_url'],
                          configuration['api_version'],
                          path)
-    kwargs['auth'] = APIKeyAuth(configuration['api_key'])
+    kwargs['auth'] = KeyAuth(configuration['auth_scheme'], auth_key)
 
     headers = kwargs.setdefault('headers', {})
 

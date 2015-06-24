@@ -1,5 +1,6 @@
 _configuration = {
-    'api_key': None,
+    'auth_key': None,
+    'auth_scheme': 'ApiKey',
     'api_version': '0',
     'base_url': 'https://api.kloudless.com'
     }
@@ -8,7 +9,8 @@ def configure(**params):
     """Update configuration based on params. Returns new configuration.
     To retrieve existing configuration, call this method with no arguments.
 
-    :param api_key: API Key
+    :param auth_key: Key in Authorization Header
+    :param auth_scheme: Scheme in Authorization Header
     :param api_version: API Version
     :param base_url: Base API URL
     """
