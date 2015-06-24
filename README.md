@@ -75,7 +75,7 @@ The `Account` model has some helper attributes to make using class methods easie
 Here is an example retrieving metadata on a folder in an account:
 
 ```python
->>> import kloudless; kloudless.configure(auth_key="API_KEY")
+>>> import kloudless; kloudless.configure(api_key="API_KEY")
 >>> accounts = kloudless.Account.all()
 >>> account = accounts[0]
 >>> root_folder = account.folders()
