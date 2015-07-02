@@ -13,21 +13,41 @@ class APIKeyAuth(object):
         request.headers['Authorization'] = 'ApiKey %s' % self.api_key
         return request
 
+class DevKeyAuth(object):
+    def __init__(self, dev_key):
+        self.dev_key = dev_key
+
+    def __call__(self, request):
+        request.headers['Authorization'] = 'DeveloperKey %s' % self.dev_key
+        return request
+
 def request(method, path, configuration=None, **kwargs):
     if configuration is None: configuration = {}
     configuration = config.merge(configuration)
+    
+    if path.startswith('applications'):
+        if not configuration['dev_key']:
+            raise exceptions.ConfigurationException(
+                "A Developer Key must be provided. You can get one at "
+                "https://developers.kloudless.com and set it by calling "
+                "'kloudless.configure(dev_key=\"DEV_KEY\")' prior to making "
+                "requests.")
 
-    if not configuration['api_key']:
-        raise exceptions.ConfigurationException(
-            "An API Key must be provided. You can get one at "
-            "https://developers.kloudless.com and set it by calling "
-            "'kloudless.configure(api_key=\"API_KEY\")' prior to making "
-            "requests.")
+        kwargs['auth'] = DevKeyAuth(configuration['dev_key'])
+    
+    else:
+        if not configuration['api_key']:
+            raise exceptions.ConfigurationException(
+                "An API Key must be provided. You can get one at "
+                "https://developers.kloudless.com and set it by calling "
+                "'kloudless.configure(api_key=\"API_KEY\")' prior to making "
+                "requests.")
+
+        kwargs['auth'] = APIKeyAuth(configuration['api_key'])
 
     url = "%s/v%s/%s" % (configuration['base_url'],
                          configuration['api_version'],
                          path)
-    kwargs['auth'] = APIKeyAuth(configuration['api_key'])
 
     headers = kwargs.setdefault('headers', {})
 

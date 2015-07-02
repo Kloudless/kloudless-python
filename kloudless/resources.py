@@ -6,6 +6,7 @@ from . import config
 import inspect
 import json
 import requests
+import warnings
 
 class BaseResource(dict):
 
@@ -37,6 +38,7 @@ class BaseResource(dict):
         self._removed_keys = set()
 
         self._parent_resource = parent_resource
+        
         if self._parent_resource_class is not None:
             if self._parent_resource is None:
                 raise KException(
@@ -47,7 +49,7 @@ class BaseResource(dict):
             elif not isinstance(self._parent_resource,
                                 self._parent_resource_class):
                 raise KException("The parent resource must be a %s object." %
-                                 self._parent_resource_class)
+                             self._parent_resource_class)
 
     def populate(self, data):
         """
@@ -83,11 +85,11 @@ class BaseResource(dict):
                     configuration=configuration) for d in data]
         elif isinstance(data, dict) and not isinstance(data, BaseResource):
             data = data.copy()
-
+            
             klass = cls
             if data.get('type') in resources:
                 klass = resources[data['type']]
-
+        
             instance = klass(id=data.get('id'), parent_resource=parent_resource,
                              configuration=configuration)
             instance.populate(data)
@@ -174,7 +176,7 @@ class AnnotatedList(list):
 
         objects = None
         for k, v in all_data.iteritems():
-            if k == 'objects' and isinstance(v, list):
+            if k in ['objects', 'permissions'] and isinstance(v, list):
                 objects = v
             else:
                 setattr(self, k, v)
@@ -224,13 +226,27 @@ class CreateMixin(object):
     @classmethod
     @allow_proxy
     def create(cls, params=None, parent_resource=None, configuration=None,
-               **data):
+            method='post', data=None, **deprecated_data):
         """
         params: A dict containing query parameters.
+        data: A dict containing data. 
+
+        TODO: Remove deprecated_data in v1.
         """
-        if not params: params = {}
+        method = getattr(cls._api_session, method)
+        
+        if not data: data = {}
+
+        if deprecated_data:
+            warnings.warning("Passing in data as keyword arguments will "
+                "be removed in version 1. Pass in data as a dict instead. "
+                "e.g. data={'name': 'example'}", DeprecationWarning)
+            data.update(deprecated_data)
+        
         data = cls.serialize(data)
-        response = request(cls._api_session.post, cls.list_path(parent_resource),
+
+        if not params: params = {}
+        response = request(method, cls.list_path(parent_resource),
                            configuration=configuration, data=data, params=params)
         return cls.create_from_data(
             response.json(), parent_resource=parent_resource,
@@ -308,7 +324,7 @@ class ResourceProxy(object):
     that is present on the underlying model, we attempt to call
     the underlying model. This is useful because resources can add in
     parameters like the parent_resource if it has not been specified yet.
-    The Account resource does this.
+   The Account resource does this.
     """
 
     def __init__(self, klass, parent_resource=None, configuration=None):
@@ -341,15 +357,8 @@ class ResourceProxy(object):
         if not kwargs.has_key('configuration'):
             kwargs['configuration'] = self.configuration
 
-class Account(BaseResource, ReadMixin, WriteMixin):
-    def __init__(self, *args, **kwargs):
-        super(Account, self).__init__(*args, **kwargs)
-
-        self._proxies = {}
-
-    @classmethod
-    def list_path(cls, parent_resource):
-        return 'accounts'
+class Proxy:
+    _proxies = {}
 
     def _get_proxy(self, resource_name):
         resource = resources[resource_name]
@@ -358,6 +367,14 @@ class Account(BaseResource, ReadMixin, WriteMixin):
                 resource, parent_resource=self,
                 configuration=self._configuration)
         return self._proxies[resource_name]
+
+class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
+    def __init__(self, *args, **kwargs):
+        super(Account, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def list_path(cls, parent_resource):
+        return 'accounts'
 
     @property
     def links(self):
@@ -391,6 +408,14 @@ class Account(BaseResource, ReadMixin, WriteMixin):
     def multipart(self):
         return self._get_proxy('multipart')
 
+    @property
+    def users(self):
+        return self._get_proxy('user')
+
+    @property 
+    def groups(self):
+        return self._get_proxy('group')
+
 class AccountBaseResource(BaseResource):
     _parent_resource_class = Account
 
@@ -407,8 +432,28 @@ class AccountBaseResource(BaseResource):
         account_path = account.detail_path()
         return "%s/%s" % (account_path, cls._path_segment)
 
+class FileSystem(BaseResource, Proxy):
+    _path_segment = None
+
+    @property
+    def permissions(self):
+        return self._get_proxy('permission')
+
+class FileSystemBaseResource(BaseResource):
+    _parent_resource_class = FileSystem
+
+    def __init__(self, *files, **kwargs):
+        if files:
+            kwargs['parent_resource'] = files[0]
+        super(FileSystemBaseResource, self).__init__(**kwargs)
+
+    @classmethod
+    def list_path(cls, file):
+        file_path = file.detail_path()
+        return "%s/%s" % (file_path, cls._path_segment)
+
 class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
-           CopyMixin):
+           CopyMixin, FileSystem):
     _path_segment = 'files'
 
     @classmethod
@@ -417,7 +462,7 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
                parent_resource=None, configuration=None, **params):
         """
         This handles file uploads.
-        `file_data` can be either a string with file data in it or a file-like object.
+        file_data` can be either a string with file data in it or a file-like object.
         """
         data = {
             'metadata': json.dumps({
@@ -455,7 +500,8 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
         return self._copy(**data)
 
 class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
-             CreateMixin, CopyMixin):
+             CreateMixin, CopyMixin, FileSystem):
+
     _path_segment = 'folders'
 
     def __init__(self, *args, **kwargs):
@@ -521,6 +567,92 @@ class Multipart(AccountBaseResource, CreateMixin, DeleteMixin):
             response.json(), parent_resource=self._parent_resource,
             configuration=self._configuration)
 
+class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
+    _path_segment = 'permissions'
+
+    @classmethod
+    @allow_proxy
+    def create(cls, params=None, parent_resource=None, configuration=None, data=None):
+        return super(Permission, cls).create(params=params, parent_resource=parent_resource, 
+                configuration=configuration, method='put', data=data)
+
+    @classmethod
+    @allow_proxy
+    def update(cls, params=None, parent_resource=None, configuration=None, data=None):
+        return super(Permission, cls).create(params=params, parent_resource=parent_resource, 
+                configuration=configuration, method='patch', data=data)
+
+class User(AccountBaseResource, ReadMixin):
+    _path_segment = 'team/users'
+
+    @classmethod
+    @allow_proxy
+    def get_groups(cls, id,  parent_resource=None, configuration=None, **params):
+        user_instance = cls(id=id, parent_resource=parent_resource,
+                       configuration=configuration)
+        response = request(cls._api_session.get, "%s/%s" % 
+                            (user_instance.detail_path(), "memberships"),
+                           configuration=configuration, params=params)
+
+        response_data = response.json()
+
+        data = cls.create_from_data(
+            response.json(), parent_resource=parent_resource,
+            configuration=configuration)
+        return AnnotatedList(data)
+
+class Group(AccountBaseResource, ReadMixin):
+    _path_segment = 'team/groups'
+
+    @classmethod
+    @allow_proxy
+    def get_users(cls, id, parent_resource=None, configuration=None, **params):
+        group_instance = cls(id=id, parent_resource=parent_resource,
+                       configuration=configuration)
+        response = request(cls._api_session.get, "%s/%s" % 
+                            (group_instance.detail_path(), "members"),
+                           configuration=configuration, params=params)
+
+        data = cls.create_from_data(
+            response.json(), parent_resource=parent_resource,
+            configuration=configuration)
+        return AnnotatedList(data)
+
+class Application(BaseResource, ReadMixin, WriteMixin, Proxy):
+
+    def __init__(self, *args, **kwargs):
+        super(Application, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def list_path(cls, parent_resource):
+        return 'applications'
+
+    @property
+    def apikeys(self):
+        return self._get_proxy('apikey')
+
+class ApplicationBaseResource(BaseResource):
+    _parent_resource_class = Application
+
+    def __init__(self, *applications, **kwargs):
+        if applications:
+            kwargs['parent_resource'] = applications[0]
+        super(ApplicationBaseResource, self).__init__(**kwargs)
+
+    @classmethod
+    def list_path(cls, application):
+        application_path = application.detail_path()
+        return "%s/%s" % (application_path, cls._path_segment)
+
+class ApiKey(ApplicationBaseResource, ListMixin, CreateMixin, DeleteMixin):
+    _path_segment = 'apikeys'
+    
+    def detail_path(self):
+        if not self['key']:
+            raise KException("The detail_path cannot be obtained since the key "
+                             "is unknown.")
+        return "%s/%s" % (self.list_path(self._parent_resource), self['key'])
+
 resources = {
     'account': Account,
     'file': File,
@@ -531,5 +663,10 @@ resources = {
     'recent': Recent,
     'events': Events,
     'multipart': Multipart,
+    'permission': Permission,
+    'user': User,
+    'group': Group,
+    'application': Application,
+    'apikey': ApiKey,
     }
 resource_types = {v:k for k,v in resources.iteritems()}

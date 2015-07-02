@@ -1,5 +1,6 @@
 _configuration = {
     'api_key': None,
+    'dev_key': None,
     'api_version': '0',
     'base_url': 'https://api.kloudless.com'
     }
