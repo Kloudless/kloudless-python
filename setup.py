@@ -18,6 +18,9 @@ install_requires=[
     'requests>=1.0',
     'python-dateutil',
     ]
+
+test_requirements = ['selenium>=2.0']
+
 setup(
     name='kloudless',
     packages=find_packages(),
@@ -39,4 +42,5 @@ setup(
         ],
     package_data={'': ['LICENSE']},
     zip_safe=False,
+    tests_require = test_requirements,
     )

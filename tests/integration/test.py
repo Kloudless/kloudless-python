@@ -14,7 +14,9 @@ if __name__ == '__main__':
     test_classes = []
     for m in sys.modules.keys():
       if 'test_cases.test_' in m:
-          test_classes.append(inspect.getmembers(sys.modules[m], inspect.isclass)[0][1])
+            for name, cls in inspect.getmembers(sys.modules[m], inspect.isclass):
+                if 'test_cases.test_' in cls.__module__:
+                    test_classes.append(cls)
     cases = []
     for cls in test_classes:
         for acc in accounts:

@@ -36,7 +36,7 @@ Here are the resource classes available:
 * `Recent`
 * `Events`
 * `Multipart`
- 
+
 Each class has the following methods where applicable:
 
 * `create(**data)` makes a POST request to create a resource of that type.
@@ -87,7 +87,7 @@ The shortcut method `account.folders` is used above,
 but you can also instantiate the classes above independently:
 
 ```python
->>> root_folder = kloudless.Folder(id='root', parent_resource=account) 
+>>> root_folder = kloudless.Folder(id='root', parent_resource=account)
 ```
 
 There are different ways to retrieve information on a resource, given it's ID.
@@ -158,6 +158,12 @@ The tests are written using [py.test](http://pytest.org) and can be run like so
 ```shell
 pip install tox
 tox
+```
+Integration tests are seperate and can be run collectively or independently
+within the `tests/integration/` directory, with an appropriate `API_KEY`. For example:
+```shell
+API_KEY='...' python test.py
+API_KEY='...' python test_cases/test_link.py
 ```
 ## TODO
 
