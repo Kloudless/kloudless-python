@@ -38,7 +38,7 @@ class BaseResource(dict):
         self._removed_keys = set()
 
         self._parent_resource = parent_resource
-        
+
         if self._parent_resource_class is not None:
             if self._parent_resource is None:
                 raise KException(
@@ -85,11 +85,11 @@ class BaseResource(dict):
                     configuration=configuration) for d in data]
         elif isinstance(data, dict) and not isinstance(data, BaseResource):
             data = data.copy()
-            
+
             klass = cls
             if data.get('type') in resources:
                 klass = resources[data['type']]
-        
+
             instance = klass(id=data.get('id'), parent_resource=parent_resource,
                              configuration=configuration)
             instance.populate(data)
@@ -229,20 +229,20 @@ class CreateMixin(object):
             method='post', data=None, **deprecated_data):
         """
         params: A dict containing query parameters.
-        data: A dict containing data. 
+        data: A dict containing data.
 
         TODO: Remove deprecated_data in v1.
         """
         method = getattr(cls._api_session, method)
-        
+
         if not data: data = {}
 
         if deprecated_data:
-            warnings.warning("Passing in data as keyword arguments will "
+            warnings.warn("Passing in data as keyword arguments will "
                 "be removed in version 1. Pass in data as a dict instead. "
                 "e.g. data={'name': 'example'}", DeprecationWarning)
             data.update(deprecated_data)
-        
+
         data = cls.serialize(data)
 
         if not params: params = {}
@@ -358,9 +358,10 @@ class ResourceProxy(object):
             kwargs['configuration'] = self.configuration
 
 class Proxy:
-    _proxies = {}
-
     def _get_proxy(self, resource_name):
+        if not getattr(self, '_proxies', None):
+            setattr(self, '_proxies', {})
+
         resource = resources[resource_name]
         if self._proxies.get(resource_name) is None:
             self._proxies[resource_name] = ResourceProxy(
@@ -412,7 +413,7 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
     def users(self):
         return self._get_proxy('user')
 
-    @property 
+    @property
     def groups(self):
         return self._get_proxy('group')
 
@@ -468,7 +469,7 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
             'metadata': json.dumps({
                     'name': file_name,
                     'parent_id': parent_id,
-                    })
+                })
             }
         files = {'file': (file_name, file_data)}
         response = request(cls._api_session.post, cls.list_path(parent_resource),
@@ -573,13 +574,13 @@ class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
     @classmethod
     @allow_proxy
     def create(cls, params=None, parent_resource=None, configuration=None, data=None):
-        return super(Permission, cls).create(params=params, parent_resource=parent_resource, 
+        return super(Permission, cls).create(params=params, parent_resource=parent_resource,
                 configuration=configuration, method='put', data=data)
 
     @classmethod
     @allow_proxy
     def update(cls, params=None, parent_resource=None, configuration=None, data=None):
-        return super(Permission, cls).create(params=params, parent_resource=parent_resource, 
+        return super(Permission, cls).create(params=params, parent_resource=parent_resource,
                 configuration=configuration, method='patch', data=data)
 
 class User(AccountBaseResource, ReadMixin):
@@ -590,7 +591,7 @@ class User(AccountBaseResource, ReadMixin):
     def get_groups(cls, id,  parent_resource=None, configuration=None, **params):
         user_instance = cls(id=id, parent_resource=parent_resource,
                        configuration=configuration)
-        response = request(cls._api_session.get, "%s/%s" % 
+        response = request(cls._api_session.get, "%s/%s" %
                             (user_instance.detail_path(), "memberships"),
                            configuration=configuration, params=params)
 
@@ -609,7 +610,7 @@ class Group(AccountBaseResource, ReadMixin):
     def get_users(cls, id, parent_resource=None, configuration=None, **params):
         group_instance = cls(id=id, parent_resource=parent_resource,
                        configuration=configuration)
-        response = request(cls._api_session.get, "%s/%s" % 
+        response = request(cls._api_session.get, "%s/%s" %
                             (group_instance.detail_path(), "members"),
                            configuration=configuration, params=params)
 
@@ -646,7 +647,7 @@ class ApplicationBaseResource(BaseResource):
 
 class ApiKey(ApplicationBaseResource, ListMixin, CreateMixin, DeleteMixin):
     _path_segment = 'apikeys'
-    
+
     def detail_path(self):
         if not self['key']:
             raise KException("The detail_path cannot be obtained since the key "
