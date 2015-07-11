@@ -28,11 +28,11 @@ def create_or_get_test_folder(account, parent_id='root', name=None):
         test_folders[account.service] = new_folder
     return new_folder
 
-def create_test_file(account, folder=None):
+def create_test_file(account, folder=None, file_name=unicode('t e s t.txt'), file_data='test'):
     if not folder:
         folder = create_or_get_test_folder(account)
-    return account.files.create(file_name=unicode('t e s t.txt'), parent_id=folder.id,
-        file_data='test', overwrite=True)
+    return account.files.create(file_name=file_name, parent_id=folder.id,
+        file_data=file_data, overwrite=True)
 
 def get_account_for_each_service():
     services_to_exclude = []
