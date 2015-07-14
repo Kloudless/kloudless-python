@@ -1,10 +1,27 @@
 import kloudless
 import unittest
+from kloudless.exceptions import KloudlessException as KException
 
 def create_or_get_test_folder(account, parent_id='root', name='testFolder'):
-    return account.folders.create(parent_id=parent_id, name=name)
+    # TODO: add search for 'testFolder' when we have search for folders
+    new_folder = None
+    folder = account.folders.retrieve(id=parent_id)
+    stack = [folder]
+    while stack:
+        folder_to_check = stack.pop(0)
+        if folder_to_check.can_create_folders:
+            new_folder = folder_to_check
+            break
+        folders = folder_to_check.contents()
+        # add at the beginning for a DFS / stack
+        stack[0:0] = folders
+    if new_folder is None:
+        # throw exception
+        raise KException('Cannot find parent folder to create test folder')
+    return account.folders.create(parent_id=new_folder.id, name=name)
 
 def create_test_file(account, folder=None):
+    # TODO: add alternative to check for `can_upload_files`
     if not folder:
         folder = create_or_get_test_folder(account)
     return account.files.create(file_name='test.txt', parent_id=folder.id,
