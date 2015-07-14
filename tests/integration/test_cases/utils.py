@@ -39,6 +39,10 @@ def create_test_file(account, folder=None, file_name=unicode('t e s t.txt'), fil
     return account.files.create(file_name=file_name, parent_id=folder.id,
         file_data=file_data, overwrite=True)
 
+def is_folder_present(folder_name, parent_folder):
+  contents = parent_folder.contents()
+  return folder_name in [f.name for f in contents if f.type == 'folder']
+
 def get_account_for_each_service():
     services_to_exclude = []
     accounts = []
@@ -82,5 +86,4 @@ def clean_up(cls):
     if cls.account.service in test_folders:
         test_folders[cls.account.service].delete(recursive=True)
         del test_folders[cls.account.service]
-
 
