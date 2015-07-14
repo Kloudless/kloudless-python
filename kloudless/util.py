@@ -3,7 +3,8 @@ import logging
 import dateutil.parser
 from datetime import datetime
 
-logger = logging.getLogger('kloudless')
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def to_datetime(timestamp):
     """
