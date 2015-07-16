@@ -1,7 +1,12 @@
 import kloudless
+from kloudless.exceptions import KloudlessException as KException
+
 import unittest
 import random
-from kloudless.exceptions import KloudlessException as KException
+import pytz
+import datetime
+import os
+import time
 
 test_folders = {}
 def create_or_get_test_folder(account, parent_id='root', name=None):
@@ -37,8 +42,11 @@ def create_test_file(account, folder=None, file_name=unicode('t e s t.txt'), fil
 def get_account_for_each_service():
     services_to_exclude = []
     accounts = []
-    for acc in kloudless.Account.all(active=True):
+    services_to_include = os.environ.get('SERVICES', '').split(',')
+    for acc in kloudless.Account.all(active=True, page_size=100):
         if acc.service in services_to_exclude:
+            continue
+        if services_to_include and acc.service not in services_to_include:
             continue
         accounts.append(acc)
         services_to_exclude.append(str(acc.service))
@@ -56,6 +64,18 @@ def create_test_case(account, test_case):
         (test_case,), {'account' : account,
                        'tearDownClass': clean_up,
                         })
+
+def accounts_wide(func):
+    """
+    Decorator to indicate that the test case should only be run once across
+    all accounts.
+    """
+    def test_case(*args, **kwargs):
+        if test_case._already_ran:
+            return
+        return func(*args, **kwargs)
+    test_case._already_ran = False
+    return test_case
 
 @classmethod
 def clean_up(cls):

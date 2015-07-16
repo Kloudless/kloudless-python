@@ -159,15 +159,22 @@ The tests are written using [py.test](http://pytest.org) and can be run like so
 pip install tox
 tox
 ```
+
 Integration tests are seperate and can be run collectively or independently
-within the `tests/integration/` directory, with an appropriate `API_KEY`. For example:
+within the `tests/integration/` directory, with an appropriate `API_KEY` set
+in the environment. An optional comma-separated list of `SERVICES` may be used
+to restrict the services being tested.
+For example:
 ```shell
 API_KEY='...' python test.py
 API_KEY='...' python test_cases/test_link.py
+API_KEY='...' SERVICES='dropbox' python test_cases/test_link.py
+API_KEY='...' SERVICES='dropbox,s3,box' python test.py
 ```
+
 ## TODO
 
-* Flesh out documentation.
+* Expand documentation.
 * Distribute via package server.
 * Fix moving files/folders between folders.
 
