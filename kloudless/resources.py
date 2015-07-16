@@ -597,7 +597,7 @@ class User(AccountBaseResource, ReadMixin):
 
         response_data = response.json()
 
-        data = cls.create_from_data(
+        data = Group.create_from_data(
             response.json(), parent_resource=parent_resource,
             configuration=configuration)
         return AnnotatedList(data)
@@ -614,7 +614,7 @@ class Group(AccountBaseResource, ReadMixin):
                             (group_instance.detail_path(), "members"),
                            configuration=configuration, params=params)
 
-        data = cls.create_from_data(
+        data = User.create_from_data(
             response.json(), parent_resource=parent_resource,
             configuration=configuration)
         return AnnotatedList(data)
