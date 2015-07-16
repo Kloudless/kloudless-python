@@ -377,6 +377,29 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
     def list_path(cls, parent_resource):
         return 'accounts'
 
+    @classmethod
+    def serialize_account(cls, resource_data):
+        account_properties = ['active', 'account', 'service', 'token',
+                              'token_secret', 'refresh_token', 'token_expiry',
+                              'refresh_token_expiry']
+        serialized = {}
+        for k, v in resource_data.iteritems():
+            if isinstance(v, BaseResource):
+                serialized[k] = v.serialize_account(v)
+            elif k not in account_properties:
+                continue
+            elif k in cls._serializers:
+                serialized[k] = cls._serializers[k][0](v)
+            else:
+                serialized[k] = v
+        return serialized
+
+    def save(self, **params):
+        # TODO: add in fields token, token_secret, refresh_token
+        response = request(self._api_session.patch, self.detail_path(),
+                   configuration=self._configuration, data=self.serialize_account(self),
+                   params=params)
+
     @property
     def links(self):
         return self._get_proxy('link')
@@ -549,6 +572,16 @@ class Recent(AccountBaseResource, ListMixin):
 
 class Events(AccountBaseResource, ListMixin):
     _path_segment = 'events'
+
+    @classmethod
+    def latest_cursor(cls, account):
+        response = request(account._api_session.get, "%s/latest" % cls.list_path(account),
+                           configuration=account._configuration)
+        data = response.json()
+        if 'cursor' in data:
+            return data['cursor']
+        else:
+            return data
 
 class Multipart(AccountBaseResource, CreateMixin, DeleteMixin):
     """

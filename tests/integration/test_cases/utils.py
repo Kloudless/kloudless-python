@@ -30,7 +30,8 @@ def create_or_get_test_folder(account, parent_id='root', name=None):
     while stack:
         folder_to_check = stack.pop(0)
         if folder_to_check.can_create_folders:
-            new_folder = account.folders.create(parent_id=folder_to_check.id, name=name)
+            new_folder = account.folders.create(parent_id=folder_to_check.id,
+                                                name=name)
             break
         folders = folder_to_check.contents()
         # add at the beginning for a DFS / stack
@@ -46,11 +47,18 @@ def create_test_file(account, folder=None, file_name=u't\xe9st file.txt',
     if not folder:
         folder = create_or_get_test_folder(account)
     return account.files.create(file_name=file_name, parent_id=folder.id,
-        file_data=file_data, overwrite=True)
+                                file_data=file_data, overwrite=True)
 
 def is_folder_present(folder_name, parent_folder):
   contents = parent_folder.contents()
   return folder_name in [f.name for f in contents if f.type == 'folder']
+
+def trigger_find_recent(account):
+    """
+    Triggers find_recent by updating the account.
+    Only works if find_recent is enabled for that account.
+    """
+    account.save()
 
 def get_account_for_each_service():
     services_to_exclude = []

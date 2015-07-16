@@ -15,7 +15,9 @@ class Search(unittest.TestCase):
         if acc.service == 'box':
             time.sleep(210)
         results = acc.search.all(q=test_file_name)
-        self.assertEqual(results[0].id, test_file.id)
+        self.assertGreater(results, 0)
+        if results:
+            self.assertEqual(results[0].id, test_file.id)
 
     def test_bad_search(self):
         self.assertEqual(self.account.search.all(q='asdfghjkl'), [])
