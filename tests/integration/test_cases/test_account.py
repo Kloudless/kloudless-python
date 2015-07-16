@@ -38,7 +38,7 @@ class Account(unittest.TestCase):
 
     @utils.accounts_wide
     def test_import_account(self):
-        for s in ['sharepoint', 'documentum', 'hubspot']:
+        for s in ['sharepoint', 'hubspot']:
             acc = None
             try:
                 with self.assertRaises(kexceptions.APIException) as e:
