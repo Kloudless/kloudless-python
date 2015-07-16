@@ -35,9 +35,10 @@ class Users(unittest.TestCase):
     def test_user_membership(self):
         if self.not_admin():
             return
-        groups = self.account.users.get_groups(id=self.users[0].id)
-        if groups: 
-            self.assertEqual(type(groups[0]), kloudless.resources.Group)
+        for user in self.users:
+            groups = user.get_groups()
+            for group in groups:
+                self.assertIsInstance(group, kloudless.resources.Group)
 
 if __name__ == '__main__':
     suite = utils.create_suite([utils.create_test_case(acc, Users) for acc in accounts])

@@ -586,37 +586,27 @@ class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
 class User(AccountBaseResource, ReadMixin):
     _path_segment = 'team/users'
 
-    @classmethod
-    @allow_proxy
-    def get_groups(cls, id,  parent_resource=None, configuration=None, **params):
-        user_instance = cls(id=id, parent_resource=parent_resource,
-                       configuration=configuration)
-        response = request(cls._api_session.get, "%s/%s" %
-                            (user_instance.detail_path(), "memberships"),
-                           configuration=configuration, params=params)
-
-        response_data = response.json()
+    def get_groups(self, **params):
+        response = request(self._api_session.get, "%s/%s" %
+                            (self.detail_path(), "memberships"),
+                           configuration=self._configuration, params=params)
 
         data = Group.create_from_data(
-            response.json(), parent_resource=parent_resource,
-            configuration=configuration)
+            response.json(), parent_resource=self._parent_resource,
+            configuration=self._configuration)
         return AnnotatedList(data)
 
 class Group(AccountBaseResource, ReadMixin):
     _path_segment = 'team/groups'
 
-    @classmethod
-    @allow_proxy
-    def get_users(cls, id, parent_resource=None, configuration=None, **params):
-        group_instance = cls(id=id, parent_resource=parent_resource,
-                       configuration=configuration)
-        response = request(cls._api_session.get, "%s/%s" %
-                            (group_instance.detail_path(), "members"),
-                           configuration=configuration, params=params)
+    def get_users(self, **params):
+        response = request(self._api_session.get, "%s/%s" %
+                            (self.detail_path(), "members"),
+                           configuration=self._configuration, params=params)
 
         data = User.create_from_data(
-            response.json(), parent_resource=parent_resource,
-            configuration=configuration)
+            response.json(), parent_resource=self._parent_resource,
+            configuration=self._configuration)
         return AnnotatedList(data)
 
 class Application(BaseResource, ReadMixin, WriteMixin, Proxy):
