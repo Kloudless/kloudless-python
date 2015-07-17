@@ -3,8 +3,6 @@ from kloudless.exceptions import KloudlessException as KException
 
 import unittest
 import random
-import pytz
-import datetime
 import os
 import time
 
@@ -13,6 +11,10 @@ DEV_KEY = os.environ.get('DEV_KEY')
 BASE_URL = os.environ.get('BASE_URL')
 if not BASE_URL:
     BASE_URL = 'https://api.kloudless.com'
+
+os.environ.setdefault(
+    'REQUESTS_CA_BUNDLE',
+    os.path.join(os.path.abspath(os.path.dirname('../')), 'kloudless.ca.crt'))
 
 kloudless.configure(api_key=API_KEY, dev_key=DEV_KEY, base_url=BASE_URL)
 
@@ -75,7 +77,7 @@ def create_suite(test_cases):
     test_loader = unittest.TestLoader()
     test_loader.sortTestMethodsUsing = (
         lambda x,y : cmp(test_list.index(x), test_list.index(y))
-        if x in test_list and y in test_list else cmp(x,y))
+        if x in test_list and y in test_list else None)
     for case in test_cases:
         suites.append(test_loader.loadTestsFromTestCase(case))
     return unittest.TestSuite(suites)
