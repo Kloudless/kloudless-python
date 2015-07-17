@@ -6,11 +6,6 @@ import pytz
 import os
 from datetime import datetime, timedelta
 
-API_KEY = os.environ['API_KEY']
-kloudless.configure(api_key=API_KEY)
-
-accounts = utils.get_account_for_each_service()
-
 class Account(unittest.TestCase):
     def test_retrieve_account(self):
         account = kloudless.Account(id=self.account.id)
@@ -94,6 +89,6 @@ class Account(unittest.TestCase):
             account.delete()
 
 if __name__ == '__main__':
-    suite = utils.create_suite([utils.create_test_case(acc, Account) for acc in accounts])
+    suite = utils.create_suite([utils.create_test_case(acc, Account) for acc in utils.accounts])
     unittest.TextTestRunner(verbosity=2).run(suite)
 

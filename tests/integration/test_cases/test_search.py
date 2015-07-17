@@ -5,11 +5,6 @@ import utils
 import random
 import time
 
-API_KEY = os.environ['API_KEY']
-kloudless.configure(api_key=API_KEY)
-
-accounts = utils.get_account_for_each_service()
-
 class Search(unittest.TestCase):
 
     def test_simple_search(self):
@@ -44,5 +39,5 @@ class Search(unittest.TestCase):
         self.assertEqual({results[0].id, results[1].id}, {test_file_1.id, test_file_2.id})
 
 if __name__ == '__main__':
-    suite = utils.create_suite([utils.create_test_case(acc, Search) for acc in accounts])
+    suite = utils.create_suite([utils.create_test_case(acc, Search) for acc in utils.accounts])
     unittest.TextTestRunner(verbosity=2).run(suite)

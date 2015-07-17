@@ -5,11 +5,6 @@ import os
 import json
 from kloudless.exceptions import KloudlessException as KException
 
-API_KEY = os.environ['API_KEY']
-kloudless.configure(api_key=API_KEY)
-
-accounts = utils.get_account_for_each_service()
-
 class File(unittest.TestCase):
 
     # need to perform CRUD on existing file
@@ -61,5 +56,5 @@ class File(unittest.TestCase):
             self.assertEqual(error_data['status_code'], 404)
 
 if __name__ == '__main__':
-    suite = utils.create_suite([utils.create_test_case(acc, File) for acc in accounts])
+    suite = utils.create_suite([utils.create_test_case(acc, File) for acc in utils.accounts])
     unittest.TextTestRunner(verbosity=2).run(suite)

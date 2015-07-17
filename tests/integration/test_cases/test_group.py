@@ -3,11 +3,6 @@ import unittest
 import os
 import utils
 
-API_KEY = os.environ['API_KEY']
-kloudless.configure(api_key=API_KEY)
-
-accounts = utils.get_account_for_each_service()
-
 class Group(unittest.TestCase):
 
     groups = None
@@ -44,5 +39,5 @@ class Group(unittest.TestCase):
                 self.assertIsInstance(user, kloudless.resources.User)
 
 if __name__ == '__main__':
-    suite = utils.create_suite([utils.create_test_case(acc, Group) for acc in accounts])
+    suite = utils.create_suite([utils.create_test_case(acc, Group) for acc in utils.accounts])
     unittest.TextTestRunner(verbosity=2).run(suite)

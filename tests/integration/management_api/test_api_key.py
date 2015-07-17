@@ -2,10 +2,8 @@ import kloudless
 import unittest
 import os
 
-DEV_KEY = os.environ['DEV_KEY']
-BASE_URL = os.environ['BASE_URL']
-
-os.environ.setdefault('REQUESTS_CA_BUNDLE', os.path.join(os.path.abspath(os.path.dirname('.')), 'kloudless.ca.crt'))
+DEV_KEY = os.environ.get('DEV_KEY')
+BASE_URL = os.environ.get('BASE_URL')
 
 kloudless.configure(dev_key=DEV_KEY, base_url=BASE_URL)
 

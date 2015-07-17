@@ -163,13 +163,16 @@ tox
 Integration tests are seperate and can be run collectively or independently
 within the `tests/integration/` directory, with an appropriate `API_KEY` set
 in the environment. An optional comma-separated list of `SERVICES` may be used
-to restrict the services being tested.
+to restrict the services being tested. Additionally, to run tests for the
+managament API, set a `DEV_KEY` and a `BASE_URL` environment variable
 For example:
 ```shell
 API_KEY='...' python test.py
 API_KEY='...' python test_cases/test_link.py
 API_KEY='...' SERVICES='dropbox' python test_cases/test_link.py
 API_KEY='...' SERVICES='dropbox,s3,box' python test.py
+DEV_KEY='...' BASE_URL='...' python management_api/test_application.py
+API_KEY='...' DEV_KEY='...' BASE_URL='...' python test.py
 ```
 
 ## TODO

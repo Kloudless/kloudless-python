@@ -3,11 +3,6 @@ import unittest
 import utils
 import os
 
-API_KEY = os.environ['API_KEY']
-kloudless.configure(api_key=API_KEY)
-
-accounts = utils.get_account_for_each_service()
-
 class Key(unittest.TestCase):
 
     def test_retrieve_account_key(self):
@@ -23,5 +18,5 @@ class Key(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    suite = utils.create_suite([utils.create_test_case(acc, Key) for acc in accounts])
+    suite = utils.create_suite([utils.create_test_case(acc, Key) for acc in utils.accounts])
     unittest.TextTestRunner(verbosity=2).run(suite)

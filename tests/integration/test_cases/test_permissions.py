@@ -3,11 +3,6 @@ import unittest
 import os
 import utils
 
-API_KEY = os.environ['API_KEY']
-kloudless.configure(api_key=API_KEY)
-
-accounts = utils.get_account_for_each_service()
-
 allow_changing_file_permissions = ['gdrive']
 allow_changing_folder_permissions = ['gdrive', 'box']
 allow_reading_permissions = ['gdrive', 'box', 'sharepoint', 'onedrivebiz']
@@ -106,5 +101,5 @@ class Permissions(unittest.TestCase):
             self.list_test_helper(self.test_file)
 
 if __name__ == '__main__':
-    suite = utils.create_suite([utils.create_test_case(acc, Permissions) for acc in accounts])
+    suite = utils.create_suite([utils.create_test_case(acc, Permissions) for acc in utils.accounts])
     unittest.TextTestRunner(verbosity=2).run(suite)

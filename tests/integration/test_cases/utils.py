@@ -8,7 +8,17 @@ import datetime
 import os
 import time
 
+API_KEY = os.environ.get('API_KEY')
+DEV_KEY = os.environ.get('DEV_KEY')
+BASE_URL = os.environ.get('BASE_URL')
+if not BASE_URL:
+    BASE_URL = 'https://api.kloudless.com'
+
+kloudless.configure(api_key=API_KEY, dev_key=DEV_KEY, base_url=BASE_URL)
+
+
 test_folders = {}
+test_list = []
 def create_or_get_test_folder(account, parent_id='root', name=None):
     if account.service in test_folders:
         return test_folders[account.service]
@@ -33,7 +43,8 @@ def create_or_get_test_folder(account, parent_id='root', name=None):
         test_folders[account.service] = new_folder
     return new_folder
 
-def create_test_file(account, folder=None, file_name=unicode('t e s t.txt'), file_data='test'):
+def create_test_file(account, folder=None, file_name=unicode('t\xc3\xa9st file.txt'),
+                     file_data='test'):
     if not folder:
         folder = create_or_get_test_folder(account)
     return account.files.create(file_name=file_name, parent_id=folder.id,
@@ -54,13 +65,17 @@ def get_account_for_each_service():
             continue
         accounts.append(acc)
         services_to_exclude.append(str(acc.service))
-
     return accounts
+
+if API_KEY:
+    accounts = get_account_for_each_service()
 
 def create_suite(test_cases):
     suites = []
+    test_loader = unittest.TestLoader()
+    test_loader.sortTestMethodsUsing = lambda x,y : cmp(test_list.index(x), test_list.index(y)) if x in test_list and y in test_list else lambda x,y : cmp(x,y)
     for case in test_cases:
-        suites.append(unittest.TestLoader().loadTestsFromTestCase(case))
+        suites.append(test_loader.loadTestsFromTestCase(case))
     return unittest.TestSuite(suites)
 
 def create_test_case(account, test_case):
@@ -80,6 +95,11 @@ def accounts_wide(func):
         return func(*args, **kwargs)
     test_case._already_ran = False
     return test_case
+
+def order(func):
+    test_list.append(func.__name__)
+    return func
+
 
 @classmethod
 def clean_up(cls):

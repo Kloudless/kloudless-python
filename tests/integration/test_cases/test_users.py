@@ -3,13 +3,8 @@ import unittest
 import os
 import utils
 
-API_KEY = os.environ['API_KEY']
-kloudless.configure(api_key=API_KEY)
-
-accounts = utils.get_account_for_each_service()
-
 class Users(unittest.TestCase):
-    
+
     users = None
 
     def setUp(self):
@@ -31,7 +26,7 @@ class Users(unittest.TestCase):
         user = self.account.users.retrieve(self.users[0].id)
         self.assertEqual(type(user), kloudless.resources.User)
         self.assertEqual(user.id, self.users[0].id)
-    
+
     def test_user_membership(self):
         if self.not_admin():
             return
@@ -41,5 +36,5 @@ class Users(unittest.TestCase):
                 self.assertIsInstance(group, kloudless.resources.Group)
 
 if __name__ == '__main__':
-    suite = utils.create_suite([utils.create_test_case(acc, Users) for acc in accounts])
+    suite = utils.create_suite([utils.create_test_case(acc, Users) for acc in utils.accounts])
     unittest.TextTestRunner(verbosity=2).run(suite)
