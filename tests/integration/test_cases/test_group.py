@@ -19,7 +19,8 @@ class Group(unittest.TestCase):
         if not self.groups:
             return
         self.assertGreater(len(self.groups), 0)
-        self.assertEqual(type(self.groups[0]), kloudless.resources.Group)
+        for group in self.groups:
+            self.assertIsInstance(group, kloudless.resources.Group)
 
     def test_retrieve_group(self):
         if self.not_admin():

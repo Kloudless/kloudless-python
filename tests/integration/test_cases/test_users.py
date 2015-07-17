@@ -18,7 +18,8 @@ class Users(unittest.TestCase):
             return
         self.assertTrue(self.users)
         self.assertGreater(len(self.users), 0)
-        self.assertEqual(type(self.users[0]), kloudless.resources.User)
+        for user in self.users:
+            self.assertIsInstance(user, kloudless.resources.User)
 
     def test_retrieve_user(self):
         if self.not_admin():
