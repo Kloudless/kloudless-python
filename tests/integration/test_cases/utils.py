@@ -23,7 +23,7 @@ def create_or_get_test_folder(account, parent_id='root', name=None):
     if account.service in test_folders:
         return test_folders[account.service]
     if not name:
-        name = unicode('testFolder ' + str(random.randint(0, 10**8)))
+        name = u't\xe9stFolder %s' % random.randint(0, 10**8)
         storeFolder = True
     new_folder = None
     folder = account.folders.retrieve(id=parent_id)
@@ -43,7 +43,7 @@ def create_or_get_test_folder(account, parent_id='root', name=None):
         test_folders[account.service] = new_folder
     return new_folder
 
-def create_test_file(account, folder=None, file_name=unicode('t\xc3\xa9st file.txt'),
+def create_test_file(account, folder=None, file_name=u't\xe9st file.txt',
                      file_data='test'):
     if not folder:
         folder = create_or_get_test_folder(account)
@@ -73,7 +73,9 @@ if API_KEY:
 def create_suite(test_cases):
     suites = []
     test_loader = unittest.TestLoader()
-    test_loader.sortTestMethodsUsing = lambda x,y : cmp(test_list.index(x), test_list.index(y)) if x in test_list and y in test_list else lambda x,y : cmp(x,y)
+    test_loader.sortTestMethodsUsing = (
+        lambda x,y : cmp(test_list.index(x), test_list.index(y))
+        if x in test_list and y in test_list else cmp(x,y))
     for case in test_cases:
         suites.append(test_loader.loadTestsFromTestCase(case))
     return unittest.TestSuite(suites)

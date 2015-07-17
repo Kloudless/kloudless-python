@@ -153,12 +153,15 @@ Here's an example moving a file from one account to a folder in a different acco
 * https://github.com/vinodc/cloud-text-editor creates folders and uploads files via the Kloudless API.
 
 ## Tests
+To install test dependencies, run `pip install -r tests/requirements.txt`.
+
 The tests are written using [py.test](http://pytest.org) and can be run like so
 (from within this directory):
 ```shell
 pip install tox
 tox
 ```
+#### Integration Tests
 
 Integration tests are seperate and can be run collectively or independently
 within the `tests/integration/` directory, with an appropriate `API_KEY` set
@@ -174,6 +177,8 @@ API_KEY='...' SERVICES='dropbox,s3,box' python test.py
 DEV_KEY='...' BASE_URL='...' python management_api/test_application.py
 API_KEY='...' DEV_KEY='...' BASE_URL='...' python test.py
 ```
+
+An account for each service will be obtained from the API to run tests for.
 
 ## TODO
 

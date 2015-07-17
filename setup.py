@@ -19,10 +19,7 @@ install_requires=[
     'python-dateutil',
     ]
 
-test_requirements = [
-    'selenium>=2.0',
-    'pytz>=2013d'
-]
+test_requirements = read('tests/requirements.txt').split()
 
 setup(
     name='kloudless',

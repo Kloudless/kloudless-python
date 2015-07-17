@@ -8,6 +8,7 @@ import time
 class Recent(unittest.TestCase):
 
     def setUp(self):
+        acc = self.account
         self.test_file_1 = utils.create_test_file(acc, file_name='recent1.txt',
             file_data=str(random.random()))
         self.test_file_2 = utils.create_test_file(acc, file_name='recent2.txt',

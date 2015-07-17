@@ -1,0 +1,2 @@
+selenium>=2.0
+pytz>=2013d

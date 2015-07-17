@@ -471,7 +471,7 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
                     'parent_id': parent_id,
                 })
             }
-        files = {'file': (file_name, file_data)}
+        files = {'file': file_data}
         response = request(cls._api_session.post, cls.list_path(parent_resource),
                            data=data, files=files, params=params,
                            configuration=configuration)
