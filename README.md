@@ -166,16 +166,17 @@ tox
 Integration tests are seperate and can be run collectively or independently
 within the `tests/integration/` directory, with an appropriate `API_KEY` set
 in the environment. An optional comma-separated list of `SERVICES` may be used
-to restrict the services being tested. Additionally, to run tests for the
-managament API, set a `DEV_KEY` and a `BASE_URL` environment variable
+to restrict the services being tested. `REQUESTS_CA_BUNDLE` should point to the
+location of the CA certificate. Additionally, to run tests for the managament
+API, set a `DEV_KEY` and a `BASE_URL` environment variable.
 For example:
 ```shell
-API_KEY='...' python test.py
-API_KEY='...' python test_cases/test_link.py
-API_KEY='...' SERVICES='dropbox' python test_cases/test_link.py
-API_KEY='...' SERVICES='dropbox,s3,box' python test.py
-DEV_KEY='...' BASE_URL='...' python management_api/test_application.py
-API_KEY='...' DEV_KEY='...' BASE_URL='...' python test.py
+API_KEY='...' REQUESTS_CA_BUNDLE='...' python test.py
+API_KEY='...' REQUESTS_CA_BUNDLE='...' python test_cases/test_link.py
+API_KEY='...' SERVICES='dropbox' REQUESTS_CA_BUNDLE='...' python test_cases/test_link.py
+API_KEY='...' SERVICES='dropbox,s3,box' REQUESTS_CA_BUNDLE='...' python test.py
+REQUESTS_CA_BUNDLE='...' DEV_KEY='...' BASE_URL='...' python management_api/test_application.py
+API_KEY='...' REQUESTS_CA_BUNDLE='...' DEV_KEY='...' BASE_URL='...' python test.py
 ```
 
 An account for each service will be obtained from the API to run tests for.

@@ -12,10 +12,6 @@ BASE_URL = os.environ.get('BASE_URL')
 if not BASE_URL:
     BASE_URL = 'https://api.kloudless.com'
 
-os.environ.setdefault(
-    'REQUESTS_CA_BUNDLE',
-    os.path.join(os.path.abspath(os.path.dirname('../')), 'kloudless.ca.crt'))
-
 kloudless.configure(api_key=API_KEY, dev_key=DEV_KEY, base_url=BASE_URL)
 
 
