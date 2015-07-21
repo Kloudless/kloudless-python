@@ -42,9 +42,9 @@ class File(unittest.TestCase):
         self.assertEqual(self.file.account, self.account.id)
 
     # Update [update contents]
-    # TODO: the python sdk doesn't support it yet
     def test_put_file(self):
-        pass
+        self.file.update('hello there')
+        self.assertTrue(self.file.contents().text == 'hello there')
 
     # Delete
     def test_delete_file(self):

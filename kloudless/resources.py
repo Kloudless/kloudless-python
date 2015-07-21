@@ -479,6 +479,17 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
             response.json(), parent_resource=parent_resource,
             configuration=configuration)
 
+    def update(self, file_data=''):
+        """
+        This overwites the file specified by 'file_id' with the contents of 'file_data'.
+        'file_data' can be either a string with file data in it or a file-like object.
+        """
+        files = {'file': file_data}
+        response = request(self._api_session.put, self.detail_path(),
+                           files=files, configuration=self._configuration)
+        self.populate(response.json())
+        return True
+
     def contents(self):
         """
         This handles file downloads. It returns a requests.Response object
