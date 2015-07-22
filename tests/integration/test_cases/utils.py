@@ -96,6 +96,20 @@ def accounts_wide(func):
     test_case._already_ran = False
     return test_case
 
+def skip_long_test(services=[]):
+    """
+    Decorator to determine whether to run long tests or not.
+    """
+    def test_case(func):
+        def test_case_wrapper(*args, **kwargs):
+            self = args[0]
+            if (self.account.service in services and
+                not os.environ.get('RUN_LONG_TESTS')):
+                return
+            return func(*args, **kwargs)
+        return test_case_wrapper
+    return test_case
+
 def order(func):
     test_list.append(func.__name__)
     return func

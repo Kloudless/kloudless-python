@@ -7,6 +7,7 @@ import time
 
 class Search(unittest.TestCase):
 
+    @utils.skip_long_test(services=['box'])
     def test_simple_search(self):
         acc = self.account
         test_file_name = 'search' + str(random.random())[2:] + '.txt'
@@ -23,6 +24,7 @@ class Search(unittest.TestCase):
         with self.assertRaises(kloudless.exceptions.APIException) as e:
             self.account.search.all(q='')
 
+    @utils.skip_long_test(services=['box'])
     def test_mult_results_search(self):
         acc = self.account
         test_file_name = 'search' + str(random.random())[2:] + '.txt'
