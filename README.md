@@ -165,18 +165,33 @@ tox
 
 Integration tests are seperate and can be run collectively or independently
 within the `tests/integration/` directory, with an appropriate `API_KEY` set
-in the environment. An optional comma-separated list of `SERVICES` may be used
-to restrict the services being tested. `REQUESTS_CA_BUNDLE` should point to the
-location of the CA certificate. Additionally, to run tests for the managament
-API, set a `DEV_KEY` and a `BASE_URL` environment variable.
-For example:
+in the environment. Here is a full list of environment variables that can
+be used to configure the tests:
+
+`API_KEY`: Required. The API Key to use.
+`DEV_KEY`: Required if testing the Management API. The Developer Key to use.
+`BASE_URL`: Optional. Defaults to 'https://api.kloudless.com'. Configures the
+    base URL to use for tests.
+`SERVICES`: Optional. A comma-separated list of service names to restrict the
+    services tested.
+`REQUESTS_CA_BUNDLE`: Optional. If pointing to a BASE_URL secured with a
+    non-trusted root CA certificate, this environment variable can be pointed
+    to the certificate to trust.
+    See http://docs.python-requests.org/en/latest/user/advanced/#ssl-cert-verification
+    for more information.
+`RUN_LONG_TESTS`: Optional. Defaults to a Falsey value. If Truthy, tests which
+    take an extended period of time to run (due to waiting/sleeping), will be
+    included.
+
+Examples:
+
 ```shell
-API_KEY='...' REQUESTS_CA_BUNDLE='...' python test.py
-API_KEY='...' REQUESTS_CA_BUNDLE='...' python test_cases/test_link.py
-API_KEY='...' SERVICES='dropbox' REQUESTS_CA_BUNDLE='...' python test_cases/test_link.py
-API_KEY='...' SERVICES='dropbox,s3,box' REQUESTS_CA_BUNDLE='...' python test.py
-REQUESTS_CA_BUNDLE='...' DEV_KEY='...' BASE_URL='...' python management_api/test_application.py
-API_KEY='...' REQUESTS_CA_BUNDLE='...' DEV_KEY='...' BASE_URL='...' python test.py
+API_KEY='...'python test.py
+API_KEY='...' python test_cases/test_link.py
+API_KEY='...' SERVICES='dropbox' python test_cases/test_link.py
+API_KEY='...' SERVICES='dropbox,s3,box' python test.py
+DEV_KEY='...' BASE_URL='...' python management_api/test_application.py
+API_KEY='...' DEV_KEY='...' BASE_URL='...' python test.py
 ```
 
 An account for each service will be obtained from the API to run tests for.
