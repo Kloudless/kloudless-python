@@ -3,6 +3,7 @@ import unittest
 import utils
 import os
 import json
+import time
 from kloudless.exceptions import KloudlessException as KException
 
 class File(unittest.TestCase):
@@ -54,6 +55,62 @@ class File(unittest.TestCase):
         except KException, e:
             error_data = json.loads(str(e).split('Error data: ')[1])
             self.assertEqual(error_data['status_code'], 404)
+
+    @utils.allow(services=['box', 'egnyte'])
+    def test_properties(self):
+        def parse(properties):
+            result = {}
+            for prop in properties['properties']:
+                result[prop['key']] = prop['value']
+            return result
+
+        self.file.properties.delete_all()
+        # Test PATCH
+        time.sleep(0.5)
+        properties = self.file.properties.update(data=[
+            {
+                'key': 'key1',
+                'value': 'value1'
+            },
+            {
+                'key': 'key2',
+                'value': 'value2'
+            }
+        ])
+
+        properties = parse(properties)
+        self.assertEqual(len(properties), 2)
+        self.assertEqual(properties['key1'], 'value1')
+        self.assertEqual(properties['key2'], 'value2')
+
+        time.sleep(0.5)
+        self.file.properties.update(data=[
+            {
+                'key': 'key1', # delete property
+                'value': None
+            },
+            {
+                'key': 'key2', # update property
+                'value': 'hello'
+            },
+            {
+                'key': 'key3', # add property
+                'value': 'value3'
+            }
+        ])
+
+        # Test GET
+        time.sleep(0.5)
+        properties = parse(self.file.properties.all())
+        self.assertEqual(len(properties), 2)
+        self.assertEqual(properties['key2'], 'hello')
+        self.assertEqual(properties['key3'], 'value3')
+
+        # Test DELETE
+        self.file.properties.delete_all()
+        time.sleep(0.5)
+        properties = parse(self.file.properties.all())
+        self.assertEqual(len(properties), 0)
 
 if __name__ == '__main__':
     suite = utils.create_suite([utils.create_test_case(acc, File) for acc in utils.accounts])

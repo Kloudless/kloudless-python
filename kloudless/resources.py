@@ -457,6 +457,10 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
            CopyMixin, FileSystem):
     _path_segment = 'files'
 
+    @property
+    def properties(self):
+        return self._get_proxy('property')
+
     @classmethod
     @allow_proxy
     def create(cls, file_name='', parent_id='root', file_data='',
@@ -594,6 +598,40 @@ class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
         return super(Permission, cls).create(params=params, parent_resource=parent_resource,
                 configuration=configuration, method='patch', data=data)
 
+class Property(FileSystemBaseResource):
+    _path_segment = 'properties'
+
+    @classmethod
+    @allow_proxy
+    def all(cls, parent_resource=None, configuration=None):
+        """
+        Returns a full list of custom properties associated with this file.
+        """
+        response = request(cls._api_session.get, cls.list_path(parent_resource),
+                           configuration=configuration)
+        return response.json()
+
+    @classmethod
+    @allow_proxy
+    def update(cls, parent_resource=None, configuration=None, data=None, **params):
+        """
+        Updates custom properties associated with this file.
+        'data' should be a list of dicts containing key/value pairs.
+        """
+        response = request(cls._api_session.patch, cls.list_path(parent_resource),
+                           configuration=configuration, data=data, params=params)
+        return response.json()
+
+    @classmethod
+    @allow_proxy
+    def delete_all(cls, parent_resource=None, configuration=None):
+        """
+        Deletes all custom properties associated with this file.
+        """
+        response = request(cls._api_session.delete, cls.list_path(parent_resource),
+                           configuration=configuration)
+        return True
+
 class User(AccountBaseResource, ReadMixin):
     _path_segment = 'team/users'
 
@@ -666,6 +704,7 @@ resources = {
     'events': Events,
     'multipart': Multipart,
     'permission': Permission,
+    'property': Property,
     'user': User,
     'group': Group,
     'application': Application,

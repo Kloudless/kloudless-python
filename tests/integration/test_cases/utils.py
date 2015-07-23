@@ -76,6 +76,24 @@ def create_suite(test_cases):
         if x in test_list and y in test_list else None)
     for case in test_cases:
         suites.append(test_loader.loadTestsFromTestCase(case))
+
+    env_services_to_include = []
+    if os.environ.get('SERVICES', ''):
+        env_services_to_include = os.environ.get('SERVICES', '').split(',')
+
+    for suite in suites:
+        for test in suite:
+            current_service = test.account.service
+            method_name = test.id().split('.')[-1]
+            method = getattr(test, method_name)
+            services_to_include = getattr(method, 'services_to_include', [])
+            services_to_exclude = getattr(method, 'services_to_exclude', [])
+
+            if ((services_to_include and current_service not in services_to_include)
+                or (services_to_exclude and current_service in services_to_exclude)
+                or (env_services_to_include and current_service not in env_services_to_include)):
+                setattr(test, 'setUp', lambda: test.skipTest('Reason: test is excluded.'))
+
     return unittest.TestSuite(suites)
 
 def create_test_case(account, test_case):
@@ -84,6 +102,25 @@ def create_test_case(account, test_case):
                        'tearDownClass': clean_up,
                         })
 
+def allow(services=[], services_to_exclude=[]):
+    """
+    Decorator to explicitly specify which services to run the decorated test on.
+    'services' specifies the services the test should run on.
+    'services_to_exclude' specifies the services the test should skip.
+    Note: The actual include/exclude logic is in create_suite().
+    """
+    if (services and services_to_exclude
+        or not services and not services_to_exclude):
+        raise ValueError("Please specify 'services' or 'services_to_exclude', and not both")
+
+    def allow_decorator(func):
+        if services:
+            func.services_to_include = services
+        elif services_to_exclude:
+            func.services_to_exclude = services_to_exclude
+        return func
+    return allow_decorator
+
 def accounts_wide(func):
     """
     Decorator to indicate that the test case should only be run once across
@@ -91,7 +128,8 @@ def accounts_wide(func):
     """
     def test_case(*args, **kwargs):
         if test_case._already_ran:
-            return
+            raise unittest.SkipTest('Reason: test already ran once.')
+        test_case._already_ran = True
         return func(*args, **kwargs)
     test_case._already_ran = False
     return test_case
@@ -105,7 +143,7 @@ def skip_long_test(services=[]):
             self = args[0]
             if (self.account.service in services and
                 not os.environ.get('RUN_LONG_TESTS')):
-                return
+                raise unittest.SkipTest('Reason: test already ran once.')
             return func(*args, **kwargs)
         return test_case_wrapper
     return test_case

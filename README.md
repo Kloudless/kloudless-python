@@ -36,6 +36,7 @@ Here are the resource classes available:
 * `Recent`
 * `Events`
 * `Multipart`
+* `Property`
 
 Each class has the following methods where applicable:
 
