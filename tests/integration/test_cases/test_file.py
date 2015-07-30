@@ -56,7 +56,7 @@ class File(unittest.TestCase):
             error_data = json.loads(str(e).split('Error data: ')[1])
             self.assertEqual(error_data['status_code'], 404)
 
-    @utils.allow(services=['box', 'egnyte'])
+    @utils.allow(services=['box', 'egnyte', 'gdrive'])
     def test_properties(self):
         def parse(properties):
             result = {}
