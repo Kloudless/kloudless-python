@@ -28,14 +28,6 @@ class APIKey(unittest.TestCase):
         self.assertEqual(len(self.app.apikeys.all()), 2)
 
     @utils.order
-    def test_list_bad_page_size(self):
-        for i in range(1000):
-            self.app.apikeys.create()
-        with self.assertRaises(kloudless.exceptions) as e:
-            keys = self.app.apikeys.all(page_size=1010)
-        self.assertEqual(len(keys), 1000)
-
-    @utils.order
     def test_delete_key(self):
         for i in range(1):
             for key in self.app.apikeys.all(page=i):

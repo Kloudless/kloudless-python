@@ -574,9 +574,11 @@ class Events(AccountBaseResource, ListMixin):
     _path_segment = 'events'
 
     @classmethod
-    def latest_cursor(cls, account):
-        response = request(account._api_session.get, "%s/latest" % cls.list_path(account),
-                           configuration=account._configuration)
+    @allow_proxy
+    def latest_cursor(cls, parent_resource=None, configuration=None):
+        response = request(cls._api_session.get,
+                           "%s/latest" % cls.list_path(parent_resource),
+                           configuration=configuration)
         data = response.json()
         if 'cursor' in data:
             return data['cursor']

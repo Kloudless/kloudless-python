@@ -91,6 +91,8 @@ def create_suite(test_cases):
 
     for suite in suites:
         for test in suite:
+            if not hasattr(test, 'account'):
+                continue
             current_service = test.account.service
             method_name = test.id().split('.')[-1]
             method = getattr(test, method_name)
@@ -149,9 +151,9 @@ def skip_long_test(services=[]):
     def test_case(func):
         def test_case_wrapper(*args, **kwargs):
             self = args[0]
-            if (self.account.service in services and
+            if ((not hasattr(self, 'account') or self.account.service in services) and
                 not os.environ.get('RUN_LONG_TESTS')):
-                raise unittest.SkipTest('Reason: test already ran once.')
+                raise unittest.SkipTest('Reason: test takes too long.')
             return func(*args, **kwargs)
         return test_case_wrapper
     return test_case

@@ -31,20 +31,51 @@ class Events(unittest.TestCase):
         time.sleep(WAIT_TIME)
 
     def get_latest_cursor(self):
-        cursor = self.account.events.latest_cursor(self.account)
+        cursor = self.account.events.latest_cursor()
         if isinstance(cursor, dict):
             raise self.failureException("Unable to get latest cursor: %s" % cursor)
         return cursor
 
-    def get_most_recent_event(self, cursor=0):
+    def get_most_recent_events(self, cursor=0, return_one=False):
         self.update_events()
         events = self.account.events.all(cursor=cursor)
         while events.remaining:
             events = self.account.events.all(cursor=events.cursor)
         if events:
-            return events[-1]
+            if return_one:
+                return events[-1]
+            else:
+                return events
         else:
             raise self.failureException('No events found in the event stream.')
+
+    @staticmethod
+    def _get_nested_dict_value(dictionary, keys):
+        """
+        Returns a nested value in a dictionary using a list of keys.
+        """
+        for i, key in enumerate(keys):
+            if i + 1 == len(keys):
+                return dictionary[key]
+            else:
+                dictionary = dictionary[key]
+
+    def filter_events(self, events, filter_dict, expect_one=False):
+        """
+        Returns only events matching the filter_dict.
+        Nested values are separated by `.` (e.g. `metadata.id`)
+        If expect_one is True, checks to see if only one event passes
+         the filter and returns the single event.
+        """
+        events_to_return = events
+        for k, v in filter_dict.iteritems():
+            events_to_return = ([event for event in events_to_return if
+                self._get_nested_dict_value(event, k.split('.')) == v])
+        if expect_one:
+            self.assertEqual(len(events_to_return), 1)
+            if events_to_return:
+                return events_to_return[0]
+        return events_to_return
 
     # PARAMETER TESTS
 
@@ -63,29 +94,49 @@ class Events(unittest.TestCase):
     def test_get_latest_cursor(self):
         self.assertIsInstance(self.cursor, int)
 
+    # def test_event_order(self):
+    #     events = self.get_most_recent_events()
+    #     last_modified = events[0]['modified']
+    #     for event in events[1:]:
+    #         current_modified = event['modified']
+    #         self.assertGreaterEqual(last_modified, current_modified)
+    #         last_modified = current_modified
+
     ###############
     # NORMAL EVENTS
     ###############
 
     # ADD
     def test_add(self):
-        event = self.get_most_recent_event(self.cursor)
-        self.assertEqual(event.metadata.id, self.file.id)
-        self.assertEqual(event.type, 'add')
+        events = self.get_most_recent_events(self.cursor)
+        event_filter = {
+                'metadata.id': self.file.id,
+                'type': 'add',
+                }
+        event = self.filter_events(events, event_filter, expect_one=True)
+        if event:
+            self.assertEqual(event.metadata.id, self.file.id)
+            self.assertEqual(event.type, 'add')
 
     # DELETE
     def test_delete(self):
         file_id = self.file.id
         self.file.delete(permanent=True)
-        event = self.get_most_recent_event(self.cursor)
-        self.assertEqual(event.metadata.id, file_id)
-        self.assertEqual(event.type, 'delete')
+        events = self.get_most_recent_events(self.cursor)
+        event_filter = {
+                'metadata.id': self.file.id,
+                'type': 'delete',
+                }
+        event = self.filter_events(events, event_filter, expect_one=True)
+        if event:
+            self.assertEqual(event.metadata.id, file_id)
+            self.assertEqual(event.type, 'delete')
 
     # Commented out until Python SDK supports file updates.
     # # UPDATE
     # def test_update(self):
     #     # TODO: Update the file
-    #     event = self.get_most_recent_event()
+    #     event = self.get_most_recent_events(self.cursor, return_one=True)
     #     self.assertEqual(event.metadata.id, self.file.id)
     #     self.assertEqual(event.type, 'update')
 
@@ -94,17 +145,29 @@ class Events(unittest.TestCase):
     def test_rename(self):
         self.file.name = 'renamed-file.txt'
         self.file.save()
-        event = self.get_most_recent_event(self.cursor)
-        self.assertEqual(event.metadata.id, self.file.id)
-        self.assertEqual(event.type, 'rename')
+        events = self.get_most_recent_events(self.cursor)
+        event_filter = {
+                'metadata.id': self.file.id,
+                'type': 'rename',
+                }
+        event = self.filter_events(events, event_filter, expect_one=True)
+        if event:
+            self.assertEqual(event.metadata.id, self.file.id)
+            self.assertEqual(event.type, 'rename')
 
     # MOVE
     def test_move(self):
         self.file.parent_id = self.test_subfolder.id
         self.file.save()
-        event = self.get_most_recent_event(self.cursor)
-        self.assertEqual(event.metadata.id, self.file.id)
-        self.assertEqual(event.type, 'move')
+        events = self.get_most_recent_events(self.cursor)
+        event_filter = {
+                'metadata.id': self.file.id,
+                'type': 'move',
+                }
+        event = self.filter_events(events, event_filter, expect_one=True)
+        if event:
+            self.assertEqual(event.metadata.id, self.file.id)
+            self.assertEqual(event.type, 'move')
 
     ###################
     # TODO: ENTERPRISE EVENTS
