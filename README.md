@@ -170,16 +170,21 @@ in the environment. Here is a full list of environment variables that can
 be used to configure the tests:
 
 `API_KEY`: Required. The API Key to use.
+
 `DEV_KEY`: Required if testing the Management API. The Developer Key to use.
+
 `BASE_URL`: Optional. Defaults to 'https://api.kloudless.com'. Configures the
     base URL to use for tests.
+
 `SERVICES`: Optional. A comma-separated list of service names to restrict the
     services tested.
+
 `REQUESTS_CA_BUNDLE`: Optional. If pointing to a BASE_URL secured with a
     non-trusted root CA certificate, this environment variable can be pointed
     to the certificate to trust.
     See http://docs.python-requests.org/en/latest/user/advanced/#ssl-cert-verification
     for more information.
+
 `RUN_LONG_TESTS`: Optional. Defaults to a Falsey value. If Truthy, tests which
     take an extended period of time to run (due to waiting/sleeping), will be
     included.
@@ -187,7 +192,7 @@ be used to configure the tests:
 Examples:
 
 ```shell
-API_KEY='...'python test.py
+API_KEY='...' python test.py
 API_KEY='...' python test_cases/test_link.py
 API_KEY='...' SERVICES='dropbox' python test_cases/test_link.py
 API_KEY='...' SERVICES='dropbox,s3,box' python test.py
