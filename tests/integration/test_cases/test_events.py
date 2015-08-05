@@ -5,7 +5,13 @@ import utils
 import time
 
 # seconds to wait for find_recent to run
-WAIT_TIME = 1
+WAIT_TIME = 3
+
+CUSTOM_WAIT_TIMES = {
+    'sharepoint': 360,
+    'onedrivebiz': 120,
+    'box': 10,
+}
 
 SUPPORTED_SERVICES = ['dropbox', 'box', 'gdrive', 'skydrive', 'evernote',
                       'sharepoint', 'onedrivebiz', 'sharefile', 'egnyte',
@@ -16,6 +22,7 @@ class Events(unittest.TestCase):
     # Perform events on folder
     @classmethod
     def setUpClass(self):
+        self.wait_time = CUSTOM_WAIT_TIMES.get(self.account.service, WAIT_TIME)
         self.test_folder = utils.create_or_get_test_folder(self.account)
         self.test_subfolder = self.account.folders.create(
                 parent_id=self.test_folder.id, name='Test Events')
@@ -28,7 +35,7 @@ class Events(unittest.TestCase):
 
     def update_events(self):
         utils.trigger_find_recent(self.account)
-        time.sleep(WAIT_TIME)
+        time.sleep(self.wait_time)
 
     def get_latest_cursor(self):
         cursor = self.account.events.latest_cursor()
@@ -36,7 +43,7 @@ class Events(unittest.TestCase):
             raise self.failureException("Unable to get latest cursor: %s" % cursor)
         return cursor
 
-    def get_most_recent_events(self, cursor=0, return_one=False):
+    def get_most_recent_events(self, cursor=0, return_one=False, retry=2):
         self.update_events()
         events = self.account.events.all(cursor=cursor)
         while events.remaining:
@@ -47,7 +54,10 @@ class Events(unittest.TestCase):
             else:
                 return events
         else:
-            raise self.failureException('No events found in the event stream.')
+            if retry > 0:
+                return self.get_most_recent_events(cursor, return_one, retry-1)
+            raise self.failureException("No events found in the event stream "
+                    "using cursor %s." % cursor)
 
     @staticmethod
     def _get_nested_dict_value(dictionary, keys):
@@ -124,7 +134,7 @@ class Events(unittest.TestCase):
         self.file.delete(permanent=True)
         events = self.get_most_recent_events(self.cursor)
         event_filter = {
-                'metadata.id': self.file.id,
+                'id': self.file.id,
                 'type': 'delete',
                 }
         event = self.filter_events(events, event_filter, expect_one=True)
