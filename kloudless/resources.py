@@ -623,6 +623,22 @@ class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
 
     @classmethod
     @allow_proxy
+    def all(cls, parent_resource=None, configuration=None, **params):
+        response = request(cls._api_session.get, cls.list_path(parent_resource),
+                           configuration=configuration, params=params)
+        
+        response_json = response.json()
+        permissions = response_json.get('permissions')
+        for perm in permissions:
+            perm['type'] = 'permission'
+        response_json['permissions'] = permissions
+        data = cls.create_from_data(
+            response_json, parent_resource=parent_resource,
+            configuration=configuration)
+        return AnnotatedList(data)
+
+    @classmethod
+    @allow_proxy
     def create(cls, params=None, parent_resource=None, configuration=None, data=None):
         return super(Permission, cls).create(params=params, parent_resource=parent_resource,
                 configuration=configuration, method='put', data=data)
