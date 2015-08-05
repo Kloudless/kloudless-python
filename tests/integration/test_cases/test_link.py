@@ -54,7 +54,7 @@ class Link(unittest.TestCase):
         driver.get(self.link.url)
         driver.find_element_by_id('id_password').send_keys('testytest')
         driver.find_element_by_name('form-submit').click()
-        self.assertFalse('developers.kloudless.com' in driver.current_url)
+        self.assertTrue('password entered is incorrect' not in driver.page_source)
         driver.close()
 
     def test_retrieve_link(self):
@@ -70,7 +70,7 @@ class Link(unittest.TestCase):
         driver.get(link.url)
         driver.find_element_by_id('id_password').send_keys('testytest')
         driver.find_element_by_name('form-submit').click()
-        self.assertFalse('developers.kloudless.com' in driver.current_url)
+        self.assertTrue('password entered is incorrect' not in driver.page_source)
         driver.close()
 
     def test_update_active_link(self):
