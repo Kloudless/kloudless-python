@@ -593,18 +593,18 @@ class Multipart(AccountBaseResource, CreateMixin, DeleteMixin):
     """
     _path_segment = 'multipart'
 
-    def upload_chunk(self, part_number=None, file_data='',
+    def upload_chunk(self, part_number=None, data='',
                      parent_resource=None, configuration=None, **params):
         """
         This handles uploading chunks of the file, after a multipart upload has
         been initiated.
         `part_number`
-        `file_data` can be either a string with file data in it or a file-like object.
+        `data` can be either a string with file data in it or a file-like object.
         """
         params.update({'part_number': part_number})
-        files = {'file': file_data}
+        headers = {'Content-Type': 'application/octet-stream'}
         response = request(self._api_session.put, self.detail_path(),
-                           files=files, params=params,
+                           data=data, params=params, headers=headers,
                            configuration=configuration)
         return True
 
