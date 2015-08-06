@@ -13,6 +13,8 @@ CUSTOM_WAIT_TIMES = {
     'box': 10,
 }
 
+LIMITED_EVENTS_SERVICES = ['gdrive']
+
 SUPPORTED_SERVICES = ['dropbox', 'box', 'gdrive', 'skydrive', 'evernote',
                       'sharepoint', 'onedrivebiz', 'sharefile', 'egnyte',
                       'cmis', 'alfresco', 'salesforce', 'hubspot']
@@ -74,13 +76,16 @@ class Events(unittest.TestCase):
         """
         Returns only events matching the filter_dict.
         Nested values are separated by `.` (e.g. `metadata.id`)
+        Possible values are given in lists: ['possible', 'values']
         If expect_one is True, checks to see if only one event passes
          the filter and returns the single event.
         """
         events_to_return = events
         for k, v in filter_dict.iteritems():
+            if isinstance(v, str):
+                v = [v]
             events_to_return = ([event for event in events_to_return if
-                self._get_nested_dict_value(event, k.split('.')) == v])
+                self._get_nested_dict_value(event, k.split('.')) in v])
         if expect_one:
             self.assertEqual(len(events_to_return), 1)
             if events_to_return:
@@ -131,7 +136,7 @@ class Events(unittest.TestCase):
     # DELETE
     def test_delete(self):
         file_id = self.file.id
-        self.file.delete(permanent=True)
+        resp = self.file.delete()
         events = self.get_most_recent_events(self.cursor)
         event_filter = {
                 'id': self.file.id,
@@ -160,10 +165,15 @@ class Events(unittest.TestCase):
                 'metadata.id': self.file.id,
                 'type': 'rename',
                 }
+        if self.account.service in LIMITED_EVENTS_SERVICES:
+            event_filter['type'] = 'add'
         event = self.filter_events(events, event_filter, expect_one=True)
         if event:
             self.assertEqual(event.metadata.id, self.file.id)
-            self.assertEqual(event.type, 'rename')
+            if self.account.service in LIMITED_EVENTS_SERVICES:
+                self.assertEqual(event.type, 'add')
+            else:
+                self.assertEqual(event.type, 'rename')
 
     # MOVE
     def test_move(self):
@@ -174,10 +184,15 @@ class Events(unittest.TestCase):
                 'metadata.id': self.file.id,
                 'type': 'move',
                 }
+        if self.account.service in LIMITED_EVENTS_SERVICES:
+            event_filter['type'] = 'add'
         event = self.filter_events(events, event_filter, expect_one=True)
         if event:
             self.assertEqual(event.metadata.id, self.file.id)
-            self.assertEqual(event.type, 'move')
+            if self.account.service in LIMITED_EVENTS_SERVICES:
+                self.assertEqual(event.type, 'add')
+            else:
+                self.assertEqual(event.type, 'move')
 
     ###################
     # TODO: ENTERPRISE EVENTS
