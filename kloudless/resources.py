@@ -722,6 +722,10 @@ class Application(BaseResource, ReadMixin, WriteMixin, Proxy):
     def apikeys(self):
         return self._get_proxy('apikey')
 
+    @property
+    def webhooks(self):
+        return self._get_proxy('webhook')
+
 class ApplicationBaseResource(BaseResource):
     _parent_resource_class = Application
 
@@ -744,6 +748,15 @@ class ApiKey(ApplicationBaseResource, ListMixin, CreateMixin, DeleteMixin):
                              "is unknown.")
         return "%s/%s" % (self.list_path(self._parent_resource), self['key'])
 
+class WebHook(ApplicationBaseResource, ListMixin, CreateMixin, RetrieveMixin, DeleteMixin):
+    _path_segment = 'webhooks'
+
+    def detail_path(self):
+        if not self['id']:
+            raise KException("The detail_path cannot be obtained since the id "
+                             "is unknown.")
+        return "%s/%s" % (self.list_path(self._parent_resource), self['id'])
+
 resources = {
     'account': Account,
     'file': File,
@@ -760,5 +773,6 @@ resources = {
     'group': Group,
     'application': Application,
     'apikey': ApiKey,
+    'webhook': WebHook,
     }
 resource_types = {v:k for k,v in resources.iteritems()}
