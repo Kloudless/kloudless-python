@@ -2,6 +2,12 @@ import kloudless
 import unittest
 import os
 import random
+
+# Add parent dir to path to import utils
+import sys
+sys.path.insert(0,
+    os.path.abspath(os.path.join(os.path.dirname(__file__),
+        '..')))
 from test_cases import utils
 
 class Application(unittest.TestCase):
