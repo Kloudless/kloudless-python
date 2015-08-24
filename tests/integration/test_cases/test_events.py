@@ -35,6 +35,9 @@ class Events(unittest.TestCase):
         self.cursor = self.get_latest_cursor()
         self.file = utils.create_test_file(self.account, folder=self.test_folder)
 
+    def tearDown(self):
+        self.file.delete()
+
     def update_events(self):
         utils.trigger_find_recent(self.account)
         time.sleep(self.wait_time)
@@ -144,7 +147,7 @@ class Events(unittest.TestCase):
                 }
         event = self.filter_events(events, event_filter, expect_one=True)
         if event:
-            self.assertEqual(event.metadata.id, file_id)
+            self.assertEqual(event.id, file_id)
             self.assertEqual(event.type, 'delete')
 
     # Commented out until Python SDK supports file updates.

@@ -324,7 +324,7 @@ class ResourceProxy(object):
     that is present on the underlying model, we attempt to call
     the underlying model. This is useful because resources can add in
     parameters like the parent_resource if it has not been specified yet.
-   The Account resource does this.
+    The Account resource does this.
     """
 
     def __init__(self, klass, parent_resource=None, configuration=None):
