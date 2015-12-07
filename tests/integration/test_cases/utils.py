@@ -64,10 +64,13 @@ def get_account_for_each_service():
     services_to_exclude = []
     accounts = []
     services_to_include = os.environ.get('SERVICES', '').split(',')
+    accounts_to_include = os.environ.get('ACCOUNTS', '').split(',')
     for acc in kloudless.Account.all(active=True, page_size=100):
         if acc.service in services_to_exclude:
             continue
         if any(services_to_include) and acc.service not in services_to_include:
+            continue
+        if any(accounts_to_include) and str(acc.id) not in accounts_to_include:
             continue
         accounts.append(acc)
         services_to_exclude.append(str(acc.service))

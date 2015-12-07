@@ -179,6 +179,9 @@ be used to configure the tests:
 `SERVICES`: Optional. A comma-separated list of service names to restrict the
     services tested.
 
+`ACCOUNTS`: Optional. A comma-separated list of account IDs to restrict the
+    accounts tested.
+
 `REQUESTS_CA_BUNDLE`: Optional. If pointing to a BASE_URL secured with a
     non-trusted root CA certificate, this environment variable can be pointed
     to the certificate to trust.
