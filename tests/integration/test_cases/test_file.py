@@ -10,6 +10,7 @@ class File(unittest.TestCase):
 
     # need to perform CRUD on existing file
     def setUp(self):
+        self.folder = utils.create_or_get_test_folder(self.account)
         self.file = utils.create_test_file(self.account)
 
     # delete test folder
@@ -19,6 +20,12 @@ class File(unittest.TestCase):
     # CREATE
     def test_create_file(self):
         self.assertEqual(self.file.account, self.account.id)
+        new_file = utils.create_test_file(self.account, file_data='test data1',
+                                          overwrite=False)
+        self.assertNotEqual(self.file.name, new_file.name)
+        new_file = utils.create_test_file(self.account, file_data='test data2',
+                                          overwrite=True)
+        self.assertEqual(self.file.name, new_file.name)
 
     # Read
     def test_read_file(self):
@@ -36,11 +43,36 @@ class File(unittest.TestCase):
         self.assertTrue(hasattr(read_file, 'mime_type'))
         self.assertTrue(hasattr(read_file, 'downloadable'))
 
-    # Update [rename/move]
-    def test_patch_file(self):
-        update_file = self.file.save(name='test-rename.txt')
-        read_file = self.account.files.retrieve(self.file.id)
+    # Rename, Move and Copy
+    def test_rename_file(self):
+        new_name = 'renamed %s' % self.file.name
+        self.file.name = new_name
+        self.assertTrue(self.file.save())
+        self.assertEqual(self.file.name, new_name)
         self.assertEqual(self.file.account, self.account.id)
+
+    def test_move_file(self):
+        new_name = 'moved %s' % self.file.name
+        folder1 = self.account.folders.create(parent_id=self.folder.id,
+                                              name='folder1')
+        self.assertTrue(utils.is_folder_present('folder1', self.folder))
+        self.file.parent_id = folder1.id
+        self.file.name = new_name
+        self.assertTrue(self.file.name, new_name)
+        self.assertTrue(self.file.save())
+        self.assertFalse(utils.is_file_present(self.file.name, self.folder))
+        self.assertTrue(utils.is_file_present(self.file.name, folder1))
+
+    def test_copy_file(self):
+        new_name = 'copied %s' % self.file.name
+        folder1 = self.account.folders.create(parent_id=self.folder.id,
+                                              name='folder1')
+        self.assertTrue(utils.is_folder_present('folder1', self.folder))
+        new_file = self.file.copy_file(parent_id=folder1.id, name=new_name)
+        self.assertTrue(new_file)
+        self.assertTrue(new_file.name, new_name)
+        self.assertTrue(utils.is_file_present(self.file.name, self.folder))
+        self.assertTrue(utils.is_file_present(new_file.name, folder1))
 
     # Update [update contents]
     def test_put_file(self):

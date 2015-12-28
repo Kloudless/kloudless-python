@@ -62,6 +62,9 @@ class Recent(unittest.TestCase):
         with self.assertRaises(kloudless.exceptions.APIException) as e:
             self.account.recent.all(page_size=1, page=length+1)
 
+    def test_bad_after_timestamp(self):
+        self.assertEqual(self.account.recent.all(after="00/00/00"), [])
+
     def test_after_timestamp(self):
         acc = self.account
         test_file_4 = utils.create_test_file(acc, file_name='recent4.txt',
@@ -69,17 +72,13 @@ class Recent(unittest.TestCase):
         after = test_file_4.modified
         test_file_5 = utils.create_test_file(acc, file_name='recent5.txt',
             file_data=str(random.random()))
-        time.sleep(0.5)
+        time.sleep(2)
         results = acc.recent.all(after=after)
         self.assertEqual(len(results), 1)
         self.assertGreaterEqual(results[0].modified, after)
 
         results = acc.recent.all(after=test_file_5.modified)
         self.assertEqual(results, [])
-
-    def test_bad_after_timestamp(self):
-        self.assertEqual(self.account.recent.all(after="00/00/00"), [])
-
 
 if __name__ == '__main__':
     suite = utils.create_suite([utils.create_test_case(acc, Recent) for acc in utils.accounts])

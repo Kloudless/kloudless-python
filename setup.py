@@ -20,7 +20,7 @@ install_requires=[
     ]
 
 test_requires = [
-    'selenium>=2.0',
+    'selenium>=2.48.0',
     'pytz>=2013d',
 ]
 

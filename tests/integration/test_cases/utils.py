@@ -18,15 +18,15 @@ kloudless.configure(api_key=API_KEY, dev_key=DEV_KEY, base_url=BASE_URL)
 test_folders = {}
 test_list = []
 def create_or_get_test_folder(account, parent_id='root', name=None):
-    if account.service in test_folders:
-        return test_folders[account.service]
+    if account.id in test_folders:
+        return test_folders[account.id]
     if not name:
         name = u't\xe9stFolder %s' % random.randint(0, 10**8)
         storeFolder = True
     new_folder = None
     folder = account.folders.retrieve(id=parent_id)
     stack = [folder]
-    test_folders[account.service] = folder
+    test_folders[account.id] = folder
     while stack:
         folder_to_check = stack.pop(0)
         if folder_to_check.can_create_folders:
@@ -39,19 +39,25 @@ def create_or_get_test_folder(account, parent_id='root', name=None):
     if new_folder is None:
         raise KException('Cannot find parent folder to create test folder')
     if storeFolder:
-        test_folders[account.service] = new_folder
+        test_folders[account.id] = new_folder
     return new_folder
 
 def create_test_file(account, folder=None, file_name=u't\xe9st file.txt',
-                     file_data='test'):
+                     file_data='test', overwrite=True):
     if not folder:
         folder = create_or_get_test_folder(account)
     return account.files.create(file_name=file_name, parent_id=folder.id,
-                                file_data=file_data, overwrite=True)
+                                file_data=file_data, overwrite=overwrite)
+
+def is_resource_present(resource_type, resource_name, parent_folder):
+    contents = parent_folder.contents()
+    return resource_name in [f.name for f in contents if f.type == resource_type]
+
+def is_file_present(file_name, parent_folder):
+    return is_resource_present('file', file_name, parent_folder)
 
 def is_folder_present(folder_name, parent_folder):
-  contents = parent_folder.contents()
-  return folder_name in [f.name for f in contents if f.type == 'folder']
+    return is_resource_present('folder', folder_name, parent_folder)
 
 def trigger_find_recent(account):
     """
@@ -168,7 +174,7 @@ def order(func):
 
 @classmethod
 def clean_up(cls):
-    if cls.account.service in test_folders:
-        test_folders[cls.account.service].delete(recursive=True)
-        del test_folders[cls.account.service]
+    if cls.account.id in test_folders:
+        test_folders[cls.account.id].delete(recursive=True)
+        del test_folders[cls.account.id]
 

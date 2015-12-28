@@ -5,7 +5,7 @@ import utils
 import time
 
 # seconds to wait for find_recent to run
-WAIT_TIME = 3
+WAIT_TIME = 10
 
 CUSTOM_WAIT_TIMES = {
     'sharepoint': 360,
@@ -36,7 +36,8 @@ class Events(unittest.TestCase):
         self.file = utils.create_test_file(self.account, folder=self.test_folder)
 
     def tearDown(self):
-        self.file.delete()
+        if self.file:
+            self.file.delete()
 
     def update_events(self):
         utils.trigger_find_recent(self.account)
@@ -138,11 +139,14 @@ class Events(unittest.TestCase):
 
     # DELETE
     def test_delete(self):
+        self.update_events()
+        self.cursor = self.get_latest_cursor()
         file_id = self.file.id
-        resp = self.file.delete()
+        self.file.delete()
+        self.file = None # To prevent tearDown from erroring.
         events = self.get_most_recent_events(self.cursor)
         event_filter = {
-                'id': self.file.id,
+                'id': file_id,
                 'type': 'delete',
                 }
         event = self.filter_events(events, event_filter, expect_one=True)
@@ -159,8 +163,11 @@ class Events(unittest.TestCase):
     #     self.assertEqual(event.type, 'update')
 
 
+
     # RENAME
     def test_rename(self):
+        self.update_events()
+        self.cursor = self.get_latest_cursor()
         self.file.name = 'renamed-file.txt'
         self.file.save()
         events = self.get_most_recent_events(self.cursor)
@@ -180,6 +187,8 @@ class Events(unittest.TestCase):
 
     # MOVE
     def test_move(self):
+        self.update_events()
+        self.cursor = self.get_latest_cursor()
         self.file.parent_id = self.test_subfolder.id
         self.file.save()
         events = self.get_most_recent_events(self.cursor)

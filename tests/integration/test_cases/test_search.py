@@ -23,7 +23,7 @@ class Search(unittest.TestCase):
         self.assertEqual(self.account.search.all(q='asdfghjkl'), [])
 
     def test_empty_str_search(self):
-        with self.assertRaises(kloudless.exceptions.APIException) as e:
+        with self.assertRaises(kloudless.exceptions.APIException) as cm:
             self.account.search.all(q='')
 
     @utils.skip_long_test(services=['box'])

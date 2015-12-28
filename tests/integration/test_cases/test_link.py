@@ -78,13 +78,13 @@ class Link(unittest.TestCase):
         self.link.save(file_id=self.test_file.id)
         r = requests.get(self.link.url)
         self.assertFalse(self.link.active)
-        self.assertTrue('deactivated' in r.text)
+        self.assertIn(r.status_code, [403, 404])
 
     def test_update_expired_link(self):
-        self.link.expiration = datetime.datetime.now().isoformat()
+        self.link.expiration = datetime.datetime.utcnow().isoformat()
         self.link.save(file_id=self.test_file.id)
         r = requests.get(self.link.url)
-        self.assertTrue('expired' in r.text)
+        self.assertIn(r.status_code, [403, 404])
 
 if __name__ == '__main__':
     suite = utils.create_suite([utils.create_test_case(acc, Link) for acc in utils.accounts])

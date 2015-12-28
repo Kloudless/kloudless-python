@@ -585,7 +585,7 @@ class Events(AccountBaseResource, ListMixin):
         else:
             return data
 
-class Multipart(AccountBaseResource, CreateMixin, DeleteMixin):
+class Multipart(AccountBaseResource, RetrieveMixin, CreateMixin, DeleteMixin):
     """
     Multipart Uploads.
     Create the multipart upload first, prior to uploading chunks of data.
