@@ -462,6 +462,34 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
     def groups(self):
         return self._get_proxy('group')
 
+    @property
+    def crm_objects(self):
+        return self._get_proxy('crm_object')
+
+    @property
+    def crm_accounts(self):
+        return self._get_proxy('crm_account')
+
+    @property
+    def crm_contacts(self):
+        return self._get_proxy('crm_contacts')
+
+    @property
+    def crm_leads(self):
+        return self._get_proxy('crm_lead')
+
+    @property
+    def crm_opportunities(self):
+        return self._get_proxy('crm_opportunity')
+
+    @property
+    def crm_campaigns(self):
+        return self._get_proxy('crm_campaign')
+
+    @property
+    def crm_tasks(self):
+        return self._get_proxy('crm_task')
+
 
 class AccountBaseResource(BaseResource):
     _parent_resource_class = Account
@@ -766,6 +794,84 @@ class Group(AccountBaseResource, ReadMixin):
         return AnnotatedList(data)
 
 
+class CRMObject(AccountBaseResource, ListMixin, CreateMixin, RetrieveMixin,
+                UpdateMixin, DeleteMixin):
+    _path_segment = 'crm/objects'
+    raw_type = None
+
+    def __init__(self, *args, **kwargs):
+        super(CRMObject, self).__init__(*args, **kwargs)
+
+    @classmethod
+    @allow_proxy
+    def all(cls, parent_resource=None, configuration=None, **params):
+        if cls.raw_type is not None:
+            params['raw_type'] = cls.raw_type
+        return super(CRMObject, cls).all(parent_resource=parent_resource,
+                                         configuration=configuration, **params)
+
+    @classmethod
+    @allow_proxy
+    def create(cls, params=None, parent_resource=None, configuration=None,
+               method='post', data=None, **deprecated_data):
+        if cls.raw_type is not None:
+            params['raw_type'] = cls.raw_type
+        return super(CRMObject, cls).create(parent_resource=parent_resource,
+                                            configuration=configuration,
+                                            method=method, data=data, **params)
+
+    @classmethod
+    @allow_proxy
+    def retrieve(cls, id, parent_resource=None, configuration=None, **params):
+        if cls.raw_type is not None:
+            params['raw_type'] = cls.raw_type
+        return super(CRMObject, cls).retrieve(id,
+                                              parent_resource=parent_resource,
+                                              configuration=configuration,
+                                              **params)
+
+    def save(self, **params):
+        # TODO: change serializer
+        if self.raw_type is not None:
+            params['raw_type'] = self.raw_type
+        return super(CRMObject, self).save(**params)
+
+    def delete(self, **params):
+        if self.raw_type is not None:
+            params['raw_type'] = self.raw_type
+        return super(CRMObject, self).delete(**params)
+
+
+class CRMAccount(CRMObject):
+    _path_segment = 'crm/accounts'
+    raw_type = 'Account'
+
+
+class CRMContact(CRMObject):
+    _path_segment = 'crm/contacts'
+    raw_type = 'Contact'
+
+
+class CRMLead(CRMObject):
+    _path_segment = 'crm/leads'
+    raw_type = 'Lead'
+
+
+class CRMOpportunity(CRMObject):
+    _path_segment = 'crm/opportunities'
+    raw_type = 'Opportunity'
+
+
+class CRMCampaign(CRMObject):
+    _path_segment = 'crm/campaigns'
+    raw_type = 'Campaign'
+
+
+class CRMTask(CRMObject):
+    _path_segment = 'crm/tasks'
+    raw_type = 'Task'
+
+
 class Application(BaseResource, ReadMixin, WriteMixin, Proxy):
 
     def __init__(self, *args, **kwargs):
@@ -835,5 +941,13 @@ resources = {
     'application': Application,
     'apikey': ApiKey,
     'webhook': WebHook,
-    }
+    # CRM Endpoint
+    'crm_object': CRMObject,
+    'crm_account': CRMAccount,
+    'crm_contact': CRMContact,
+    'crm_lead': CRMLead,
+    'crm_opportunity': CRMOpportunity,
+    'crm_campaign': CRMCampaign,
+    'crm_task': CRMTask,
+}
 resource_types = {v: k for k, v in resources.iteritems()}
