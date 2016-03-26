@@ -4,22 +4,30 @@ from . import exceptions
 
 import functools
 import json
+from abc import ABCMeta, abstractproperty
 
-class APIKeyAuth(object):
-    def __init__(self, api_key):
-        self.api_key = api_key
+class BaseAuth:
+    __metaclass__ = ABCMeta
+
+    scheme = abstractproperty()
+
+    def __init__(self, key):
+        self.key = key
 
     def __call__(self, request):
-        request.headers['Authorization'] = 'ApiKey %s' % self.api_key
+        request.headers['Authorization'] = '%s %s' % (self.scheme, self.key)
         return request
+
+class APIKeyAuth(BaseAuth):
+    scheme = 'APIKey'
 
 class DevKeyAuth(object):
-    def __init__(self, dev_key):
-        self.dev_key = dev_key
+    scheme = 'DeveloperKey'
 
-    def __call__(self, request):
-        request.headers['Authorization'] = 'DeveloperKey %s' % self.dev_key
-        return request
+class BearerTokenAuth(object):
+    scheme = 'Bearer'
+
+_get_requestor = functools.partial
 
 def request(method, path, configuration=None, **kwargs):
     if configuration is None: configuration = {}
@@ -35,15 +43,17 @@ def request(method, path, configuration=None, **kwargs):
 
         kwargs['auth'] = DevKeyAuth(configuration['dev_key'])
     
-    else:
-        if not configuration['api_key']:
-            raise exceptions.ConfigurationException(
-                "An API Key must be provided. You can get one at "
-                "https://developers.kloudless.com and set it by calling "
-                "'kloudless.configure(api_key=\"API_KEY\")' prior to making "
-                "requests.")
-
+    elif configuration['api_key']:
         kwargs['auth'] = APIKeyAuth(configuration['api_key'])
+    elif configuration['token']:
+        kwargs['auth'] = BearerTokenAuth(configuration['token'])
+    else:
+        raise exceptions.ConfigurationException(
+            "An API Key or Bearer Token must be provided. You can get an API Key at "
+            "https://developers.kloudless.com and set it by calling "
+            "'kloudless.configure(api_key=\"API_KEY\")' prior to making "
+            "requests. You can get a Bearer token by authenticating an account and "
+            "set it by calling 'kloudless.configure(token=\"TOKEN\")' as well.")
 
     url = "%s/v%s/%s" % (configuration['base_url'],
                          configuration['api_version'],
