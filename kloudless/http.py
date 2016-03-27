@@ -16,7 +16,7 @@ class BaseAuth:
 
     @property
     def auth_header(self):
-        '%s %s' % (self.scheme, self.key)
+        return '%s %s' % (self.scheme, self.key)
 
     def __call__(self, request):
         request.headers['Authorization'] = self.auth_header

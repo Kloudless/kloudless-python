@@ -3,8 +3,14 @@ import os
 import requests
 import datetime
 import time
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
+
+skipSeleniumTests = None
+try:
+    from selenium import webdriver
+    from selenium.webdriver.common.keys import Keys
+except ImportError:
+    skipSeleniumTests = lambda: unittest.skipTest(
+        "Selenium not installed.")
 
 import utils
 import sdk
@@ -49,6 +55,9 @@ class Link(unittest.TestCase):
             self.assertTrue(link.active)
 
     def test_create_password_link(self):
+        if skipSeleniumTests:
+            skipSeleniumTests()
+
         self.link = self.account.links.create(file_id=self.test_file.id, password='testytest')
         self.assertTrue(self.link.password)
         driver = webdriver.Firefox()
@@ -63,6 +72,9 @@ class Link(unittest.TestCase):
         self.assertEqual(self.link.id, retrieved.id)
 
     def test_update_password_link(self):
+        if skipSeleniumTests:
+            skipSeleniumTests()
+
         self.link.password = 'testytest'
         current_time = datetime.datetime.now().isoformat()
         self.link.save(file_id=self.test_file.id)
