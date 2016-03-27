@@ -14,8 +14,12 @@ class BaseAuth:
     def __init__(self, key):
         self.key = key
 
+    @property
+    def auth_header(self):
+        '%s %s' % (self.scheme, self.key)
+
     def __call__(self, request):
-        request.headers['Authorization'] = '%s %s' % (self.scheme, self.key)
+        request.headers['Authorization'] = self.auth_header
         return request
 
 class APIKeyAuth(BaseAuth):
