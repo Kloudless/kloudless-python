@@ -53,6 +53,9 @@ class WebHook(unittest.TestCase):
         webhooks = self.app.webhooks.all()
         self.assertEqual(len(webhooks), 0)
 
+def test_cases():
+    return [WebHook]
+
 if __name__ == '__main__':
-    suite = utils.create_suite([WebHook])
+    suite = utils.create_suite(test_cases())
     unittest.TextTestRunner(verbosity=2).run(suite)

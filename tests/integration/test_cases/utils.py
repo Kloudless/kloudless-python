@@ -4,6 +4,7 @@ import os
 import time
 import sys
 import imp
+from functools import wraps
 
 # To handle package name changes
 curdir = os.path.dirname(os.path.realpath(__file__))
@@ -153,6 +154,7 @@ def accounts_wide(func):
     Decorator to indicate that the test case should only be run once across
     all accounts.
     """
+    @wraps(func)
     def test_case(*args, **kwargs):
         if test_case._already_ran:
             raise unittest.SkipTest('Reason: test already ran once.')
@@ -166,6 +168,7 @@ def skip_long_test(services=[]):
     Decorator to determine whether to run long tests or not.
     """
     def test_case(func):
+        @wraps(func)
         def test_case_wrapper(*args, **kwargs):
             self = args[0]
             if ((not hasattr(self, 'account') or self.account.service in services) and

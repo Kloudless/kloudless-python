@@ -8,7 +8,7 @@ from management_api import *
 
 os.environ.setdefault('REQUESTS_CA_BUNDLE', os.path.join(os.path.abspath(os.path.dirname('..')), 'kloudless.ca.crt'))
 
-def collect_test_cases():
+def test_cases():
     test_classes = []
     for m in sys.modules.keys():
       if '.test_' in m:
@@ -30,6 +30,5 @@ def collect_test_cases():
     return cases
 
 if __name__ == '__main__':
-    cases = collect_test_cases()
-    suite = utils.create_suite(cases)
+    suite = utils.create_suite(test_cases())
     unittest.TextTestRunner(verbosity=2).run(suite)

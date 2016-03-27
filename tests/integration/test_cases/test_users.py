@@ -37,6 +37,9 @@ class Users(unittest.TestCase):
             for group in groups:
                 self.assertIsInstance(group, sdk.resources.Group)
 
+def test_cases():
+    return [utils.create_test_case(acc, Users) for acc in utils.accounts]
+
 if __name__ == '__main__':
-    suite = utils.create_suite([utils.create_test_case(acc, Users) for acc in utils.accounts])
+    suite = utils.create_suite(test_cases())
     unittest.TextTestRunner(verbosity=2).run(suite)

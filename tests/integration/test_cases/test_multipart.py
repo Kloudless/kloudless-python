@@ -75,6 +75,9 @@ class Multipart(unittest.TestCase):
         self.assertIsInstance(overwrite_file_result, sdk.resources.File)
         self.assertNotEqual(file_result.name, no_overwrite_file_result.name)
 
+def test_cases():
+    return [utils.create_test_case(acc, Multipart) for acc in utils.accounts]
+
 if __name__ == '__main__':
-    suite = utils.create_suite([utils.create_test_case(acc, Multipart) for acc in utils.accounts])
+    suite = utils.create_suite(test_cases())
     unittest.TextTestRunner(verbosity=2).run(suite)

@@ -42,6 +42,9 @@ class APIKey(unittest.TestCase):
         keys = self.app.apikeys.all()
         self.assertEqual(len(keys), 0)
 
+def test_cases():
+    return [APIKey]
+
 if __name__ == '__main__':
-    suite = utils.create_suite([APIKey])
+    suite = utils.create_suite(test_cases())
     unittest.TextTestRunner(verbosity=2).run(suite)

@@ -212,7 +212,10 @@ class Events(unittest.TestCase):
     # Need the Python SDK to support enterprise actions.
     ###################
 
+def test_cases():
+    return [utils.create_test_case(acc, Events) for
+            acc in utils.accounts if acc.service in SUPPORTED_SERVICES]
+
 if __name__ == '__main__':
-    suite = utils.create_suite(([utils.create_test_case(acc, Events) for
-            acc in utils.accounts if acc.service in SUPPORTED_SERVICES]))
+    suite = utils.create_suite(test_cases())
     unittest.TextTestRunner(verbosity=2).run(suite)

@@ -99,6 +99,9 @@ class Link(unittest.TestCase):
         r = requests.get(self.link.url)
         self.assertIn(r.status_code, [403, 404])
 
+def test_cases():
+    return [utils.create_test_case(acc, Link) for acc in utils.accounts]
+
 if __name__ == '__main__':
-    suite = utils.create_suite([utils.create_test_case(acc, Link) for acc in utils.accounts])
+    suite = utils.create_suite(test_cases())
     unittest.TextTestRunner(verbosity=2).run(suite)

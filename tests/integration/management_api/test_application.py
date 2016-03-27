@@ -51,6 +51,9 @@ class Application(unittest.TestCase):
         self.assertEqual(app.description, description)
         self.assertEqual(app.name, name)
 
+def test_cases():
+    return [Application]
+
 if __name__ == '__main__':
-    suite = utils.create_suite([Application])
+    suite = utils.create_suite(test_cases())
     unittest.TextTestRunner(verbosity=2).run(suite)

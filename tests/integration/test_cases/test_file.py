@@ -144,6 +144,9 @@ class File(unittest.TestCase):
         properties = parse(self.file.properties.all())
         self.assertEqual(len(properties), 0)
 
+def test_cases():
+    return [utils.create_test_case(acc, File) for acc in utils.accounts]
+
 if __name__ == '__main__':
-    suite = utils.create_suite([utils.create_test_case(acc, File) for acc in utils.accounts])
+    suite = utils.create_suite(test_cases())
     unittest.TextTestRunner(verbosity=2).run(suite)
