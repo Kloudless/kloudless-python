@@ -1,7 +1,8 @@
-import kloudless
 import unittest
 import os
+
 import utils
+import sdk
 
 class Users(unittest.TestCase):
 
@@ -19,13 +20,13 @@ class Users(unittest.TestCase):
         self.assertTrue(self.users)
         self.assertGreater(len(self.users), 0)
         for user in self.users:
-            self.assertIsInstance(user, kloudless.resources.User)
+            self.assertIsInstance(user, sdk.resources.User)
 
     def test_retrieve_user(self):
         if self.not_admin():
             return
         user = self.account.users.retrieve(self.users[0].id)
-        self.assertEqual(type(user), kloudless.resources.User)
+        self.assertEqual(type(user), sdk.resources.User)
         self.assertEqual(user.id, self.users[0].id)
 
     def test_user_membership(self):
@@ -34,7 +35,7 @@ class Users(unittest.TestCase):
         for user in self.users:
             groups = user.get_groups()
             for group in groups:
-                self.assertIsInstance(group, kloudless.resources.Group)
+                self.assertIsInstance(group, sdk.resources.Group)
 
 if __name__ == '__main__':
     suite = utils.create_suite([utils.create_test_case(acc, Users) for acc in utils.accounts])

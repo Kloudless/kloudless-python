@@ -1,7 +1,8 @@
-import kloudless
 import unittest
 import os
+
 import utils
+import sdk
 
 allow_multipart = ['azure', 's3', 'dropbox', 'egnyte', 'gdrive', 'skydrive', 
                 'sharefile', 'sharepoint', 'onedrivebiz']
@@ -39,7 +40,7 @@ class Multipart(unittest.TestCase):
         
         # Complete
         file_result = multipart.complete()
-        self.assertIsInstance(file_result, kloudless.resources.File)
+        self.assertIsInstance(file_result, sdk.resources.File)
 
         # Folder Check
         if file_result.get('parent'):
@@ -64,14 +65,14 @@ class Multipart(unittest.TestCase):
         response = multipart.upload_chunk(part_number=1, data=os.urandom(self.chunk_size))
         self.assertTrue(response)
         overwrite_file_result = multipart.complete()
-        self.assertIsInstance(overwrite_file_result, kloudless.resources.File)
+        self.assertIsInstance(overwrite_file_result, sdk.resources.File)
         self.assertEqual(file_result.name, overwrite_file_result.name)
 
         multipart = acc.multipart.create(data=multipart_data, params={'overwrite': 'false'})
         response = multipart.upload_chunk(part_number=1, data=os.urandom(self.chunk_size))
         self.assertTrue(response)
         no_overwrite_file_result = multipart.complete()
-        self.assertIsInstance(overwrite_file_result, kloudless.resources.File)
+        self.assertIsInstance(overwrite_file_result, sdk.resources.File)
         self.assertNotEqual(file_result.name, no_overwrite_file_result.name)
 
 if __name__ == '__main__':

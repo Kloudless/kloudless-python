@@ -1,8 +1,8 @@
 import unittest
 import os
-import kloudless
 import inspect
 import sys
+
 from test_cases import *
 from management_api import *
 
@@ -31,6 +31,5 @@ if __name__ == '__main__':
         suite = utils.create_suite(management_cases)
         unittest.TextTestRunner(verbosity=2).run(suite)
     if utils.API_KEY:
-        kloudless.configure(base_url='https://api.kloudless.com')
         suite = utils.create_suite(cases)
         unittest.TextTestRunner(verbosity=2).run(suite)

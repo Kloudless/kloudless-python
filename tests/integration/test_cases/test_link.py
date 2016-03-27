@@ -1,12 +1,13 @@
-import kloudless
 import unittest
 import os
-import utils
 import requests
 import datetime
 import time
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+
+import utils
+import sdk
 
 class Link(unittest.TestCase):
 
@@ -35,7 +36,7 @@ class Link(unittest.TestCase):
         self.assertTrue(self.link.id in names)
 
     def test_create_bad_link(self):
-        with self.assertRaises(kloudless.exceptions.APIException) as e:
+        with self.assertRaises(sdk.exceptions.APIException) as e:
             self.link = self.account.links.create(file_id='bad_file_id')
 
     def test_list_links_page_size(self):

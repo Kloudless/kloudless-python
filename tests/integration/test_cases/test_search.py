@@ -1,9 +1,10 @@
-import kloudless
 import unittest
 import os
-import utils
 import random
 import time
+
+import utils
+import sdk
 
 class Search(unittest.TestCase):
 
@@ -23,7 +24,7 @@ class Search(unittest.TestCase):
         self.assertEqual(self.account.search.all(q='asdfghjkl'), [])
 
     def test_empty_str_search(self):
-        with self.assertRaises(kloudless.exceptions.APIException) as cm:
+        with self.assertRaises(sdk.exceptions.APIException) as cm:
             self.account.search.all(q='')
 
     @utils.skip_long_test(services=['box'])

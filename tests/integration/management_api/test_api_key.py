@@ -1,6 +1,6 @@
-import kloudless
 import unittest
 import os
+
 
 # Add parent dir to path to import utils
 import sys
@@ -8,12 +8,13 @@ sys.path.insert(0,
     os.path.abspath(os.path.join(os.path.dirname(__file__),
         '..')))
 from test_cases import utils
+import sdk
 
 class APIKey(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.app = kloudless.Application.create(name='test')
+        cls.app = sdk.Application.create(name='test')
 
     @classmethod
     def tearDownClass(cls):

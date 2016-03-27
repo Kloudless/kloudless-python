@@ -1,7 +1,8 @@
-import kloudless
 import unittest
 import os
+
 import utils
+import sdk
 
 class Keys(unittest.TestCase):
 
@@ -13,13 +14,13 @@ class Keys(unittest.TestCase):
     def test_list_keys(self):
         if self.keys:
             for key in self.keys:
-                self.assertIsInstance(key, kloudless.resources.Key)
+                self.assertIsInstance(key, sdk.resources.Key)
 
     def test_retrieve_key(self):
         if not self.keys:
             return
         key = self.account.keys.retrieve(self.keys[0].id)
-        self.assertIsInstance(key, kloudless.resources.Key)
+        self.assertIsInstance(key, sdk.resources.Key)
         self.assertEquals(self.keys[0].id, key.id)
 
 if __name__ == '__main__':

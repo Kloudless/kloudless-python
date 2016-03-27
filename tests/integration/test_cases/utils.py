@@ -1,10 +1,17 @@
-import kloudless
-from kloudless.exceptions import KloudlessException as KException
-
 import unittest
 import random
 import os
 import time
+import sys
+import imp
+
+# To handle package name changes
+curdir = os.path.dirname(os.path.realpath(__file__))
+setup = imp.load_source(
+    'setup', os.path.join(curdir, '..', '..', '..', 'setup.py'))
+sys.modules['sdk'] = __import__(setup.package_name)
+
+import sdk
 
 API_KEY = os.environ.get('API_KEY')
 DEV_KEY = os.environ.get('DEV_KEY')
@@ -12,7 +19,7 @@ BASE_URL = os.environ.get('BASE_URL')
 if not BASE_URL:
     BASE_URL = 'https://api.kloudless.com'
 
-kloudless.configure(api_key=API_KEY, dev_key=DEV_KEY, base_url=BASE_URL)
+sdk.configure(api_key=API_KEY, dev_key=DEV_KEY, base_url=BASE_URL)
 
 
 test_folders = {}
@@ -37,7 +44,8 @@ def create_or_get_test_folder(account, parent_id='root', name=None):
         # add at the beginning for a DFS / stack
         stack[0:0] = folders
     if new_folder is None:
-        raise KException('Cannot find parent folder to create test folder')
+        raise sdk.exceptions.KloudlessException(
+            'Cannot find parent folder to create test folder')
     if storeFolder:
         test_folders[account.id] = new_folder
     return new_folder
@@ -71,7 +79,7 @@ def get_account_for_each_service():
     accounts = []
     services_to_include = os.environ.get('SERVICES', '').split(',')
     accounts_to_include = os.environ.get('ACCOUNTS', '').split(',')
-    for acc in kloudless.Account.all(active=True, page_size=100):
+    for acc in sdk.Account.all(active=True, page_size=100):
         if acc.service in services_to_exclude:
             continue
         if any(services_to_include) and acc.service not in services_to_include:

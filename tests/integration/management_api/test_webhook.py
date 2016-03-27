@@ -1,4 +1,3 @@
-import kloudless
 import unittest
 import os
 import time
@@ -9,12 +8,13 @@ sys.path.insert(0,
     os.path.abspath(os.path.join(os.path.dirname(__file__),
         '..')))
 from test_cases import utils
+import sdk
 
 class WebHook(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.app = kloudless.Application.create(name='testApp')
+        cls.app = sdk.Application.create(name='testApp')
         cls.app.apikeys.create()
         cls.app_id = cls.app.id
         cls.url = "https://kloudless-webhooks-receiver.herokuapp.com?app_id=%s" % cls.app_id

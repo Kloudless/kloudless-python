@@ -1,7 +1,8 @@
-import kloudless
 import unittest
-import utils
 import os
+
+import utils
+import sdk
 
 class Folder(unittest.TestCase):
 
@@ -25,7 +26,7 @@ class Folder(unittest.TestCase):
             params={'conflict_if_exists': 'false'})
         self.assertEqual(new_folder.name, folder_name)
 
-        with self.assertRaises(kloudless.exceptions.KloudlessException) as cm:
+        with self.assertRaises(sdk.exceptions.KloudlessException) as cm:
             acc.folders.create(
                 data={'parent_id': self.test_folder.id, 'name': folder_name},
                 params={'conflict_if_exists': 'true'})

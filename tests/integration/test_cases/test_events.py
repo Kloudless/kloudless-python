@@ -1,8 +1,9 @@
-import kloudless
 import unittest
 import os
-import utils
 import time
+
+import utils
+import sdk
 
 # seconds to wait for find_recent to run
 WAIT_TIME = 10
@@ -103,7 +104,7 @@ class Events(unittest.TestCase):
         self.assertEqual(len(events), 1)
 
     def test_event_invalid_page_size(self):
-        with self.assertRaises(kloudless.exceptions.APIException):
+        with self.assertRaises(sdk.exceptions.APIException):
             self.account.events.all(page_size=100000)
 
     def test_event_cursor(self):

@@ -1,10 +1,10 @@
-import kloudless
 import unittest
-import utils
 import os
 import json
 import time
-from kloudless.exceptions import KloudlessException as KException
+
+import utils
+import sdk
 
 class File(unittest.TestCase):
 
@@ -84,7 +84,7 @@ class File(unittest.TestCase):
         try:
             self.file.delete(permanent=True)
             read_file = self.account.files.retrieve(self.file.id)
-        except KException, e:
+        except sdk.exceptions.KloudessException, e:
             error_data = json.loads(str(e).split('Error data: ')[1])
             self.assertEqual(error_data['status_code'], 404)
 

@@ -1,21 +1,23 @@
-import kloudless
-from kloudless import exceptions as kexceptions
-import unittest
 import utils
+import sdk
+from sdk import exceptions as kexceptions
+
+import unittest
 import pytz
 import os
+import time
 from datetime import datetime, timedelta
 
 class Account(unittest.TestCase):
     def test_retrieve_account(self):
-        account = kloudless.Account(id=self.account.id)
+        account = sdk.Account(id=self.account.id)
         account.refresh()
         self.assertTrue(account.account)
-        account = kloudless.Account.retrieve(id=self.account.id)
+        account = sdk.Account.retrieve(id=self.account.id)
         self.assertTrue(account.account)
 
     def _import(self, service='s3', **extra):
-        return kloudless.Account.create(
+        return sdk.Account.create(
             account='test', token='test', service=service,
             **extra)
 
@@ -23,17 +25,17 @@ class Account(unittest.TestCase):
     def test_list_accounts(self):
         accounts = utils.get_account_for_each_service()
         self.assertGreater(len(accounts), 0)
-        self.assertEqual(len(kloudless.Account.all(page=1, page_size=1)), 1)
-        self.assertEqual(len(kloudless.Account.all(page=2, page_size=1)), 1)
-        self.assertEqual(len(kloudless.Account.all(page=1, page_size=2)), 2)
-        for acc in kloudless.Account.all(active=True, page_size=1000):
+        self.assertEqual(len(sdk.Account.all(page=1, page_size=1)), 1)
+        self.assertEqual(len(sdk.Account.all(page=2, page_size=1)), 1)
+        self.assertEqual(len(sdk.Account.all(page=1, page_size=2)), 2)
+        for acc in sdk.Account.all(active=True, page_size=1000):
             self.assertTrue(acc.active)
-        for acc in kloudless.Account.all(admin=True, page_size=100):
+        for acc in sdk.Account.all(admin=True, page_size=100):
             self.assertTrue(acc.admin)
 
     @utils.accounts_wide
     def test_import_account(self):
-        for s in ['sharepoint', 'hubspot']:
+        for s in ['hubspot', 'alfresco']:
             acc = None
             try:
                 with self.assertRaises(kexceptions.APIException) as e:
@@ -60,10 +62,11 @@ class Account(unittest.TestCase):
         account.delete()
         with self.assertRaises(AttributeError) as e:
             account.account
+        time.sleep(1)
         with self.assertRaises(kexceptions.APIException) as e:
-            kloudless.Account.retrieve(account.id)
+            sdk.Account.retrieve(account.id)
         with self.assertRaises(kexceptions.APIException) as e:
-            kloudless.Account(id=account.id).delete()
+            sdk.Account(id=account.id).delete()
         self.assertTrue(e.exception.status, 404)
 
     @utils.accounts_wide
@@ -78,7 +81,7 @@ class Account(unittest.TestCase):
             account.save()
             self.assertEqual(account.id, account_id)
             self.assertEqual(account.token_expiry, expiry)
-            account = kloudless.Account.retrieve(id=account.id)
+            account = sdk.Account.retrieve(id=account.id)
             self.assertEqual(account.id, account_id)
             self.assertEqual(account.token_expiry, expiry)
 

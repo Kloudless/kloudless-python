@@ -1,7 +1,8 @@
-import kloudless
 import unittest
 import os
+
 import utils
+import sdk
 
 change_file_permissions = ['gdrive']
 change_folder_permissions = ['gdrive', 'box']
@@ -32,10 +33,10 @@ class Permissions(unittest.TestCase):
 
     def list_test_helper(self, data):
         result = data.permissions.all()
-        self.assertIsInstance(result, kloudless.resources.AnnotatedList)
+        self.assertIsInstance(result, sdk.resources.AnnotatedList)
         owner_exists = False
         for perm in result:
-            self.assertIsInstance(perm, kloudless.resources.Permission)
+            self.assertIsInstance(perm, sdk.resources.Permission)
             if self.account.service not in readonly_permissions:
                 if perm.role == "owner":
                     owner_exists = True

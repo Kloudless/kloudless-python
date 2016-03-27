@@ -1,9 +1,10 @@
-import kloudless
 import unittest
 import os
-import utils
 import random
 import time
+
+import utils
+import sdk
 
 class Recent(unittest.TestCase):
 
@@ -25,7 +26,7 @@ class Recent(unittest.TestCase):
         self.assertEqual(len(results), 1)
 
     def test_bad_recent_page_size(self):
-        with self.assertRaises(kloudless.exceptions.APIException) as e:
+        with self.assertRaises(sdk.exceptions.APIException) as e:
             self.account.recent.all(page_size=1001)
 
     def test_simple_recent_page(self):
@@ -54,12 +55,12 @@ class Recent(unittest.TestCase):
         self.assertEqual(results[0].id, files['test_file_1'].id)
 
     def test_bad_recent_page(self):
-        with self.assertRaises(kloudless.exceptions.APIException) as e:
+        with self.assertRaises(sdk.exceptions.APIException) as e:
             self.account.recent.all(page_size=1, page=0)
 
     def test_outofbounds_recent_page(self):
         length = self.account.recent.all().total
-        with self.assertRaises(kloudless.exceptions.APIException) as e:
+        with self.assertRaises(sdk.exceptions.APIException) as e:
             self.account.recent.all(page_size=1, page=length+1)
 
     def test_bad_after_timestamp(self):
