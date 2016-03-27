@@ -1,31 +1,31 @@
 import json
 import requests
-import kloudless
 
 from mock import MagicMock, patch, call
 from requests.models import Response
-from kloudless.resources import Account, Folder, File
 
 import helpers
+import sdk
+from sdk.resources import Account, Folder, File
 
 @helpers.configured_test
 def test_account_list():
-    with patch('kloudless.resources.request') as mock_req:
-        resp = Response()
-        resp._content = helpers.account_list
+    resp = Response()
+    resp._content = helpers.account_list
+    with patch('sdk.resources.request') as mock_req:
         mock_req.return_value = resp
-        accounts = kloudless.Account().all()
+        accounts = Account().all()
         assert len(accounts) > 0
         assert all([isinstance(x, Account) for x in accounts])
 
 @helpers.configured_test
 def test_account_retrieve():
-    with patch('kloudless.resources.request') as mock_req:
+    with patch('sdk.resources.request') as mock_req:
         resp = Response()
         resp._content = helpers.account
         mock_req.return_value = resp
         account_data = json.loads(helpers.account)
-        account = kloudless.Account().retrieve(account_data['id'])
+        account = Account().retrieve(account_data['id'])
         assert isinstance(account, Account)
         for attr in ['id', 'service', 'active', 'account']:
             assert account_data[attr] == getattr(account, attr)
@@ -37,7 +37,7 @@ def test_account_retrieve():
 @helpers.configured_test
 def test_folder_contents():
     account = Account.create_from_data(json.loads(helpers.account))
-    with patch('kloudless.resources.request') as mock_req:
+    with patch('sdk.resources.request') as mock_req:
         resp = Response()
         resp._content = helpers.root_folder_contents
         mock_req.return_value = resp
@@ -53,7 +53,7 @@ def test_folder_contents():
 @helpers.configured_test
 def test_folder_metadata():
     account = Account.create_from_data(json.loads(helpers.account))
-    with patch('kloudless.resources.request') as mock_req:
+    with patch('sdk.resources.request') as mock_req:
         resp = Response()
         resp._content = helpers.folder_data
         mock_req.return_value = resp
@@ -73,7 +73,7 @@ def test_folder_metadata():
 def test_folder_creation():
     account = Account.create_from_data(json.loads(helpers.account))
     folder_data = json.loads(helpers.folder_data)
-    with patch('kloudless.resources.request') as mock_req:
+    with patch('sdk.resources.request') as mock_req:
         resp = Response()
         resp.status_code = 201
         resp._content = helpers.folder_data
@@ -94,7 +94,7 @@ def test_folder_creation():
 def test_folder_delete():
     account = Account.create_from_data(json.loads(helpers.account))
     folder_data = json.loads(helpers.folder_data)
-    with patch('kloudless.resources.request') as mock_req:
+    with patch('sdk.resources.request') as mock_req:
         resp = Response()
         resp.status_code = 204
         mock_req.resturn_value = resp
@@ -111,7 +111,7 @@ def test_folder_delete():
 def test_file_metadata():
     account = Account.create_from_data(json.loads(helpers.account))
     file_data = json.loads(helpers.file_data)
-    with patch('kloudless.resources.request') as mock_req:
+    with patch('sdk.resources.request') as mock_req:
         resp = Response()
         resp._content = helpers.file_data
         mock_req.return_value = resp
@@ -131,7 +131,7 @@ def test_file_contents():
     account = Account.create_from_data(json.loads(helpers.account))
     file_data = json.loads(helpers.file_data)
     file_obj = File.create_from_data(file_data, parent_resource=account)
-    with patch('kloudless.resources.request') as mock_req:
+    with patch('sdk.resources.request') as mock_req:
         resp = Response()
         resp._content = helpers.file_contents
         mock_req.return_value = resp
@@ -148,7 +148,7 @@ def test_file_delete():
     account = Account.create_from_data(json.loads(helpers.account))
     file_data = json.loads(helpers.file_data)
     file_obj = File.create_from_data(file_data, parent_resource=account)
-    with patch('kloudless.resources.request') as mock_req:
+    with patch('sdk.resources.request') as mock_req:
         resp = Response()
         resp.status_code = 204
         mock_req.return_value = resp
@@ -163,7 +163,7 @@ def test_file_delete():
 def test_file_upload():
     account = Account.create_from_data(json.loads(helpers.account))
     file_data = json.loads(helpers.file_data)
-    with patch('kloudless.resources.request') as mock_req:
+    with patch('sdk.resources.request') as mock_req:
         resp = Response()
         resp._content = helpers.file_data
         mock_req.return_value = resp
@@ -179,8 +179,7 @@ def test_file_upload():
                                     data={'metadata':json.dumps({
                                                 'name': file_data['name'],
                                                 'parent_id': 'root'})},
-                                    files={'file': (file_data['name'],
-                                                    helpers.file_contents)},
+                                    files={'file': helpers.file_contents},
                                     params={},
                                     configuration=None)
 
@@ -189,7 +188,7 @@ def test_file_update():
     account = Account.create_from_data(json.loads(helpers.account))
     file_data = json.loads(helpers.file_data)
     file_obj = File.create_from_data(file_data, parent_resource=account)
-    with patch('kloudless.resources.request') as mock_req:
+    with patch('sdk.resources.request') as mock_req:
         resp = Response()
         new_data = file_data.copy()
         new_data['name'] = 'NewFileName'
@@ -221,7 +220,7 @@ def test_file_copy():
     account = Account.create_from_data(json.loads(helpers.account))
     file_data = json.loads(helpers.file_data)
     file_obj = File.create_from_data(file_data, parent_resource=account)
-    with patch('kloudless.resources.request') as mock_req:
+    with patch('sdk.resources.request') as mock_req:
         resp = Response()
         new_data = file_data.copy()
         new_data['name'] = 'NewFileName'

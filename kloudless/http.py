@@ -66,7 +66,7 @@ def request(method, path, configuration=None, **kwargs):
         if ctype.lower() == 'application/json':
             kwargs['data'] = json.dumps(kwargs['data'])
 
-    requestor = functools.partial(method, url, **kwargs)
+    requestor = _get_requestor(method, url, **kwargs)
     response = _request(requestor)
     return response
 
