@@ -13,8 +13,10 @@ def read(fname):
         contents = f.read()
     return contents
 
+package_name = 'kloudless'
+
 def version():
-    text = read(opj(curdir, 'kloudless', 'version.py'))
+    text = read(opj(curdir, package_name, 'version.py'))
     matches = re.findall("('|\")(\S+)('|\")", text)
     return matches[0][1]
 
@@ -27,8 +29,6 @@ test_requires = [
     'selenium>=2.48.0',
     'pytz>=2013d',
 ]
-
-package_name = 'kloudless'
 
 if __name__ == '__main__':
     setup(
