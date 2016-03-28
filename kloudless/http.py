@@ -25,10 +25,10 @@ class BaseAuth:
 class APIKeyAuth(BaseAuth):
     scheme = 'APIKey'
 
-class DevKeyAuth(object):
+class DevKeyAuth(BaseAuth):
     scheme = 'DeveloperKey'
 
-class BearerTokenAuth(object):
+class BearerTokenAuth(BaseAuth):
     scheme = 'Bearer'
 
 _get_requestor = functools.partial

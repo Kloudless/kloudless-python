@@ -1,5 +1,6 @@
 import unittest
 import os
+import base64
 import time
 
 # Add parent dir to path to import utils
@@ -12,41 +13,34 @@ import sdk
 
 class WebHook(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.app = sdk.Application.create(name='testApp')
-        cls.app.apikeys.create()
-        cls.app_id = cls.app.id
-        cls.url = "https://kloudless-webhooks-receiver.herokuapp.com?app_id=%s" % cls.app_id
-        cls.app.webhooks.create(url=cls.url)
+    def setUp(self):
+        name = base64.b64encode(os.urandom(12))
+        self.app = sdk.Application.create(name=name)
+        self.app.apikeys.create()
+        self.url = "https://kloudless-webhooks-receiver.herokuapp.com?app_id=%s" % self.app.id
+        self.webhook = self.app.webhooks.create(url=self.url)
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.app.delete()
+    def tearDown(self):
+        self.app.delete()
 
-    @utils.order
     def test_create_webhook(self):
-        webhook = self.app.webhooks.create(url=self.url)
         webhooks = self.app.webhooks.all()
-        self.assertTrue(webhook.id in [w.id for w in webhooks])
+        self.assertTrue(self.webhook.id in [w.id for w in webhooks])
 
-    @utils.order
     def test_list_webhooks(self):
+        self.app.webhooks.create(url=self.url)
         self.assertEqual(len(self.app.webhooks.all()), 2)
 
-    @utils.order
     def test_retrieve_webhook(self):
-        webhook = self.app.webhooks.create(url=self.url)
-        retrieved_webhook = self.app.webhooks.retrieve(id=webhook.id)
-        self.assertEqual(webhook, retrieved_webhook)
+        retrieved_webhook = self.app.webhooks.retrieve(id=self.webhook.id)
+        self.assertEqual(self.webhook, retrieved_webhook)
 
-    @utils.order
     def test_list_page_size(self):
+        self.app.webhooks.create(url=self.url)
         webhooks = self.app.webhooks.all(page_size=1)
         self.assertEqual(len(webhooks), 1)
-        self.assertEqual(len(self.app.webhooks.all()), 3)
+        self.assertEqual(len(self.app.webhooks.all()), 2)
 
-    @utils.order
     def test_delete_webhook(self):
         for webhook in self.app.webhooks.all():
             webhook.delete()

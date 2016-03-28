@@ -27,15 +27,14 @@ class Link(unittest.TestCase):
     def tearDown(self):
         self.link.delete()
 
-    @utils.order
     def test_create_link(self):
         self.assertEqual(self.link.file_id, self.test_file.id)
 
-    @utils.order
     def test_create_direct_link(self):
-        self.link = self.account.links.create(file_id=self.test_file.id, direct=True)
-        r = requests.get(self.link.url)
+        self.link2 = self.account.links.create(file_id=self.test_file.id, direct=True)
+        r = requests.get(self.link2.url)
         self.assertEqual(r.text, 'test')
+        self.link2.delete()
 
     def test_list_links(self):
         names = [f.id for f in self.account.links.all()]

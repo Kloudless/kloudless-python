@@ -1,6 +1,6 @@
 import unittest
 import os
-import random
+import base64
 
 # Add parent dir to path to import utils
 import sys
@@ -13,7 +13,8 @@ import sdk
 class Application(unittest.TestCase):
 
     def setUp(self):
-        self.app = sdk.Application.create(name='testApp')
+        name = base64.b64encode(os.urandom(12))
+        self.app = sdk.Application.create(name='app %s' % name)
 
     def tearDown(self):
         self.app.delete()
@@ -26,7 +27,7 @@ class Application(unittest.TestCase):
     def test_create_application(self):
         new_app = None
         try:
-            app_name = 'test' + str(random.randint(0, 10**8))
+            app_name = 'test ' + base64.b64encode(os.urandom(12))
             description = 'random app woo'
             new_app = sdk.Application.create(name=app_name, description=description)
             self.assertEqual(new_app.name, app_name)
@@ -43,7 +44,7 @@ class Application(unittest.TestCase):
 
     def test_update_application(self):
         description = 'testytest'
-        name = 'more testing'
+        name = 'more testing ' + base64.b64encode(os.urandom(12))
         self.app.name =  name
         self.app.description = description
         self.app.save()

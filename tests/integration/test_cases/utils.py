@@ -24,7 +24,7 @@ sdk.configure(api_key=API_KEY, dev_key=DEV_KEY, base_url=BASE_URL)
 
 
 test_folders = {}
-test_list = []
+
 def create_or_get_test_folder(account, parent_id='root', name=None):
     if account.id in test_folders:
         return test_folders[account.id]
@@ -97,9 +97,6 @@ if API_KEY:
 def create_suite(test_cases):
     suites = []
     test_loader = unittest.TestLoader()
-    test_loader.sortTestMethodsUsing = (
-        lambda x,y : cmp(test_list.index(x), test_list.index(y))
-        if x in test_list and y in test_list else None)
     for case in test_cases:
         suites.append(test_loader.loadTestsFromTestCase(case))
 
@@ -177,10 +174,6 @@ def skip_long_test(services=[]):
             return func(*args, **kwargs)
         return test_case_wrapper
     return test_case
-
-def order(func):
-    test_list.append(func.__name__)
-    return func
 
 
 @classmethod
