@@ -22,6 +22,9 @@ def test_cases():
                 cases.append(cls)
                 continue
         if utils.API_KEY:
+            if 'crm_api.' in cls.__module__:
+                cases.append(cls)
+                continue
             if 'test_cases.' in cls.__module__:
                 for acc in utils.accounts:
                     cases.append(utils.create_test_case(acc, cls))
