@@ -13,6 +13,7 @@ setup_file = imp.load_source(
     'setup', os.path.join(curdir, '..', '..', '..', 'setup.py'))
 sys.modules['sdk'] = __import__(setup_file.package_name)
 
+import test_case_module
 import sdk
 
 API_KEY = os.environ.get('API_KEY')
@@ -184,14 +185,12 @@ def create_test_case(account, test_case):
     # Store the test class in a module, for nose to find it.
     # Also alias the module name based on the package we appear to be in.
 
-    __import__('test_case_module')
-    testsmod = sys.modules['test_case_module'] # test_case_module
-    setattr(testsmod, test_case_class_name, new_test_case)
-    sys.modules['integration.test_cases.test_case_module'] = testsmod
+    setattr(test_case_module, test_case_class_name, new_test_case)
+    sys.modules['integration.test_cases.test_case_module'] = test_case_module
 
     # Provide the context for nose.
     new_test_case.context = new_test_case
-    new_test_case.__module__ = testsmod.__name__
+    new_test_case.__module__ = test_case_module.__name__
 
     return new_test_case
 

@@ -6,6 +6,7 @@ import unittest
 import pytz
 import os
 import time
+import random
 from datetime import datetime, timedelta
 
 class Account(unittest.TestCase):
@@ -18,8 +19,8 @@ class Account(unittest.TestCase):
 
     def _import(self, service='s3', **extra):
         return sdk.Account.create(
-            account='test', token='test', service=service,
-            **extra)
+            account='test %s' % random.randint(0, 10e8), token='test',
+            service=service, **extra)
 
     @utils.accounts_wide
     def test_list_accounts(self):

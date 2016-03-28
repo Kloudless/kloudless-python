@@ -6,8 +6,6 @@ import sys
 from test_cases import *
 from management_api import *
 
-os.environ.setdefault('REQUESTS_CA_BUNDLE', os.path.join(os.path.abspath(os.path.dirname('..')), 'kloudless.ca.crt'))
-
 def test_cases():
     test_classes = []
     for m in sys.modules.keys():
