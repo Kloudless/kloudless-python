@@ -17,9 +17,6 @@ import sdk
 
 class Link(unittest.TestCase):
 
-    test_file = None
-    link = None
-
     def setUp(self):
         self.test_file = utils.create_test_file(self.account)
         self.link = self.account.links.create(file_id=self.test_file.id)
