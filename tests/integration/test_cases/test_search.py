@@ -1,5 +1,6 @@
 import unittest
 import os
+import base64
 import random
 import time
 
@@ -21,7 +22,8 @@ class Search(unittest.TestCase):
             self.assertEqual(results[0].id, test_file.id)
 
     def test_bad_search(self):
-        self.assertEqual(self.account.search.all(q='asdfghjkl'), [])
+        q = base64.b64encode(os.urandom(40))
+        self.assertEqual(self.account.search.all(q=q), [])
 
     def test_empty_str_search(self):
         with self.assertRaises(sdk.exceptions.APIException) as cm:
@@ -32,16 +34,19 @@ class Search(unittest.TestCase):
         acc = self.account
         test_file_name = 'search' + str(random.random())[2:] + '.txt'
         root_folder = utils.create_or_get_test_folder(acc)
-        test_folder_1 = acc.folders.create(parent_id=root_folder.id, name='testFolder1')
-        test_folder_2 = acc.folders.create(parent_id=root_folder.id, name='testFolder2')
+        test_folder_1 = acc.folders.create(parent_id=root_folder.id,
+                                           name='folder %s' % random.randint(0, 10e8))
+        test_folder_2 = acc.folders.create(parent_id=root_folder.id,
+                                           name='folder %s' % random.randint(0, 10e8))
         test_file_1 = utils.create_test_file(acc, folder=test_folder_1,
-            file_name=test_file_name)
+                                             file_name=test_file_name)
         test_file_2 = utils.create_test_file(acc, folder=test_folder_2,
-            file_name=test_file_name)
+                                             file_name=test_file_name)
         if acc.service == 'box':
             time.sleep(210)
         results = acc.search.all(q=test_file_name)
-        self.assertEqual({results[0].id, results[1].id}, {test_file_1.id, test_file_2.id})
+        self.assertEqual({results[0].id, results[1].id},
+                         {test_file_1.id, test_file_2.id})
 
 def test_cases():
     return [utils.create_test_case(acc, Search) for acc in utils.accounts]

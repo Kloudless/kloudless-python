@@ -25,18 +25,21 @@ if not BASE_URL:
 sdk.configure(api_key=API_KEY, dev_key=DEV_KEY, base_url=BASE_URL)
 
 
-test_folders = {}
-
 def create_or_get_test_folder(account, parent_id='root', name=None):
+    test_folders = dynamic_case_module.test_folders
+
     if account.id in test_folders:
         return test_folders[account.id]
+
     if not name:
         name = u't\xe9st folder %s' % random.randint(0, 10e8)
-        storeFolder = True
-    new_folder = None
+
     folder = account.folders.retrieve(id=parent_id)
+
+    # Find the first folder that supports folder creation within it and
+    # create the test folder in it.
+
     stack = [folder]
-    test_folders[account.id] = folder
     while stack:
         folder_to_check = stack.pop(0)
         if folder_to_check.can_create_folders:
@@ -46,11 +49,11 @@ def create_or_get_test_folder(account, parent_id='root', name=None):
         folders = folder_to_check.contents()
         # add at the beginning for a DFS / stack
         stack[0:0] = folders
-    if new_folder is None:
+    else:
         raise sdk.exceptions.KloudlessException(
-            'Cannot find parent folder to create test folder')
-    if storeFolder:
-        test_folders[account.id] = new_folder
+            'Cannot find a parent folder to create the test folder in.')
+
+    test_folders[account.id] = new_folder
     return new_folder
 
 def create_test_file(account, folder=None, file_name=None,
@@ -197,6 +200,7 @@ def create_test_case(account, test_case):
 def gen_tear_down_class(base_class):
     @classmethod
     def tearDownClass(cls):
+        test_folders = dynamic_case_module.test_folders
         if cls.account.id in test_folders:
             test_folders[cls.account.id].delete(recursive=True)
             del test_folders[cls.account.id]
