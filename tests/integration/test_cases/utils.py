@@ -4,13 +4,14 @@ import os
 import time
 import sys
 import imp
-from functools import wraps
+from functools import wraps, update_wrapper
+import inspect
 
 # To handle package name changes
 curdir = os.path.dirname(os.path.realpath(__file__))
-setup = imp.load_source(
+setup_file = imp.load_source(
     'setup', os.path.join(curdir, '..', '..', '..', 'setup.py'))
-sys.modules['sdk'] = __import__(setup.package_name)
+sys.modules['sdk'] = __import__(setup_file.package_name)
 
 import sdk
 
@@ -29,7 +30,7 @@ def create_or_get_test_folder(account, parent_id='root', name=None):
     if account.id in test_folders:
         return test_folders[account.id]
     if not name:
-        name = u't\xe9stFolder %s' % random.randint(0, 10**8)
+        name = u't\xe9st folder %s' % random.randint(0, 10e8)
         storeFolder = True
     new_folder = None
     folder = account.folders.retrieve(id=parent_id)
@@ -51,8 +52,10 @@ def create_or_get_test_folder(account, parent_id='root', name=None):
         test_folders[account.id] = new_folder
     return new_folder
 
-def create_test_file(account, folder=None, file_name=u't\xe9st file.txt',
+def create_test_file(account, folder=None, file_name=None,
                      file_data='test', overwrite=True):
+    if not file_name:
+        file_name = u't\xe9st file %s.txt' % random.randint(0, 10e8)
     if not folder:
         folder = create_or_get_test_folder(account)
     return account.files.create(file_name=file_name, parent_id=folder.id,
@@ -121,12 +124,6 @@ def create_suite(test_cases):
 
     return unittest.TestSuite(suites)
 
-def create_test_case(account, test_case):
-    return type('test_' + test_case.__name__ + '_' + str(account.service),
-        (test_case,), {'account' : account,
-                       'tearDownClass': clean_up,
-                        })
-
 def allow(services=[], services_to_exclude=[]):
     """
     Decorator to explicitly specify which services to run the decorated test on.
@@ -175,10 +172,34 @@ def skip_long_test(services=[]):
         return test_case_wrapper
     return test_case
 
+def create_test_case(account, test_case):
+    test_case_class_name = 'test_%s_%s_%s' % (
+        test_case.__name__, account.service, account.id)
+    class_attrs = {
+        'account' : account,
+        'tearDownClass': gen_tear_down_class(test_case),
+    }
+    new_test_case = type(str(test_case_class_name), (test_case,), class_attrs)
 
-@classmethod
-def clean_up(cls):
-    if cls.account.id in test_folders:
-        test_folders[cls.account.id].delete(recursive=True)
-        del test_folders[cls.account.id]
+    # Store the test class in a module, for nose to find it.
+    # Also alias the module name based on the package we appear to be in.
 
+    __import__('test_case_module')
+    testsmod = sys.modules['test_case_module'] # test_case_module
+    setattr(testsmod, test_case_class_name, new_test_case)
+    sys.modules['integration.test_cases.test_case_module'] = testsmod
+
+    # Provide the context for nose.
+    new_test_case.context = new_test_case
+    new_test_case.__module__ = testsmod.__name__
+
+    return new_test_case
+
+def gen_tear_down_class(base_class):
+    @classmethod
+    def tearDownClass(cls):
+        if cls.account.id in test_folders:
+            test_folders[cls.account.id].delete(recursive=True)
+            del test_folders[cls.account.id]
+        super(cls, cls).tearDownClass()
+    return tearDownClass

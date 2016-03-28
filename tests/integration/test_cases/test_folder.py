@@ -11,9 +11,6 @@ class Folder(unittest.TestCase):
         self.assertTrue(hasattr(self.test_folder, 'id'))
         self.assertEqual(self.test_folder.type, 'folder')
 
-    def tearDown(self):
-        self.tearDownClass()
-
     def test_create_folder(self):
         acc = self.account
         folder_name = '%s sub-folder' % self.test_folder.name

@@ -13,10 +13,6 @@ class File(unittest.TestCase):
         self.folder = utils.create_or_get_test_folder(self.account)
         self.file = utils.create_test_file(self.account)
 
-    # delete test folder
-    def tearDown(self):
-        self.tearDownClass()
-
     # CREATE
     def test_create_file(self):
         self.assertEqual(self.file.account, self.account.id)

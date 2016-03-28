@@ -22,19 +22,23 @@ SUPPORTED_SERVICES = ['dropbox', 'box', 'gdrive', 'skydrive', 'evernote',
 
 class Events(unittest.TestCase):
 
+    # The presence of setUpClass implies that _multiprocess_can_split_ = False
+    # so nose will not run this in parallel.
+
     # Perform events on folder
     @classmethod
-    def setUpClass(self):
-        self.wait_time = CUSTOM_WAIT_TIMES.get(self.account.service, WAIT_TIME)
-        self.test_folder = utils.create_or_get_test_folder(self.account)
-        self.test_subfolder = self.account.folders.create(
-                parent_id=self.test_folder.id, name='Test Events')
-        self.test_subfolder2 = self.account.folders.create(
-                parent_id=self.test_folder.id, name='Test Events2')
+    def setUpClass(cls):
+        cls.wait_time = CUSTOM_WAIT_TIMES.get(cls.account.service, WAIT_TIME)
+        cls.test_folder = utils.create_or_get_test_folder(cls.account)
+        cls.test_subfolder = cls.account.folders.create(
+                parent_id=cls.test_folder.id, name='Test Events')
+        cls.test_subfolder2 = cls.account.folders.create(
+                parent_id=cls.test_folder.id, name='Test Events2')
 
     def setUp(self):
         self.cursor = self.get_latest_cursor()
-        self.file = utils.create_test_file(self.account, folder=self.test_folder)
+        self.file = utils.create_test_file(
+            self.account, folder=self.test_folder)
 
     def tearDown(self):
         if self.file:
@@ -102,6 +106,7 @@ class Events(unittest.TestCase):
     def test_event_page_size(self):
         events = self.account.events.all(page_size=1)
         self.assertEqual(len(events), 1)
+
 
     def test_event_invalid_page_size(self):
         with self.assertRaises(sdk.exceptions.APIException):
