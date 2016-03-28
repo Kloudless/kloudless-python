@@ -20,7 +20,7 @@ def test_cases():
     for cls in test_classes:
         if utils.DEV_KEY:
             if 'management_api.' in cls.__module__:
-                management_cases.append(cls)
+                cases.append(cls)
                 continue
         if utils.API_KEY:
             if 'test_cases.' in cls.__module__:
