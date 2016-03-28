@@ -303,7 +303,9 @@ class UpdateMixin(object):
             # This assumes that if the metadata contains an 'account' key,
             # it maps to the correct Account ID. We update our parent
             # resource with the ID and it's metadata if it is different.
-            if self._parent_resource:
+            res_type = resource_types[self.__class__]
+            if (self._parent_resource and res_type in ['file', 'folder',
+                                                       'link', 'key']):
                 parent_res_type = resource_types[self._parent_resource_class]
                 if (hasattr(self, parent_res_type) and
                         self._parent_resource.id != self[parent_res_type]):

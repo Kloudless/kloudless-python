@@ -5,6 +5,7 @@ import sys
 
 from test_cases import *
 from management_api import *
+from crm_api import *
 
 def test_cases():
     test_classes = []
