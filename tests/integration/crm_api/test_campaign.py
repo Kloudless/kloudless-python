@@ -6,22 +6,22 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__),
                 '..')))
 from test_cases import utils
-import sdk
 
 
 class CRMCampaign(unittest.TestCase):
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def setUp(self):
-        account_id = 832496
-        self.account = sdk.Account.retrieve(id=account_id)
         data = {
             'name': 'API Test Campaign Name'
         }
         self.obj = self.account.crm_campaigns.create(data=data)
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def tearDown(self):
         self.obj.delete()
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def test_list_object(self):
         objects = self.account.crm_campaigns.all()
         # assert properties
@@ -30,6 +30,7 @@ class CRMCampaign(unittest.TestCase):
             self.assertEqual(obj.type, 'Campaign')
             self.assertTrue('raw' in obj)
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def test_read_object(self):
         obj = self.account.crm_campaigns.retrieve(self.obj.id)
         # assert Campaign properties
@@ -41,6 +42,7 @@ class CRMCampaign(unittest.TestCase):
         self.assertTrue('modified' in obj)
         self.assertTrue('description' in obj)
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def test_update_object(self):
         obj = self.obj
         obj.description = 'test campaign description'
@@ -49,7 +51,7 @@ class CRMCampaign(unittest.TestCase):
 
 
 def test_cases():
-    return [CRMCampaign]
+    return [utils.create_test_case(acc, CRMCampaign) for acc in utils.accounts]
 
 if __name__ == '__main__':
     suite = utils.create_suite(test_cases())

@@ -6,15 +6,13 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__),
                 '..')))
 from test_cases import utils
-import sdk
 
 
 class CRMObject(unittest.TestCase):
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def setUp(self):
-        account_id = 832496
         self.raw_type = 'Account'
-        self.account = sdk.Account.retrieve(id=account_id)
         params = {
             'raw_type': self.raw_type
         }
@@ -23,11 +21,12 @@ class CRMObject(unittest.TestCase):
         }
         self.obj = self.account.crm_objects.create(params=params, data=data)
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def tearDown(self):
         self.obj.delete(raw_type=self.raw_type)
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def test_list_object(self):
-        self.raw_type = 'Account'
         objects = self.account.crm_objects.all(raw_type=self.raw_type)
         # assert properties
         if objects:
@@ -35,8 +34,8 @@ class CRMObject(unittest.TestCase):
             self.assertEqual(obj.type, self.raw_type)
             self.assertTrue('raw' in obj)
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def test_read_object(self):
-        self.raw_type = 'Account'
         obj = self.account.crm_objects.retrieve(self.obj.id,
                                                 raw_type=self.raw_type)
         # assert properties
@@ -44,8 +43,8 @@ class CRMObject(unittest.TestCase):
         self.assertTrue('raw' in obj)
         self.assertEqual(obj.id, self.obj.id)
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def test_update_object(self):
-        self.raw_type = 'Account'
         obj = self.obj
         obj.description = 'test description'
         obj.save(raw_type='Account')
@@ -53,7 +52,7 @@ class CRMObject(unittest.TestCase):
 
 
 def test_cases():
-    return [CRMObject]
+    return [utils.create_test_case(acc, CRMObject) for acc in utils.accounts]
 
 
 if __name__ == '__main__':

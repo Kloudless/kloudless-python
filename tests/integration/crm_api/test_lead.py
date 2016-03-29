@@ -6,23 +6,23 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__),
                 '..')))
 from test_cases import utils
-import sdk
 
 
 class CRMLead(unittest.TestCase):
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def setUp(self):
-        account_id = 832496
-        self.account = sdk.Account.retrieve(id=account_id)
         data = {
             'company': 'API Test Company Name',
             'last_name': 'API Test Lead Last Name'
         }
         self.obj = self.account.crm_leads.create(data=data)
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def tearDown(self):
         self.obj.delete()
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def test_list_object(self):
         objects = self.account.crm_leads.all()
         # assert properties
@@ -31,6 +31,7 @@ class CRMLead(unittest.TestCase):
             self.assertEqual(obj.type, 'Lead')
             self.assertTrue('raw' in obj)
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def test_read_object(self):
         obj = self.account.crm_leads.retrieve(self.obj.id)
         # assert Lead properties
@@ -42,6 +43,7 @@ class CRMLead(unittest.TestCase):
         self.assertTrue('modified' in obj)
         self.assertTrue('description' in obj)
 
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def test_update_object(self):
         obj = self.obj
         obj.description = 'test lead description'
@@ -50,7 +52,7 @@ class CRMLead(unittest.TestCase):
 
 
 def test_cases():
-    return [CRMLead]
+    return [utils.create_test_case(acc, CRMLead) for acc in utils.accounts]
 
 if __name__ == '__main__':
     suite = utils.create_suite(test_cases())

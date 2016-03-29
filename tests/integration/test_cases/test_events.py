@@ -6,12 +6,12 @@ import utils
 import sdk
 
 # seconds to wait for find_recent to run
-WAIT_TIME = 10
+WAIT_TIME = 5
 
 CUSTOM_WAIT_TIMES = {
-    'sharepoint': 360,
-    'onedrivebiz': 120,
-    'box': 10,
+    'sharepoint': 60,
+    'onedrivebiz': 60,
+    'box': 5,
 }
 
 LIMITED_EVENTS_SERVICES = ['gdrive']
@@ -29,6 +29,7 @@ class Events(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.wait_time = CUSTOM_WAIT_TIMES.get(cls.account.service, WAIT_TIME)
+        cls.max_retries = 2
         cls.test_folder = utils.create_or_get_test_folder(cls.account)
         cls.test_subfolder = cls.account.folders.create(
                 parent_id=cls.test_folder.id, name='Test Events')
@@ -44,9 +45,9 @@ class Events(unittest.TestCase):
         if self.file:
             self.file.delete()
 
-    def update_events(self):
+    def update_events(self, wait_time=None):
         utils.trigger_find_recent(self.account)
-        time.sleep(self.wait_time)
+        time.sleep(wait_time or self.wait_time)
 
     def get_latest_cursor(self):
         cursor = self.account.events.latest_cursor()
@@ -54,8 +55,8 @@ class Events(unittest.TestCase):
             raise self.failureException("Unable to get latest cursor: %s" % cursor)
         return cursor
 
-    def get_most_recent_events(self, cursor=0, return_one=False, retry=2):
-        self.update_events()
+    def get_most_recent_events(self, cursor=0, return_one=False, retry=0):
+        self.update_events(self.wait_time * (retry + 1))
         events = self.account.events.all(cursor=cursor)
         while events.remaining:
             events = self.account.events.all(cursor=events.cursor)
@@ -65,8 +66,8 @@ class Events(unittest.TestCase):
             else:
                 return events
         else:
-            if retry > 0:
-                return self.get_most_recent_events(cursor, return_one, retry-1)
+            if retry <= self.max_retries:
+                return self.get_most_recent_events(cursor, return_one, retry+1)
             raise self.failureException("No events found in the event stream "
                     "using cursor %s." % cursor)
 
@@ -132,6 +133,7 @@ class Events(unittest.TestCase):
     ###############
 
     # ADD
+    @utils.skip_long_test(services=SUPPORTED_SERVICES)
     def test_add(self):
         events = self.get_most_recent_events(self.cursor)
         event_filter = {
@@ -144,6 +146,7 @@ class Events(unittest.TestCase):
             self.assertEqual(event.type, 'add')
 
     # DELETE
+    @utils.skip_long_test(services=SUPPORTED_SERVICES)
     def test_delete(self):
         self.update_events()
         self.cursor = self.get_latest_cursor()
@@ -162,6 +165,7 @@ class Events(unittest.TestCase):
 
     # Commented out until Python SDK supports file updates.
     # # UPDATE
+    # @utils.skip_long_test(services=SUPPORTED_SERVICES)
     # def test_update(self):
     #     # TODO: Update the file
     #     event = self.get_most_recent_events(self.cursor, return_one=True)
@@ -171,6 +175,7 @@ class Events(unittest.TestCase):
 
 
     # RENAME
+    @utils.skip_long_test(services=SUPPORTED_SERVICES)
     def test_rename(self):
         self.update_events()
         self.cursor = self.get_latest_cursor()
@@ -192,6 +197,7 @@ class Events(unittest.TestCase):
                 self.assertEqual(event.type, 'rename')
 
     # MOVE
+    @utils.skip_long_test(services=SUPPORTED_SERVICES)
     def test_move(self):
         self.update_events()
         self.cursor = self.get_latest_cursor()

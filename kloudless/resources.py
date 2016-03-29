@@ -418,6 +418,30 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
                 serialized[k] = v
         return serialized
 
+    def convert(self, data=None, params=None):
+        params = {} if params is None else params
+        data = {} if data is None else data
+
+        convert_path = "%s/%s" % (self.detail_path(), 'convert_id')
+
+        response = request(self._api_session.post, convert_path,
+                           configuration=self._configuration, data=data,
+                           params=params)
+
+        return response.json()
+
+    def file_upload_url(self, data=None, params=None):
+        params = {} if params is None else params
+        data = {} if data is None else data
+
+        upload_url_path = "%s/%s" % (self.detail_path(), 'file_upload_url')
+
+        response = request(self._api_session.post, upload_url_path,
+                           configuration=self._configuration, data=data,
+                           params=params)
+
+        return response.json()
+
     def save(self, **params):
         # TODO: add in fields token, token_secret, refresh_token
         request(self._api_session.patch, self.detail_path(),

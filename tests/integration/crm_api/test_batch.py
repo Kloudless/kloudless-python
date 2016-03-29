@@ -6,15 +6,11 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__),
                 '..')))
 from test_cases import utils
-import sdk
 
 
 class CRMBatch(unittest.TestCase):
 
-    def setUp(self):
-        account_id = 832496
-        self.account = sdk.Account.retrieve(id=account_id)
-
+    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
     def test_batch(self):
         data = {
             'requests': [{
@@ -30,7 +26,7 @@ class CRMBatch(unittest.TestCase):
 
 
 def test_cases():
-    return [CRMBatch]
+    return [utils.create_test_case(acc, CRMBatch) for acc in utils.accounts]
 
 if __name__ == '__main__':
     suite = utils.create_suite(test_cases())

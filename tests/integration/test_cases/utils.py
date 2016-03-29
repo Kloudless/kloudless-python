@@ -1,11 +1,9 @@
 import unittest
 import random
 import os
-import time
 import sys
 import imp
-from functools import wraps, update_wrapper
-import inspect
+from functools import wraps
 
 # To handle package name changes
 curdir = os.path.dirname(os.path.realpath(__file__))
@@ -56,6 +54,7 @@ def create_or_get_test_folder(account, parent_id='root', name=None):
     test_folders[account.id] = new_folder
     return new_folder
 
+
 def create_test_file(account, folder=None, file_name=None,
                      file_data='test', overwrite=True):
     if not file_name:
@@ -65,15 +64,20 @@ def create_test_file(account, folder=None, file_name=None,
     return account.files.create(file_name=file_name, parent_id=folder.id,
                                 file_data=file_data, overwrite=overwrite)
 
+
 def is_resource_present(resource_type, resource_name, parent_folder):
     contents = parent_folder.contents()
-    return resource_name in [f.name for f in contents if f.type == resource_type]
+    return resource_name in [f.name for f in contents if
+                             f.type == resource_type]
+
 
 def is_file_present(file_name, parent_folder):
     return is_resource_present('file', file_name, parent_folder)
 
+
 def is_folder_present(folder_name, parent_folder):
     return is_resource_present('folder', folder_name, parent_folder)
+
 
 def trigger_find_recent(account):
     """
@@ -81,6 +85,7 @@ def trigger_find_recent(account):
     Only works if find_recent is enabled for that account.
     """
     account.save()
+
 
 def get_account_for_each_service():
     services_to_exclude = []
@@ -100,6 +105,7 @@ def get_account_for_each_service():
 
 if API_KEY:
     accounts = get_account_for_each_service()
+
 
 def create_suite(test_cases):
     suites = []
@@ -121,31 +127,51 @@ def create_suite(test_cases):
             services_to_include = getattr(method, 'services_to_include', [])
             services_to_exclude = getattr(method, 'services_to_exclude', [])
 
-            if ((services_to_include and current_service not in services_to_include)
-                or (services_to_exclude and current_service in services_to_exclude)
-                or (env_services_to_include and current_service not in env_services_to_include)):
-                setattr(test, 'setUp', lambda: test.skipTest('Reason: test is excluded.'))
+            if ((services_to_include and
+                 current_service not in services_to_include)
+                or (services_to_exclude and
+                    current_service in services_to_exclude)
+                or (env_services_to_include and
+                    current_service not in env_services_to_include)):
+                setattr(test, 'setUp',
+                        lambda: test.skipTest('Reason: test is excluded.'))
 
     return unittest.TestSuite(suites)
 
+
 def allow(services=[], services_to_exclude=[]):
     """
-    Decorator to explicitly specify which services to run the decorated test on.
+    Decorator to explicitly specify which services to run the decorated
+    test on.
     'services' specifies the services the test should run on.
     'services_to_exclude' specifies the services the test should skip.
     Note: The actual include/exclude logic is in create_suite().
     """
     if (services and services_to_exclude
-        or not services and not services_to_exclude):
-        raise ValueError("Please specify 'services' or 'services_to_exclude', and not both")
+            or not services and not services_to_exclude):
+        raise ValueError("Please specify 'services' or "
+                         "'services_to_exclude', and not both")
 
     def allow_decorator(func):
-        if services:
-            func.services_to_include = services
-        elif services_to_exclude:
-            func.services_to_exclude = services_to_exclude
-        return func
+        @wraps(func)
+        def test_method(*args, **kwargs):
+            self = args[0]
+            if (hasattr(self, 'account') and self.account and
+                    self.account.service):
+                if services and self.account.service not in services:
+                    self.skipTest("%s not in list of included services." %
+                                  self.account.service)
+                elif (services_to_exclude and
+                        self.account.service in services_to_exclude):
+                    self.skipTest("%s in list of excluded services." %
+                                  self.account.service)
+            elif not (hasattr(self, 'account')):
+                self.skipTest("No account so skipping.")
+
+            return func(*args, **kwargs)
+        return test_method
     return allow_decorator
+
 
 def accounts_wide(func):
     """
@@ -161,6 +187,7 @@ def accounts_wide(func):
     test_case._already_ran = False
     return test_case
 
+
 def skip_long_test(services=[]):
     """
     Decorator to determine whether to run long tests or not.
@@ -169,18 +196,20 @@ def skip_long_test(services=[]):
         @wraps(func)
         def test_case_wrapper(*args, **kwargs):
             self = args[0]
-            if ((not hasattr(self, 'account') or self.account.service in services) and
-                not os.environ.get('RUN_LONG_TESTS')):
+            if ((not hasattr(self, 'account') or
+                 self.account.service in services) and
+                    not os.environ.get('RUN_LONG_TESTS')):
                 raise unittest.SkipTest('Reason: test takes too long.')
             return func(*args, **kwargs)
         return test_case_wrapper
     return test_case
 
+
 def create_test_case(account, test_case):
     test_case_class_name = 'test_%s_%s_%s' % (
         test_case.__name__, account.service, account.id)
     class_attrs = {
-        'account' : account,
+        'account': account,
         'tearDownClass': gen_tear_down_class(test_case),
     }
     new_test_case = type(str(test_case_class_name), (test_case,), class_attrs)
@@ -196,6 +225,7 @@ def create_test_case(account, test_case):
     new_test_case.__module__ = dynamic_case_module.__name__
 
     return new_test_case
+
 
 def gen_tear_down_class(base_class):
     @classmethod

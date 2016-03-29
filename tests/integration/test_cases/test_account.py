@@ -4,10 +4,10 @@ from sdk import exceptions as kexceptions
 
 import unittest
 import pytz
-import os
 import time
 import random
 from datetime import datetime, timedelta
+
 
 class Account(unittest.TestCase):
     def test_retrieve_account(self):
@@ -48,8 +48,10 @@ class Account(unittest.TestCase):
         accounts = []
         try:
             accounts.append(self._import())
-            accounts.append(self._import(service='sharepoint', domain='domain'))
-            accounts.append(self._import(service='alfresco', repository_url='test'))
+            accounts.append(self._import(service='sharepoint',
+                                         domain='domain'))
+            accounts.append(self._import(service='alfresco',
+                                         repository_url='test'))
             accounts.append(self._import(service='hubspot', hub_id='hub'))
             for acc in accounts:
                 self.assertTrue(acc.id)
@@ -92,10 +94,34 @@ class Account(unittest.TestCase):
         finally:
             account.delete()
 
+    def test_convert(self):
+        account = sdk.Account.retrieve(id=self.account.id)
+        contents = account.folders().contents()
+        if contents:
+            obj = contents[0]
+            data = {}
+            data['raw_id'] = obj.raw_id
+            data['type'] = obj.type
+            response = account.convert(data=data)
+            self.assertTrue('id' in response)
+
+    def test_file_upload_url(self):
+        account = sdk.Account.retrieve(id=self.account.id)
+        contents = account.folders().contents()
+        name = 'test_file_name'
+        if contents:
+            obj = contents[0]
+            data = {}
+            data['parent_id'] = obj.id
+            data['name'] = name
+            response = account.file_upload_url(data=data)
+            self.assertEqual(response['method'], 'put')
+            self.assertTrue('url' in response)
+
+
 def test_cases():
     return [utils.create_test_case(acc, Account) for acc in utils.accounts]
 
 if __name__ == '__main__':
     suite = utils.create_suite(test_cases())
     unittest.TextTestRunner(verbosity=2).run(suite)
-
