@@ -1,17 +1,21 @@
-import kloudless
 import unittest
 import os
-import utils
 import requests
 import datetime
 import time
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
+
+skipSeleniumTests = None
+try:
+    from selenium import webdriver
+    from selenium.webdriver.common.keys import Keys
+except ImportError:
+    skipSeleniumTests = lambda: unittest.skipTest(
+        "Selenium not installed.")
+
+import utils
+import sdk
 
 class Link(unittest.TestCase):
-
-    test_file = None
-    link = None
 
     def setUp(self):
         self.test_file = utils.create_test_file(self.account)
@@ -20,22 +24,21 @@ class Link(unittest.TestCase):
     def tearDown(self):
         self.link.delete()
 
-    @utils.order
     def test_create_link(self):
         self.assertEqual(self.link.file_id, self.test_file.id)
 
-    @utils.order
     def test_create_direct_link(self):
-        self.link = self.account.links.create(file_id=self.test_file.id, direct=True)
-        r = requests.get(self.link.url)
+        self.link2 = self.account.links.create(file_id=self.test_file.id, direct=True)
+        r = requests.get(self.link2.url)
         self.assertEqual(r.text, 'test')
+        self.link2.delete()
 
     def test_list_links(self):
         names = [f.id for f in self.account.links.all()]
         self.assertTrue(self.link.id in names)
 
     def test_create_bad_link(self):
-        with self.assertRaises(kloudless.exceptions.APIException) as e:
+        with self.assertRaises(sdk.exceptions.APIException) as e:
             self.link = self.account.links.create(file_id='bad_file_id')
 
     def test_list_links_page_size(self):
@@ -48,6 +51,9 @@ class Link(unittest.TestCase):
             self.assertTrue(link.active)
 
     def test_create_password_link(self):
+        if skipSeleniumTests:
+            skipSeleniumTests()
+
         self.link = self.account.links.create(file_id=self.test_file.id, password='testytest')
         self.assertTrue(self.link.password)
         driver = webdriver.Firefox()
@@ -62,6 +68,9 @@ class Link(unittest.TestCase):
         self.assertEqual(self.link.id, retrieved.id)
 
     def test_update_password_link(self):
+        if skipSeleniumTests:
+            skipSeleniumTests()
+
         self.link.password = 'testytest'
         current_time = datetime.datetime.now().isoformat()
         self.link.save(file_id=self.test_file.id)
@@ -86,6 +95,9 @@ class Link(unittest.TestCase):
         r = requests.get(self.link.url)
         self.assertIn(r.status_code, [403, 404])
 
+def test_cases():
+    return [utils.create_test_case(acc, Link) for acc in utils.accounts]
+
 if __name__ == '__main__':
-    suite = utils.create_suite([utils.create_test_case(acc, Link) for acc in utils.accounts])
+    suite = utils.create_suite(test_cases())
     unittest.TextTestRunner(verbosity=2).run(suite)

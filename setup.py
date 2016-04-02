@@ -2,6 +2,10 @@
 
 from setuptools import setup, find_packages
 import re
+import os
+from os.path import join as opj
+
+curdir = os.path.dirname(os.path.realpath(__file__))
 
 def read(fname):
     contents = ''
@@ -9,8 +13,10 @@ def read(fname):
         contents = f.read()
     return contents
 
+package_name = 'kloudless'
+
 def version():
-    text = read('kloudless/version.py')
+    text = read(opj(curdir, package_name, 'version.py'))
     matches = re.findall("('|\")(\S+)('|\")", text)
     return matches[0][1]
 
@@ -24,26 +30,27 @@ test_requires = [
     'pytz>=2013d',
 ]
 
-setup(
-    name='kloudless',
-    packages=find_packages(),
-    include_package_data=True,
-    author='Kloudless',
-    author_email='hello@kloudless.com',
-    version=version(),
-    description = "Python library for the Kloudless API",
-    long_description=read('README.md'),
-    url='https://developers.kloudless.com/',
-    install_requires=install_requires,
-    license='MIT',
-    classifiers=[
-        'Programming Language :: Python',
-        'Intended Audience :: Developers',
-        'Natural Language :: English',
-        "License :: OSI Approved :: MIT License",
-        "Development Status :: 4 - Beta",
-        ],
-    package_data={'': ['LICENSE']},
-    zip_safe=False,
-    tests_require = test_requires,
-    )
+if __name__ == '__main__':
+    setup(
+        name=package_name,
+        packages=[package_name],
+        include_package_data=True,
+        author='Kloudless',
+        author_email='hello@kloudless.com',
+        version=version(),
+        description = "Python library for the Kloudless API",
+        long_description=read(opj(curdir, 'README.md')),
+        url='https://kloudless.com/',
+        install_requires=install_requires,
+        license='MIT',
+        classifiers=[
+            'Programming Language :: Python',
+            'Intended Audience :: Developers',
+            'Natural Language :: English',
+            "License :: OSI Approved :: MIT License",
+            "Development Status :: 4 - Beta",
+            ],
+        package_data={'': ['LICENSE']},
+        zip_safe=False,
+        tests_require = test_requires,
+        )

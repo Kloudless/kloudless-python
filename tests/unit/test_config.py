@@ -1,14 +1,16 @@
-import kloudless
+import helpers
+
+import sdk
 
 def test_configure():
     """
     This is a basic test to make sure that the configuration mechanism works.
     """
-    default_configs = kloudless.config.configure()
+    default_configs = sdk.config.configure()
     configs = {"api_key": "TESTKEY",
                "api_version": 31337,
                "base_url": "example.com"}
-    kloudless.configure(**configs)
+    sdk.configure(**configs)
     for key in configs.iterkeys():
-        assert configs[key] == kloudless.config._configuration[key]
-    kloudless.configure(**default_configs)
+        assert configs[key] == sdk.config._configuration[key]
+    sdk.configure(**default_configs)

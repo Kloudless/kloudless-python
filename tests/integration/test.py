@@ -1,36 +1,53 @@
 import unittest
 import os
-import kloudless
 import inspect
 import sys
+
 from test_cases import *
 from management_api import *
+from crm_api import *
 
-os.environ.setdefault('REQUESTS_CA_BUNDLE', os.path.join(os.path.abspath(os.path.dirname('..')), 'kloudless.ca.crt'))
+STORAGE_SERVICES = ['dropbox', 'box', 'gdrive', 'skydrive', 'sharefile',
+                    'copy', 'sugarsync', 'egnyte', 'evernote', 'sharepoint',
+                    'onedrivebiz', 'cmis', 'alfresco', 'alfresco_cloud',
+                    'salesforce', 'hubspot', 'smb', 'jive', 'webdav', 'cq5',
+                    's3', 'azure']
+CRM_SERVICES = ['salesforce', 'dynamics', 'oracle']
+
+
+def test_cases():
+    management_tests = []
+    storage_tests = []
+    crm_tests = []
+
+    for m in sys.modules.keys():
+        if '.test_' in m:
+            for name, cls in inspect.getmembers(sys.modules[m],
+                                                inspect.isclass):
+                if '.test_' in cls.__module__:
+                    if 'management_api' in cls.__module__:
+                        management_tests.append(cls)
+                    if 'crm_api' in cls.__module__:
+                        crm_tests.append(cls)
+                    if 'test_cases.' in cls.__module__:
+                        storage_tests.append(cls)
+
+    cases = []
+    if utils.DEV_KEY:
+        cases.extend(management_tests)
+
+    if utils.API_KEY:
+        for acc in utils.accounts:
+            if acc.service in STORAGE_SERVICES:
+                for storage_test in storage_tests:
+                    cases.append(utils.create_test_case(acc, storage_test))
+
+            if acc.service in CRM_SERVICES:
+                for crm_test in crm_tests:
+                    cases.append(utils.create_test_case(acc, crm_test))
+
+    return cases
 
 if __name__ == '__main__':
-    test_classes = []
-    for m in sys.modules.keys():
-      if '.test_' in m:
-            for name, cls in inspect.getmembers(sys.modules[m], inspect.isclass):
-                if '.test_' in cls.__module__:
-                    test_classes.append(cls)
-    cases = []
-    management_cases = []
-    for cls in test_classes:
-        if utils.DEV_KEY:
-            if 'management_api.' in cls.__module__:
-                management_cases.append(cls)
-                continue
-        if utils.API_KEY:
-            if 'test_cases.' in cls.__module__:
-                for acc in utils.accounts:
-                    cases.append(utils.create_test_case(acc, cls))
-
-    if utils.DEV_KEY:
-        suite = utils.create_suite(management_cases)
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    if utils.API_KEY:
-        kloudless.configure(base_url='https://api.kloudless.com')
-        suite = utils.create_suite(cases)
-        unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = utils.create_suite(test_cases())
+    unittest.TextTestRunner(verbosity=2).run(suite)

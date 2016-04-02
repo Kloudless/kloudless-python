@@ -1,4 +1,11 @@
-import kloudless
+import sys
+import imp
+
+# To handle package name changes
+setup = imp.load_source('setup', '../../setup.py')
+sys.modules['sdk'] = __import__(setup.package_name)
+
+import sdk
 
 from functools import wraps
 
@@ -11,10 +18,10 @@ def configured_test(f):
     """
     @wraps(f)
     def wrapper(*args, **kwargs):
-        default_config = kloudless.config.configure()
-        kloudless.configure(**test_configuration)
+        default_config = sdk.config.configure()
+        sdk.configure(**test_configuration)
         result = f(*args, **kwargs)
-        kloudless.configure(**default_config)
+        sdk.configure(**default_config)
         return result
     return wrapper
 

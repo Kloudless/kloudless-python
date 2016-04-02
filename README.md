@@ -21,7 +21,28 @@ pip install https://github.com/kloudless/kloudless-python/archive/master.zip
 ## Documentation
 
 See the [Kloudless API Docs](https://developers.kloudless.com/docs) for the official reference.
-You can obtain an API Key at the [Developer Portal](https://developers.kloudless.com).
+You can obtain an API Key at the [Developer Portal](https://developers.kloudless.com), or
+use an authenticated user's Bearer token.
+
+## Configuration
+
+Configure Kloudless using the `configure` method on the `kloudless` module:
+
+```python
+>>> import kloudless
+>>> kloudless.configure(token="BEARER TOKEN")
+>>> # Or:
+>>> kloudless.configure(api_key="API_KEY")
+```
+
+Here are the configuration options:
+
+* `api_key` The Kloudless API Key. Will be used instead of the Bearer Token if
+  both are provided.
+* `dev_key` The Kloudless Developer Key. Used to access the Management API.
+* `token` A Kloudless account's Bearer token.
+* `api_version` The API version. (default: `0`)
+* `base_url` The API Server's URL. (default: `https://api.kloudless.com`)
 
 ### Resources
 

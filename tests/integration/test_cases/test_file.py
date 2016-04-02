@@ -1,10 +1,11 @@
-import kloudless
 import unittest
-import utils
 import os
+import random
 import json
 import time
-from kloudless.exceptions import KloudlessException as KException
+
+import utils
+import sdk
 
 class File(unittest.TestCase):
 
@@ -13,10 +14,6 @@ class File(unittest.TestCase):
         self.folder = utils.create_or_get_test_folder(self.account)
         self.file = utils.create_test_file(self.account)
 
-    # delete test folder
-    def tearDown(self):
-        self.tearDownClass()
-
     # CREATE
     def test_create_file(self):
         self.assertEqual(self.file.account, self.account.id)
@@ -24,7 +21,7 @@ class File(unittest.TestCase):
                                           overwrite=False)
         self.assertNotEqual(self.file.name, new_file.name)
         new_file = utils.create_test_file(self.account, file_data='test data2',
-                                          overwrite=True)
+                                          file_name=self.file.name, overwrite=True)
         self.assertEqual(self.file.name, new_file.name)
 
     # Read
@@ -53,9 +50,9 @@ class File(unittest.TestCase):
 
     def test_move_file(self):
         new_name = 'moved %s' % self.file.name
-        folder1 = self.account.folders.create(parent_id=self.folder.id,
-                                              name='folder1')
-        self.assertTrue(utils.is_folder_present('folder1', self.folder))
+        folder1 = self.account.folders.create(
+            parent_id=self.folder.id, name='folder %s' % random.randint(0, 10e10))
+        self.assertTrue(utils.is_folder_present(folder1.name, self.folder))
         self.file.parent_id = folder1.id
         self.file.name = new_name
         self.assertTrue(self.file.name, new_name)
@@ -65,9 +62,9 @@ class File(unittest.TestCase):
 
     def test_copy_file(self):
         new_name = 'copied %s' % self.file.name
-        folder1 = self.account.folders.create(parent_id=self.folder.id,
-                                              name='folder1')
-        self.assertTrue(utils.is_folder_present('folder1', self.folder))
+        folder1 = self.account.folders.create(
+            parent_id=self.folder.id, name='folder %s' % random.randint(0, 10e10))
+        self.assertTrue(utils.is_folder_present(folder1.name, self.folder))
         new_file = self.file.copy_file(parent_id=folder1.id, name=new_name)
         self.assertTrue(new_file)
         self.assertTrue(new_file.name, new_name)
@@ -84,7 +81,7 @@ class File(unittest.TestCase):
         try:
             self.file.delete(permanent=True)
             read_file = self.account.files.retrieve(self.file.id)
-        except KException, e:
+        except sdk.exceptions.KloudlessException, e:
             error_data = json.loads(str(e).split('Error data: ')[1])
             self.assertEqual(error_data['status_code'], 404)
 
@@ -144,6 +141,9 @@ class File(unittest.TestCase):
         properties = parse(self.file.properties.all())
         self.assertEqual(len(properties), 0)
 
+def test_cases():
+    return [utils.create_test_case(acc, File) for acc in utils.accounts]
+
 if __name__ == '__main__':
-    suite = utils.create_suite([utils.create_test_case(acc, File) for acc in utils.accounts])
+    suite = utils.create_suite(test_cases())
     unittest.TextTestRunner(verbosity=2).run(suite)

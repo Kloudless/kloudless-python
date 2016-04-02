@@ -1,4 +1,4 @@
-from .util import to_datetime, to_iso, logger
+from .util import to_datetime, to_iso
 from .http import request
 from .exceptions import KloudlessException as KException
 from . import config
@@ -7,6 +7,7 @@ import inspect
 import json
 import requests
 import warnings
+
 
 class BaseResource(dict):
 
@@ -25,7 +26,8 @@ class BaseResource(dict):
     _api_session = requests.Session()
 
     def __init__(self, id=None, parent_resource=None, configuration=None):
-        if not configuration: configuration = {}
+        if not configuration:
+            configuration = {}
         self._configuration = config.merge(configuration)
 
         self['id'] = id
@@ -49,7 +51,7 @@ class BaseResource(dict):
             elif not isinstance(self._parent_resource,
                                 self._parent_resource_class):
                 raise KException("The parent resource must be a %s object." %
-                             self._parent_resource_class)
+                                 self._parent_resource_class)
 
     def populate(self, data):
         """
@@ -90,7 +92,8 @@ class BaseResource(dict):
             if data.get('type') in resources:
                 klass = resources[data['type']]
 
-            instance = klass(id=data.get('id'), parent_resource=parent_resource,
+            instance = klass(id=data.get('id'),
+                             parent_resource=parent_resource,
                              configuration=configuration)
             instance.populate(data)
             return instance
@@ -135,7 +138,7 @@ class BaseResource(dict):
 
     def __getattr__(self, k):
         if k[0] == '_':
-             raise AttributeError(k)
+            raise AttributeError(k)
         try:
             return self[k]
         except KeyError, e:
@@ -147,7 +150,7 @@ class BaseResource(dict):
     def __getitem__(self, k):
         try:
             return super(BaseResource, self).__getitem__(k)
-        except KeyError, e:
+        except KeyError:
             if k in self._removed_keys:
                 raise KeyError(
                     "%r. The key %s was previously present but no longer is. "
@@ -163,6 +166,7 @@ class BaseResource(dict):
         raise TypeError(
             "Items cannot be deleted. Please set them to None instead if you "
             "wish to clear them.")
+
 
 class AnnotatedList(list):
     """
@@ -185,20 +189,24 @@ class AnnotatedList(list):
             raise KException("No lists were found!")
         list.__init__(self, objects)
 
+
 def allow_proxy(func):
     func.allow_proxy = True
     return func
+
 
 class ListMixin(object):
     @classmethod
     @allow_proxy
     def all(cls, parent_resource=None, configuration=None, **params):
-        response = request(cls._api_session.get, cls.list_path(parent_resource),
+        response = request(cls._api_session.get,
+                           cls.list_path(parent_resource),
                            configuration=configuration, params=params)
         data = cls.create_from_data(
             response.json(), parent_resource=parent_resource,
             configuration=configuration)
         return AnnotatedList(data)
+
 
 class RetrieveMixin(object):
     @classmethod
@@ -219,14 +227,16 @@ class RetrieveMixin(object):
                            configuration=self._configuration)
         self.populate(response.json())
 
+
 class ReadMixin(RetrieveMixin, ListMixin):
     pass
+
 
 class CreateMixin(object):
     @classmethod
     @allow_proxy
     def create(cls, params=None, parent_resource=None, configuration=None,
-            method='post', data=None, **deprecated_data):
+               method='post', data=None, **deprecated_data):
         """
         params: A dict containing query parameters.
         data: A dict containing data.
@@ -235,22 +245,27 @@ class CreateMixin(object):
         """
         method = getattr(cls._api_session, method)
 
-        if not data: data = {}
+        if not data:
+            data = {}
 
         if deprecated_data:
-            warnings.warn("Passing in data as keyword arguments will "
-                "be removed in version 1. Pass in data as a dict instead. "
-                "e.g. data={'name': 'example'}", DeprecationWarning)
+            warnings.warn("Passing in data as keyword arguments will be "
+                          "removed in version 1. Pass in data as a dict "
+                          "instead. e.g. data={'name': 'example'}",
+                          DeprecationWarning)
             data.update(deprecated_data)
 
         data = cls.serialize(data)
 
-        if not params: params = {}
+        if not params:
+            params = {}
         response = request(method, cls.list_path(parent_resource),
-                           configuration=configuration, data=data, params=params)
+                           configuration=configuration, data=data,
+                           params=params)
         return cls.create_from_data(
             response.json(), parent_resource=parent_resource,
             configuration=configuration)
+
 
 class UpdateMixin(object):
     def _data_to_save(self, new_data):
@@ -279,8 +294,8 @@ class UpdateMixin(object):
                     raise KException("No ID provided to identify the resource "
                                      "to update.")
             response = request(self._api_session.patch, self.detail_path(),
-                               configuration=self._configuration, data=new_data,
-                               params=params)
+                               configuration=self._configuration,
+                               data=new_data, params=params)
             self.populate(response.json())
 
             # For some resources (eg: File/Folder), the parent resource could
@@ -288,35 +303,42 @@ class UpdateMixin(object):
             # This assumes that if the metadata contains an 'account' key,
             # it maps to the correct Account ID. We update our parent
             # resource with the ID and it's metadata if it is different.
-            if self._parent_resource:
-                parent_resource_type = resource_types[self._parent_resource_class]
-                if (hasattr(self, parent_resource_type) and
-                    self._parent_resource.id != self[parent_resource_type]):
-                    self._parent_resource.id = self[parent_resource_type]
+            res_type = resource_types[self.__class__]
+            if (self._parent_resource and res_type in ['file', 'folder',
+                                                       'link', 'key']):
+                parent_res_type = resource_types[self._parent_resource_class]
+                if (hasattr(self, parent_res_type) and
+                        self._parent_resource.id != self[parent_res_type]):
+                    self._parent_resource.id = self[parent_res_type]
                     self._parent_resource.refresh()
 
             return True
         return False
 
+
 class DeleteMixin(object):
     def delete(self, **params):
-        response = request(self._api_session.delete, self.detail_path(),
-                           configuration=self._configuration, params=params)
+        request(self._api_session.delete, self.detail_path(),
+                configuration=self._configuration, params=params)
         self.populate({})
+
 
 class CopyMixin(object):
     def _copy(self, **data):
         """
         Copy the file/folder to another location.
         """
-        response = request(self._api_session.post, "%s/copy" % self.detail_path(),
+        response = request(self._api_session.post,
+                           "%s/copy" % self.detail_path(),
                            configuration=self._configuration, data=data)
         return self.__class__.create_from_data(
             response.json(), parent_resource=self._parent_resource,
             configuration=self._configuration)
 
+
 class WriteMixin(CreateMixin, UpdateMixin, DeleteMixin):
     pass
+
 
 class ResourceProxy(object):
     """
@@ -352,10 +374,11 @@ class ResourceProxy(object):
         return self.klass(*args, **kwargs)
 
     def update_kwargs(self, kwargs):
-        if not kwargs.has_key('parent_resource'):
+        if 'parent_resource' not in kwargs:
             kwargs['parent_resource'] = self.parent_resource
-        if not kwargs.has_key('configuration'):
+        if 'configuration' not in kwargs:
             kwargs['configuration'] = self.configuration
+
 
 class Proxy:
     def _get_proxy(self, resource_name):
@@ -368,6 +391,7 @@ class Proxy:
                 resource, parent_resource=self,
                 configuration=self._configuration)
         return self._proxies[resource_name]
+
 
 class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
     def __init__(self, *args, **kwargs):
@@ -394,11 +418,35 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
                 serialized[k] = v
         return serialized
 
+    def convert(self, data=None, params=None):
+        params = {} if params is None else params
+        data = {} if data is None else data
+
+        convert_path = "%s/%s" % (self.detail_path(), 'convert_id')
+
+        response = request(self._api_session.post, convert_path,
+                           configuration=self._configuration, data=data,
+                           params=params)
+
+        return response.json()
+
+    def file_upload_url(self, data=None, params=None):
+        params = {} if params is None else params
+        data = {} if data is None else data
+
+        upload_url_path = "%s/%s" % (self.detail_path(), 'file_upload_url')
+
+        response = request(self._api_session.post, upload_url_path,
+                           configuration=self._configuration, data=data,
+                           params=params)
+
+        return response.json()
+
     def save(self, **params):
         # TODO: add in fields token, token_secret, refresh_token
-        response = request(self._api_session.patch, self.detail_path(),
-                   configuration=self._configuration, data=self.serialize_account(self),
-                   params=params)
+        request(self._api_session.patch, self.detail_path(),
+                configuration=self._configuration,
+                data=self.serialize_account(self), params=params)
 
     @property
     def links(self):
@@ -440,6 +488,51 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
     def groups(self):
         return self._get_proxy('group')
 
+    @property
+    def crm_objects(self):
+        return self._get_proxy('crm_object')
+
+    @property
+    def crm_accounts(self):
+        return self._get_proxy('crm_account')
+
+    @property
+    def crm_contacts(self):
+        return self._get_proxy('crm_contact')
+
+    @property
+    def crm_leads(self):
+        return self._get_proxy('crm_lead')
+
+    @property
+    def crm_opportunities(self):
+        return self._get_proxy('crm_opportunity')
+
+    @property
+    def crm_campaigns(self):
+        return self._get_proxy('crm_campaign')
+
+    @property
+    def crm_tasks(self):
+        return self._get_proxy('crm_task')
+
+    @property
+    def crm_batch(self):
+        return self._get_proxy('crm_batch')
+
+    @property
+    def crm_recent(self):
+        return self._get_proxy('crm_recent')
+
+    @property
+    def crm_search(self):
+        return self._get_proxy('crm_search')
+
+    @property
+    def crm_events(self):
+        return self._get_proxy('crm_events')
+
+
 class AccountBaseResource(BaseResource):
     _parent_resource_class = Account
 
@@ -456,12 +549,14 @@ class AccountBaseResource(BaseResource):
         account_path = account.detail_path()
         return "%s/%s" % (account_path, cls._path_segment)
 
+
 class FileSystem(BaseResource, Proxy):
     _path_segment = None
 
     @property
     def permissions(self):
         return self._get_proxy('permission')
+
 
 class FileSystemBaseResource(BaseResource):
     _parent_resource_class = FileSystem
@@ -475,6 +570,7 @@ class FileSystemBaseResource(BaseResource):
     def list_path(cls, file):
         file_path = file.detail_path()
         return "%s/%s" % (file_path, cls._path_segment)
+
 
 class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
            CopyMixin, FileSystem):
@@ -490,16 +586,18 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
                parent_resource=None, configuration=None, **params):
         """
         This handles file uploads.
-        file_data` can be either a string with file data in it or a file-like object.
+        `file_data` can be either a string with file data in it or a
+        file-like object.
         """
         data = {
             'metadata': json.dumps({
-                    'name': file_name,
-                    'parent_id': parent_id,
-                })
-            }
+                'name': file_name,
+                'parent_id': parent_id,
+            })
+        }
         files = {'file': file_data}
-        response = request(cls._api_session.post, cls.list_path(parent_resource),
+        response = request(cls._api_session.post,
+                           cls.list_path(parent_resource),
                            data=data, files=files, params=params,
                            configuration=configuration)
         return cls.create_from_data(
@@ -508,8 +606,10 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
 
     def update(self, file_data=''):
         """
-        This overwites the file specified by 'file_id' with the contents of 'file_data'.
-        'file_data' can be either a string with file data in it or a file-like object.
+        This overwites the file specified by 'file_id' with the contents of
+        `file_data`.
+        `file_data` can be either a string with file data in it or a
+        file-like object.
         """
         files = {'file': file_data}
         response = request(self._api_session.put, self.detail_path(),
@@ -531,12 +631,14 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
         For more information, see the documentation for requests.Response's
         Body content workflow.
         """
-        response = request(self._api_session.get, "%s/contents" % self.detail_path(),
+        response = request(self._api_session.get,
+                           "%s/contents" % self.detail_path(),
                            configuration=self._configuration, stream=True)
         return response
 
     def copy_file(self, **data):
         return self._copy(**data)
+
 
 class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
              CreateMixin, CopyMixin, FileSystem):
@@ -548,7 +650,8 @@ class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
         super(Folder, self).__init__(*args, **kwargs)
 
     def contents(self):
-        response = request(self._api_session.get, "%s/contents" % self.detail_path(),
+        response = request(self._api_session.get,
+                           "%s/contents" % self.detail_path(),
                            configuration=self._configuration)
         data = self.create_from_data(
             response.json(), parent_resource=self._parent_resource,
@@ -558,17 +661,22 @@ class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
     def copy_folder(self, **data):
         return self._copy(**data)
 
+
 class Link(AccountBaseResource, ReadMixin, WriteMixin):
     _path_segment = 'links'
+
 
 class Key(AccountBaseResource, ReadMixin):
     _path_segment = 'keys'
 
+
 class Search(AccountBaseResource, ListMixin):
     _path_segment = 'search'
 
+
 class Recent(AccountBaseResource, ListMixin):
     _path_segment = 'recent'
+
 
 class Events(AccountBaseResource, ListMixin):
     _path_segment = 'events'
@@ -585,6 +693,7 @@ class Events(AccountBaseResource, ListMixin):
         else:
             return data
 
+
 class Multipart(AccountBaseResource, RetrieveMixin, CreateMixin, DeleteMixin):
     """
     Multipart Uploads.
@@ -599,24 +708,27 @@ class Multipart(AccountBaseResource, RetrieveMixin, CreateMixin, DeleteMixin):
         This handles uploading chunks of the file, after a multipart upload has
         been initiated.
         `part_number`
-        `data` can be either a string with file data in it or a file-like object.
+        `data` can be either a string with file data in it or a
+        file-like object.
         """
         params.update({'part_number': part_number})
         headers = {'Content-Type': 'application/octet-stream'}
-        response = request(self._api_session.put, self.detail_path(),
-                           data=data, params=params, headers=headers,
-                           configuration=configuration)
+        request(self._api_session.put, self.detail_path(),
+                data=data, params=params, headers=headers,
+                configuration=configuration)
         return True
 
     def complete(self, **params):
         """
         Completes the multipart upload and returns a File object.
         """
-        response = request(self._api_session.post, "%s/complete" % self.detail_path(),
+        response = request(self._api_session.post,
+                           "%s/complete" % self.detail_path(),
                            params=params, configuration=self._configuration)
         return File.create_from_data(
             response.json(), parent_resource=self._parent_resource,
             configuration=self._configuration)
+
 
 class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
     _path_segment = 'permissions'
@@ -624,9 +736,10 @@ class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
     @classmethod
     @allow_proxy
     def all(cls, parent_resource=None, configuration=None, **params):
-        response = request(cls._api_session.get, cls.list_path(parent_resource),
+        response = request(cls._api_session.get,
+                           cls.list_path(parent_resource),
                            configuration=configuration, params=params)
-        
+
         response_json = response.json()
         permissions = response_json.get('permissions')
         for perm in permissions:
@@ -639,15 +752,22 @@ class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
 
     @classmethod
     @allow_proxy
-    def create(cls, params=None, parent_resource=None, configuration=None, data=None):
-        return super(Permission, cls).create(params=params, parent_resource=parent_resource,
-                configuration=configuration, method='put', data=data)
+    def create(cls, params=None, parent_resource=None, configuration=None,
+               data=None):
+        return super(Permission, cls).create(params=params,
+                                             parent_resource=parent_resource,
+                                             configuration=configuration,
+                                             method='put', data=data)
 
     @classmethod
     @allow_proxy
-    def update(cls, params=None, parent_resource=None, configuration=None, data=None):
-        return super(Permission, cls).create(params=params, parent_resource=parent_resource,
-                configuration=configuration, method='patch', data=data)
+    def update(cls, params=None, parent_resource=None, configuration=None,
+               data=None):
+        return super(Permission, cls).create(params=params,
+                                             parent_resource=parent_resource,
+                                             configuration=configuration,
+                                             method='patch', data=data)
+
 
 class Property(FileSystemBaseResource):
     _path_segment = 'properties'
@@ -658,19 +778,23 @@ class Property(FileSystemBaseResource):
         """
         Returns a full list of custom properties associated with this file.
         """
-        response = request(cls._api_session.get, cls.list_path(parent_resource),
+        response = request(cls._api_session.get,
+                           cls.list_path(parent_resource),
                            configuration=configuration)
         return response.json()
 
     @classmethod
     @allow_proxy
-    def update(cls, parent_resource=None, configuration=None, data=None, **params):
+    def update(cls, parent_resource=None, configuration=None, data=None,
+               **params):
         """
         Updates custom properties associated with this file.
         'data' should be a list of dicts containing key/value pairs.
         """
-        response = request(cls._api_session.patch, cls.list_path(parent_resource),
-                           configuration=configuration, data=data, params=params)
+        response = request(cls._api_session.patch,
+                           cls.list_path(parent_resource),
+                           configuration=configuration, data=data,
+                           params=params)
         return response.json()
 
     @classmethod
@@ -679,16 +803,17 @@ class Property(FileSystemBaseResource):
         """
         Deletes all custom properties associated with this file.
         """
-        response = request(cls._api_session.delete, cls.list_path(parent_resource),
-                           configuration=configuration)
+        request(cls._api_session.delete, cls.list_path(parent_resource),
+                configuration=configuration)
         return True
+
 
 class User(AccountBaseResource, ReadMixin):
     _path_segment = 'team/users'
 
     def get_groups(self, **params):
         response = request(self._api_session.get, "%s/%s" %
-                            (self.detail_path(), "memberships"),
+                           (self.detail_path(), "memberships"),
                            configuration=self._configuration, params=params)
 
         data = Group.create_from_data(
@@ -696,18 +821,116 @@ class User(AccountBaseResource, ReadMixin):
             configuration=self._configuration)
         return AnnotatedList(data)
 
+
 class Group(AccountBaseResource, ReadMixin):
     _path_segment = 'team/groups'
 
     def get_users(self, **params):
         response = request(self._api_session.get, "%s/%s" %
-                            (self.detail_path(), "members"),
+                           (self.detail_path(), "members"),
                            configuration=self._configuration, params=params)
 
         data = User.create_from_data(
             response.json(), parent_resource=self._parent_resource,
             configuration=self._configuration)
         return AnnotatedList(data)
+
+
+class CRMObject(AccountBaseResource, ListMixin, CreateMixin, RetrieveMixin,
+                UpdateMixin, DeleteMixin):
+    _path_segment = 'crm/objects'
+    raw_type = None
+
+    def __init__(self, *args, **kwargs):
+        super(CRMObject, self).__init__(*args, **kwargs)
+
+    @classmethod
+    @allow_proxy
+    def all(cls, parent_resource=None, configuration=None, **params):
+        if cls.raw_type is not None:
+            params['raw_type'] = cls.raw_type
+        return super(CRMObject, cls).all(parent_resource=parent_resource,
+                                         configuration=configuration, **params)
+
+    @classmethod
+    @allow_proxy
+    def create(cls, params=None, parent_resource=None, configuration=None,
+               method='post', data=None, **deprecated_data):
+        params = {} if params is None else params
+        if cls.raw_type is not None:
+            params['raw_type'] = cls.raw_type
+        return super(CRMObject, cls).create(params=params,
+                                            parent_resource=parent_resource,
+                                            configuration=configuration,
+                                            method=method, data=data)
+
+    @classmethod
+    @allow_proxy
+    def retrieve(cls, id, parent_resource=None, configuration=None, **params):
+        if cls.raw_type is not None:
+            params['raw_type'] = cls.raw_type
+        return super(CRMObject, cls).retrieve(id,
+                                              parent_resource=parent_resource,
+                                              configuration=configuration,
+                                              **params)
+
+    def save(self, **params):
+        # TODO: change serializer
+        if self.raw_type is not None:
+            params['raw_type'] = self.raw_type
+        super(CRMObject, self).save(**params)
+
+    def delete(self, **params):
+        if self.raw_type is not None:
+            params['raw_type'] = self.raw_type
+        super(CRMObject, self).delete(**params)
+
+
+class CRMAccount(CRMObject):
+    _path_segment = 'crm/accounts'
+    raw_type = 'Account'
+
+
+class CRMContact(CRMObject):
+    _path_segment = 'crm/contacts'
+    raw_type = 'Contact'
+
+
+class CRMLead(CRMObject):
+    _path_segment = 'crm/leads'
+    raw_type = 'Lead'
+
+
+class CRMOpportunity(CRMObject):
+    _path_segment = 'crm/opportunities'
+    raw_type = 'Opportunity'
+
+
+class CRMCampaign(CRMObject):
+    _path_segment = 'crm/campaigns'
+    raw_type = 'Campaign'
+
+
+class CRMTask(CRMObject):
+    _path_segment = 'crm/tasks'
+    raw_type = 'Task'
+
+
+class CRMBatchRequest(AccountBaseResource, CreateMixin):
+    _path_segment = 'crm/batch'
+
+
+class CRMRecent(AccountBaseResource, ListMixin):
+    _path_segment = 'crm/recent'
+
+
+class CRMSearch(AccountBaseResource, ListMixin):
+    _path_segment = 'crm/search'
+
+
+class CRMEvents(AccountBaseResource, ListMixin):
+    _path_segment = 'events'
+
 
 class Application(BaseResource, ReadMixin, WriteMixin, Proxy):
 
@@ -726,6 +949,7 @@ class Application(BaseResource, ReadMixin, WriteMixin, Proxy):
     def webhooks(self):
         return self._get_proxy('webhook')
 
+
 class ApplicationBaseResource(BaseResource):
     _parent_resource_class = Application
 
@@ -739,16 +963,19 @@ class ApplicationBaseResource(BaseResource):
         application_path = application.detail_path()
         return "%s/%s" % (application_path, cls._path_segment)
 
+
 class ApiKey(ApplicationBaseResource, ListMixin, CreateMixin, DeleteMixin):
     _path_segment = 'apikeys'
 
     def detail_path(self):
         if not self['key']:
-            raise KException("The detail_path cannot be obtained since the key "
-                             "is unknown.")
+            raise KException("The detail_path cannot be obtained since the key"
+                             " is unknown.")
         return "%s/%s" % (self.list_path(self._parent_resource), self['key'])
 
-class WebHook(ApplicationBaseResource, ListMixin, CreateMixin, RetrieveMixin, DeleteMixin):
+
+class WebHook(ApplicationBaseResource, ListMixin, CreateMixin, RetrieveMixin,
+              DeleteMixin):
     _path_segment = 'webhooks'
 
     def detail_path(self):
@@ -771,8 +998,21 @@ resources = {
     'property': Property,
     'user': User,
     'group': Group,
+    # CRM Endpoint
+    'crm_object': CRMObject,
+    'crm_account': CRMAccount,
+    'crm_contact': CRMContact,
+    'crm_lead': CRMLead,
+    'crm_opportunity': CRMOpportunity,
+    'crm_campaign': CRMCampaign,
+    'crm_task': CRMTask,
+    'crm_batch': CRMBatchRequest,
+    'crm_recent': CRMRecent,
+    'crm_search': CRMSearch,
+    'crm_events': CRMEvents,
+    # Application Endpoint
     'application': Application,
     'apikey': ApiKey,
     'webhook': WebHook,
-    }
-resource_types = {v:k for k,v in resources.iteritems()}
+}
+resource_types = {v: k for k, v in resources.iteritems()}
