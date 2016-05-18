@@ -5,6 +5,8 @@ class KloudlessException(Exception):
 
         self.error_data = {}
         self.status = None
+        self.response = response
+
         if response is not None:
             self.status = response.status_code
             message += ' Error data: ' + response.text
@@ -31,6 +33,16 @@ class AuthorizationException(KloudlessException):
     default_message = (
         "Authorization failed. Please double check that the API Key "
         "being used is correct.")
+
+class RateLimitException(KloudlessException):
+    default_message = (
+        "Rate limiting encountered. Please try again later.")
+
+    def __init__(self, *args, **kwargs):
+        super(RateLimitException, self).__init__(*args, **kwargs)
+        self.retry_after = None
+        if self.response is not None and 'Retry-After' in self.response.headers:
+            self.retry_after = float(self.response.headers['Retry-After'])
 
 class ServerException(KloudlessException):
     default_message = (

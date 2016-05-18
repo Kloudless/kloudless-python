@@ -4,6 +4,7 @@ from . import exceptions
 
 import functools
 import json
+import time
 from abc import ABCMeta, abstractproperty
 
 class BaseAuth:
@@ -71,10 +72,10 @@ def request(method, path, configuration=None, **kwargs):
             kwargs['data'] = json.dumps(kwargs['data'])
 
     requestor = _get_requestor(method, url, **kwargs)
-    response = _request(requestor)
+    response = _request(requestor, configuration)
     return response
 
-def _request(requestor):
+def _request(requestor, configuration):
     response = requestor()
 
     if not response.ok:
@@ -84,6 +85,15 @@ def _request(requestor):
             raise exceptions.AuthenticationException(response=response)
         elif response.status_code == 401:
             raise exceptions.AuthorizationException(response=response)
+        elif response.status_code == 429:
+            throttle_obj = configuration.get('throttle_retry_strategy')
+            if not throttle_obj:
+                raise exceptions.RateLimitException(response=response)
+
+            delay = throttle_obj.track_and_delay(response)
+            if delay is not None:
+                time.sleep(delay)
+                return _request(requestor, configuration)
         elif response.status_code >= 500:
             raise exceptions.ServerException(response=response)
         else:

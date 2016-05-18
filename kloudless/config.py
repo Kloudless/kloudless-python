@@ -1,9 +1,12 @@
+from . import throttling
+
 _configuration = {
     'api_key': None,
     'dev_key': None,
     'token': None,
     'api_version': '0',
-    'base_url': 'https://api.kloudless.com'
+    'base_url': 'https://api.kloudless.com',
+    'throttle_retry_strategy': throttling.ExpFallback(),
     }
 
 def configure(**params):
