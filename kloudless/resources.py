@@ -22,8 +22,13 @@ class BaseResource(dict):
         }
 
     _path_segment = None
+
     _parent_resource_class = None
-    _api_session = requests.Session()
+
+    # requests.Session's connection pool could cause failures due to the lack
+    # of keep-alives causing the connection to drop unexpectedly.
+    # Use `requests` to be safe, but alter if better performance is preferable.
+    _api_session = requests
 
     def __init__(self, id=None, parent_resource=None, configuration=None):
         if not configuration:

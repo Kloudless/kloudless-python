@@ -4,6 +4,7 @@ import os
 import sys
 import imp
 from functools import wraps
+import requests
 
 # To handle package name changes
 curdir = os.path.dirname(os.path.realpath(__file__))
@@ -21,7 +22,7 @@ if not BASE_URL:
     BASE_URL = 'https://api.kloudless.com'
 
 sdk.configure(api_key=API_KEY, dev_key=DEV_KEY, base_url=BASE_URL)
-
+sdk.BaseResource._api_session = requests.Session()
 
 def create_or_get_test_folder(account, parent_id='root', name=None):
     test_folders = dynamic_case_module.test_folders
