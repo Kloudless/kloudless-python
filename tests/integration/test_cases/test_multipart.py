@@ -15,7 +15,7 @@ class Multipart(unittest.TestCase):
 
     def test_multipart(self):
         if self.account.service not in allow_multipart:
-            self.skipTest("Multipart no allowed")
+            self.skipTest("Multipart not allowed.")
 
         # Create Multipart
         acc = self.account
