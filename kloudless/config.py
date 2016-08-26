@@ -4,7 +4,7 @@ _configuration = {
     'api_key': None,
     'dev_key': None,
     'token': None,
-    'api_version': '0',
+    'api_version': '1',
     'base_url': 'https://api.kloudless.com',
     'throttle_retry_strategy': throttling.ExpFallback(),
     }

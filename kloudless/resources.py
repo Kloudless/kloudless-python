@@ -309,8 +309,7 @@ class UpdateMixin(object):
             # it maps to the correct Account ID. We update our parent
             # resource with the ID and it's metadata if it is different.
             res_type = resource_types[self.__class__]
-            if (self._parent_resource and res_type in ['file', 'folder',
-                                                       'link', 'key']):
+            if (self._parent_resource and res_type in ['file', 'folder', 'link']):
                 parent_res_type = resource_types[self._parent_resource_class]
                 if (hasattr(self, parent_res_type) and
                         self._parent_resource.id != self[parent_res_type]):
@@ -466,10 +465,6 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
         return self._get_proxy('folder')
 
     @property
-    def keys(self):
-        return self._get_proxy('key')
-
-    @property
     def search(self):
         return self._get_proxy('search')
 
@@ -579,7 +574,7 @@ class FileSystemBaseResource(BaseResource):
 
 class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
            CopyMixin, FileSystem):
-    _path_segment = 'files'
+    _path_segment = 'storage/files'
 
     @property
     def properties(self):
@@ -648,7 +643,7 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
 class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
              CreateMixin, CopyMixin, FileSystem):
 
-    _path_segment = 'folders'
+    _path_segment = 'storage/folders'
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('id', 'root')
@@ -668,19 +663,15 @@ class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
 
 
 class Link(AccountBaseResource, ReadMixin, WriteMixin):
-    _path_segment = 'links'
-
-
-class Key(AccountBaseResource, ReadMixin):
-    _path_segment = 'keys'
+    _path_segment = 'storage/links'
 
 
 class Search(AccountBaseResource, ListMixin):
-    _path_segment = 'search'
+    _path_segment = 'storage/search'
 
 
 class Recent(AccountBaseResource, ListMixin):
-    _path_segment = 'recent'
+    _path_segment = 'storage/recent'
 
 
 class Events(AccountBaseResource, ListMixin):
@@ -705,7 +696,7 @@ class Multipart(AccountBaseResource, RetrieveMixin, CreateMixin, DeleteMixin):
     Create the multipart upload first, prior to uploading chunks of data.
     Complete the upload once all chunks have been uploaded.
     """
-    _path_segment = 'multipart'
+    _path_segment = 'storage/multipart'
 
     def upload_chunk(self, part_number=None, data='',
                      parent_resource=None, configuration=None, **params):
@@ -736,7 +727,7 @@ class Multipart(AccountBaseResource, RetrieveMixin, CreateMixin, DeleteMixin):
 
 
 class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
-    _path_segment = 'permissions'
+    _path_segment = 'storage/permissions'
 
     @classmethod
     @allow_proxy
@@ -775,7 +766,7 @@ class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
 
 
 class Property(FileSystemBaseResource):
-    _path_segment = 'properties'
+    _path_segment = 'storage/properties'
 
     @classmethod
     @allow_proxy
@@ -925,16 +916,8 @@ class CRMBatchRequest(AccountBaseResource, CreateMixin):
     _path_segment = 'crm/batch'
 
 
-class CRMRecent(AccountBaseResource, ListMixin):
-    _path_segment = 'crm/recent'
-
-
 class CRMSearch(AccountBaseResource, ListMixin):
     _path_segment = 'crm/search'
-
-
-class CRMEvents(AccountBaseResource, ListMixin):
-    _path_segment = 'events'
 
 
 class Application(BaseResource, ReadMixin, WriteMixin, Proxy):
@@ -994,7 +977,6 @@ resources = {
     'file': File,
     'folder': Folder,
     'link': Link,
-    'key': Key,
     'search': Search,
     'recent': Recent,
     'events': Events,
@@ -1012,9 +994,7 @@ resources = {
     'crm_campaign': CRMCampaign,
     'crm_task': CRMTask,
     'crm_batch': CRMBatchRequest,
-    'crm_recent': CRMRecent,
     'crm_search': CRMSearch,
-    'crm_events': CRMEvents,
     # Application Endpoint
     'application': Application,
     'apikey': ApiKey,
