@@ -17,10 +17,13 @@ class Account(unittest.TestCase):
         account = sdk.Account.retrieve(id=self.account.id)
         self.assertTrue(account.account)
 
-    def _import(self, service='s3', **extra):
-        return sdk.Account.create(
-            account='test %s' % random.randint(0, 10e8), token='test',
-            service=service, **extra)
+    def _import(self, service='s3', **data):
+        data.update({
+            'account': 'test %s' % random.randint(0, 10e8),
+            'token': 'test',
+            'service': service
+        })
+        return sdk.Account.create(data=data)
 
     @utils.accounts_wide
     def test_list_accounts(self):
@@ -104,20 +107,6 @@ class Account(unittest.TestCase):
             data['type'] = obj.type
             response = account.convert(data=data)
             self.assertTrue('id' in response)
-
-    def test_file_upload_url(self):
-        account = sdk.Account.retrieve(id=self.account.id)
-        contents = account.folders().contents()
-        name = 'test_file_name'
-        if contents:
-            obj = contents[0]
-            data = {}
-            data['parent_id'] = obj.id
-            data['name'] = name
-            response = account.file_upload_url(data=data)
-            self.assertEqual(response['method'], 'put')
-            self.assertTrue('url' in response)
-
 
 def test_cases():
     return [utils.create_test_case(acc, Account) for acc in utils.accounts]

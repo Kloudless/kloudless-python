@@ -31,10 +31,10 @@ class Events(unittest.TestCase):
         cls.wait_time = CUSTOM_WAIT_TIMES.get(cls.account.service, WAIT_TIME)
         cls.max_retries = 2
         cls.test_folder = utils.create_or_get_test_folder(cls.account)
-        cls.test_subfolder = cls.account.folders.create(
-                parent_id=cls.test_folder.id, name='Test Events')
-        cls.test_subfolder2 = cls.account.folders.create(
-                parent_id=cls.test_folder.id, name='Test Events2')
+        cls.test_subfolder = cls.account.folders.create(data={
+            'parent_id': cls.test_folder.id, 'name': 'Test Events'})
+        cls.test_subfolder2 = cls.account.folders.create(data={
+            'parent_id': cls.test_folder.id, 'name': 'Test Events2'})
 
     def setUp(self):
         self.cursor = self.get_latest_cursor()

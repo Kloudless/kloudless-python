@@ -79,8 +79,8 @@ def test_folder_creation():
         resp._content = helpers.folder_data
         mock_req.return_value = resp
         folder = Folder.create(parent_resource=account,
-                               name="TestFolder",
-                               parent_id="root")
+                               data={'name': "TestFolder",
+                                     'parent_id': "root"})
         assert isinstance(folder, Folder)
         for attr in ['id', 'name', 'type', 'size', 'account']:
             assert folder_data[attr] == getattr(folder, attr)

@@ -240,25 +240,16 @@ class ReadMixin(RetrieveMixin, ListMixin):
 class CreateMixin(object):
     @classmethod
     @allow_proxy
-    def create(cls, params=None, parent_resource=None, configuration=None,
-               method='post', data=None, **deprecated_data):
+    def create(cls, data=None, params=None, method='post',
+               parent_resource=None, configuration=None):
         """
         params: A dict containing query parameters.
         data: A dict containing data.
-
-        TODO: Remove deprecated_data in v1.
         """
         method = getattr(cls._api_session, method)
 
         if not data:
             data = {}
-
-        if deprecated_data:
-            warnings.warn("Passing in data as keyword arguments will be "
-                          "removed in version 1. Pass in data as a dict "
-                          "instead. e.g. data={'name': 'example'}",
-                          DeprecationWarning)
-            data.update(deprecated_data)
 
         data = cls.serialize(data)
 
@@ -434,18 +425,6 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
 
         return response.json()
 
-    def file_upload_url(self, data=None, params=None):
-        params = {} if params is None else params
-        data = {} if data is None else data
-
-        upload_url_path = "%s/%s" % (self.detail_path(), 'file_upload_url')
-
-        response = request(self._api_session.post, upload_url_path,
-                           configuration=self._configuration, data=data,
-                           params=params)
-
-        return response.json()
-
     def save(self, **params):
         # TODO: add in fields token, token_secret, refresh_token
         request(self._api_session.patch, self.detail_path(),
@@ -582,38 +561,38 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
 
     @classmethod
     @allow_proxy
-    def create(cls, file_name='', parent_id='root', file_data='',
-               parent_resource=None, configuration=None, **params):
+    def create(cls, file_name='', parent_id='root', file_data='', params=None,
+               parent_resource=None, configuration=None):
         """
         This handles file uploads.
         `file_data` can be either a string with file data in it or a
         file-like object.
         """
-        data = {
-            'metadata': json.dumps({
+        headers = {
+            'X-Kloudless-Metadata': json.dumps({
                 'name': file_name,
                 'parent_id': parent_id,
-            })
+            }),
+            'Content-Type': 'application/octet-stream',
         }
-        files = {'file': file_data}
-        response = request(cls._api_session.post,
-                           cls.list_path(parent_resource),
-                           data=data, files=files, params=params,
+        response = request(cls._api_session.post, cls.list_path(parent_resource),
+                           data=file_data, params=params, headers=headers,
                            configuration=configuration)
         return cls.create_from_data(
             response.json(), parent_resource=parent_resource,
             configuration=configuration)
 
-    def update(self, file_data=''):
+    def update(self, file_data='', params=None):
         """
         This overwites the file specified by 'file_id' with the contents of
         `file_data`.
         `file_data` can be either a string with file data in it or a
         file-like object.
         """
-        files = {'file': file_data}
+        headers = {'Content-Type': 'application/octet-stream'}
         response = request(self._api_session.put, self.detail_path(),
-                           files=files, configuration=self._configuration)
+                           data=file_data, params=params, headers=headers,
+                           configuration=self._configuration)
         self.populate(response.json())
         return True
 
@@ -638,6 +617,16 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
 
     def copy_file(self, **data):
         return self._copy(**data)
+
+    @classmethod
+    @allow_proxy
+    def upload_url(cls, data=None, params=None,
+                   parent_resource=None, configuration=None):
+        upload_url_path = "%s/%s" % (cls.list_path(parent_resource), 'upload_url')
+        response = request(cls._api_session.post, upload_url_path,
+                           configuration=configuration, data=data or {},
+                           params=params or {})
+        return response.json()
 
 
 class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
@@ -727,7 +716,7 @@ class Multipart(AccountBaseResource, RetrieveMixin, CreateMixin, DeleteMixin):
 
 
 class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
-    _path_segment = 'storage/permissions'
+    _path_segment = 'permissions'
 
     @classmethod
     @allow_proxy
@@ -766,7 +755,7 @@ class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
 
 
 class Property(FileSystemBaseResource):
-    _path_segment = 'storage/properties'
+    _path_segment = 'properties'
 
     @classmethod
     @allow_proxy
@@ -851,7 +840,7 @@ class CRMObject(AccountBaseResource, ListMixin, CreateMixin, RetrieveMixin,
     @classmethod
     @allow_proxy
     def create(cls, params=None, parent_resource=None, configuration=None,
-               method='post', data=None, **deprecated_data):
+               method='post', data=None):
         params = {} if params is None else params
         if cls.raw_type is not None:
             params['raw_type'] = cls.raw_type

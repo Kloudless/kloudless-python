@@ -19,7 +19,8 @@ class Folder(unittest.TestCase):
         acc = self.account
         folder_name = '%s sub-%s' % (self.test_folder.name, self._rand())
 
-        acc.folders.create(parent_id=self.test_folder.id, name=folder_name)
+        acc.folders.create(data={
+            'parent_id': self.test_folder.id, 'name': folder_name})
         self.assertTrue(utils.is_folder_present(folder_name, self.test_folder))
 
         new_folder = acc.folders.create(
@@ -52,13 +53,14 @@ class Folder(unittest.TestCase):
         self.assertTrue(hasattr(contents, 'page'))
         self.assertTrue(hasattr(contents, 'next_page'))
 
-        new_folder = acc.folders.create(parent_id=test_folder.id, name=self._rand())
+        new_folder = acc.folders.create(data={
+            'parent_id': test_folder.id, 'name': self._rand()})
         self.assertTrue(utils.is_folder_present(new_folder.name, test_folder))
 
     def test_rename_folder(self):
         result = None
-        folder = self.account.folders.create(parent_id=self.test_folder.id,
-                                             name=self._rand())
+        folder = self.account.folders.create(data={
+            'parent_id': self.test_folder.id, 'name': self._rand()})
         old_folder_parent = folder.parent
         new_folder_name = folder.name + '_renamed'
         folder.name = new_folder_name
@@ -70,8 +72,10 @@ class Folder(unittest.TestCase):
     def test_move_folder(self):
         acc = self.account
         test_folder = self.test_folder
-        folder1 = acc.folders.create(parent_id=test_folder.id, name=self._rand())
-        folder2 = acc.folders.create(parent_id=test_folder.id, name=self._rand())
+        folder1 = acc.folders.create(data={
+            'parent_id': test_folder.id, 'name': self._rand()})
+        folder2 = acc.folders.create(data={
+            'parent_id': test_folder.id, 'name': self._rand()})
         self.assertTrue(utils.is_folder_present(folder1.name, test_folder))
         self.assertTrue(utils.is_folder_present(folder2.name, test_folder))
         folder2.parent_id = folder1.id
@@ -82,9 +86,11 @@ class Folder(unittest.TestCase):
         acc = self.account
         test_folder = self.test_folder
 
-        folder1 = acc.folders.create(parent_id=test_folder.id, name=self._rand())
+        folder1 = acc.folders.create(data={
+            'parent_id': test_folder.id, 'name': self._rand()})
         self.assertTrue(utils.is_folder_present(folder1.name, test_folder))
-        folder2 = acc.folders.create(parent_id=folder1.id, name=self._rand())
+        folder2 = acc.folders.create(data={
+            'parent_id': folder1.id, 'name': self._rand()})
         self.assertTrue(utils.is_folder_present(folder2.name, folder1))
 
         copy = folder1.copy_folder(parent_id=test_folder.id, name='%s copy' % folder1.name)
@@ -97,24 +103,28 @@ class Folder(unittest.TestCase):
         test_folder = self.test_folder
 
         # Test deleting an empty folder
-        folder1 = acc.folders.create(parent_id=test_folder.id, name=self._rand())
+        folder1 = acc.folders.create(data={
+            'parent_id': test_folder.id, 'name': self._rand()})
         folder1_name = folder1.name # Deletion removes the name.
         self.assertTrue(utils.is_folder_present(folder1_name, test_folder))
         folder1.delete()
         self.assertFalse(utils.is_folder_present(folder1_name, test_folder))
 
         # Same as above with recursive=True
-        folder1 = acc.folders.create(parent_id=test_folder.id, name=self._rand())
+        folder1 = acc.folders.create(data={
+            'parent_id': test_folder.id, 'name': self._rand()})
         folder1_name = folder1.name
         self.assertTrue(utils.is_folder_present(folder1_name, test_folder))
         folder1.delete(recursive=True)
         self.assertFalse(utils.is_folder_present(folder1_name, test_folder))
 
         # Error case: test deleting a non-empty folder without recursive=True
-        folder1 = acc.folders.create(parent_id=test_folder.id, name=self._rand())
+        folder1 = acc.folders.create(data={
+            'parent_id': test_folder.id, 'name': self._rand()})
         folder1_name = folder1.name
         self.assertTrue(utils.is_folder_present(folder1_name, test_folder))
-        folder2 = acc.folders.create(parent_id=folder1.id, name=self._rand())
+        folder2 = acc.folders.create(data={
+            'parent_id': folder1.id, 'name': self._rand()})
         folder2_name = folder2.name
         self.assertTrue(utils.is_folder_present(folder2_name, folder1))
         try:

@@ -34,10 +34,12 @@ class Search(unittest.TestCase):
         acc = self.account
         test_file_name = 'search' + str(random.random())[2:] + '.txt'
         root_folder = utils.create_or_get_test_folder(acc)
-        test_folder_1 = acc.folders.create(parent_id=root_folder.id,
-                                           name='folder %s' % random.randint(0, 10e8))
-        test_folder_2 = acc.folders.create(parent_id=root_folder.id,
-                                           name='folder %s' % random.randint(0, 10e8))
+        test_folder_1 = acc.folders.create(data={
+            'parent_id': root_folder.id,
+            'name': 'folder %s' % random.randint(0, 10e8)})
+        test_folder_2 = acc.folders.create(data={
+            'parent_id': root_folder.id,
+            'name': 'folder %s' % random.randint(0, 10e8)})
         test_file_1 = utils.create_test_file(acc, folder=test_folder_1,
                                              file_name=test_file_name)
         test_file_2 = utils.create_test_file(acc, folder=test_folder_2,

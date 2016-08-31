@@ -14,7 +14,7 @@ class Application(unittest.TestCase):
 
     def setUp(self):
         name = base64.b64encode(os.urandom(12))
-        self.app = sdk.Application.create(name='app %s' % name)
+        self.app = sdk.Application.create(data={'name': 'app %s' % name})
 
     def tearDown(self):
         self.app.delete()
@@ -29,7 +29,8 @@ class Application(unittest.TestCase):
         try:
             app_name = 'test ' + base64.b64encode(os.urandom(12))
             description = 'random app woo'
-            new_app = sdk.Application.create(name=app_name, description=description)
+            new_app = sdk.Application.create(data={
+                'name': app_name, 'description': description})
             self.assertEqual(new_app.name, app_name)
             self.assertEqual(new_app.description, description)
             self.assertTrue(new_app.active)

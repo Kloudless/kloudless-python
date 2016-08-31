@@ -14,7 +14,7 @@ class APIKey(unittest.TestCase):
 
     def setUp(self):
         name = base64.b64encode(os.urandom(12))
-        self.app = sdk.Application.create(name="app %s" % name)
+        self.app = sdk.Application.create(data={'name': "app %s" % name})
 
     def tearDown(self):
         self.app.delete()

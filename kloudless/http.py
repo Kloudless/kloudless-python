@@ -66,7 +66,7 @@ def request(method, path, configuration=None, **kwargs):
 
     headers = kwargs.setdefault('headers', {})
 
-    if kwargs.get('data') and not kwargs.get('files'):
+    if kwargs.get('data'):
         ctype = headers.setdefault('Content-Type', 'application/json')
         if ctype.lower() == 'application/json':
             kwargs['data'] = json.dumps(kwargs['data'])

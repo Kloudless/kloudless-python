@@ -19,7 +19,7 @@ class Link(unittest.TestCase):
 
     def setUp(self):
         self.test_file = utils.create_test_file(self.account)
-        self.link = self.account.links.create(file_id=self.test_file.id)
+        self.link = self.account.links.create(data={'file_id': self.test_file.id})
 
     def tearDown(self):
         self.link.delete()
@@ -28,7 +28,8 @@ class Link(unittest.TestCase):
         self.assertEqual(self.link.file_id, self.test_file.id)
 
     def test_create_direct_link(self):
-        self.link2 = self.account.links.create(file_id=self.test_file.id, direct=True)
+        self.link2 = self.account.links.create(data={
+            'file_id': self.test_file.id, 'direct': True})
         r = requests.get(self.link2.url)
         self.assertEqual(r.text, 'test')
         self.link2.delete()
@@ -39,7 +40,7 @@ class Link(unittest.TestCase):
 
     def test_create_bad_link(self):
         with self.assertRaises(sdk.exceptions.APIException) as e:
-            self.link = self.account.links.create(file_id='bad_file_id')
+            self.link = self.account.links.create(data={'file_id': 'bad_file_id'})
 
     def test_list_links_page_size(self):
         links = self.account.links.all(page_size=1)
@@ -54,7 +55,8 @@ class Link(unittest.TestCase):
         if skipSeleniumTests:
             skipSeleniumTests()
 
-        self.link = self.account.links.create(file_id=self.test_file.id, password='testytest')
+        self.link = self.account.links.create(data={
+            'file_id': self.test_file.id, 'password': 'testytest'})
         self.assertTrue(self.link.password)
         driver = webdriver.Firefox()
         driver.get(self.link.url)

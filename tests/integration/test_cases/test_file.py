@@ -51,7 +51,8 @@ class File(unittest.TestCase):
     def test_move_file(self):
         new_name = 'moved %s' % self.file.name
         folder1 = self.account.folders.create(
-            parent_id=self.folder.id, name='folder %s' % random.randint(0, 10e10))
+            data={'parent_id': self.folder.id,
+                  'name': 'folder %s' % random.randint(0, 10e10)})
         self.assertTrue(utils.is_folder_present(folder1.name, self.folder))
         self.file.parent_id = folder1.id
         self.file.name = new_name
@@ -63,7 +64,8 @@ class File(unittest.TestCase):
     def test_copy_file(self):
         new_name = 'copied %s' % self.file.name
         folder1 = self.account.folders.create(
-            parent_id=self.folder.id, name='folder %s' % random.randint(0, 10e10))
+            data={'parent_id': self.folder.id,
+                  'name': 'folder %s' % random.randint(0, 10e10)})
         self.assertTrue(utils.is_folder_present(folder1.name, self.folder))
         new_file = self.file.copy_file(parent_id=folder1.id, name=new_name)
         self.assertTrue(new_file)
@@ -73,7 +75,7 @@ class File(unittest.TestCase):
 
     # Update [update contents]
     def test_put_file(self):
-        self.file.update('hello there')
+        self.file.update(file_data='hello there')
         self.assertTrue(self.file.contents().text == 'hello there')
 
     # Delete
@@ -140,6 +142,17 @@ class File(unittest.TestCase):
         time.sleep(0.5)
         properties = parse(self.file.properties.all())
         self.assertEqual(len(properties), 0)
+
+    def test_upload_url(self):
+        contents = self.account.folders().contents()
+        name = 'test_file_name'
+        if contents:
+            obj = contents[0]
+            data = {}
+            data['parent_id'] = obj.id
+            data['name'] = name
+            response = self.account.files.upload_url(data=data)
+            self.assertTrue('url' in response)
 
 def test_cases():
     return [utils.create_test_case(acc, File) for acc in utils.accounts]

@@ -42,8 +42,8 @@ def create_or_get_test_folder(account, parent_id='root', name=None):
     while stack:
         folder_to_check = stack.pop(0)
         if folder_to_check.can_create_folders:
-            new_folder = account.folders.create(parent_id=folder_to_check.id,
-                                                name=name)
+            new_folder = account.folders.create(data={
+                'parent_id': folder_to_check.id, 'name': name})
             break
         folders = folder_to_check.contents()
         # add at the beginning for a DFS / stack
@@ -63,7 +63,7 @@ def create_test_file(account, folder=None, file_name=None,
     if not folder:
         folder = create_or_get_test_folder(account)
     return account.files.create(file_name=file_name, parent_id=folder.id,
-                                file_data=file_data, overwrite=overwrite)
+                                file_data=file_data, params={'overwrite': overwrite})
 
 
 def is_resource_present(resource_type, resource_name, parent_folder):
@@ -93,7 +93,7 @@ def get_account_for_each_service():
     accounts = []
     services_to_include = os.environ.get('SERVICES', '').split(',')
     accounts_to_include = os.environ.get('ACCOUNTS', '').split(',')
-    for acc in sdk.Account.all(active=True, page_size=100):
+    for acc in sdk.Account.all(active=True, page_size=1000):
         if acc.service in services_to_exclude:
             continue
         if any(services_to_include) and acc.service not in services_to_include:

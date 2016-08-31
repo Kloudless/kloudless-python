@@ -15,10 +15,10 @@ class WebHook(unittest.TestCase):
 
     def setUp(self):
         name = base64.b64encode(os.urandom(12))
-        self.app = sdk.Application.create(name=name)
+        self.app = sdk.Application.create(data={'name': name})
         self.app.apikeys.create()
         self.url = "https://kloudless-webhooks-receiver.herokuapp.com?app_id=%s" % self.app.id
-        self.webhook = self.app.webhooks.create(url=self.url)
+        self.webhook = self.app.webhooks.create(data={'url': self.url})
 
     def tearDown(self):
         self.app.delete()
@@ -28,7 +28,7 @@ class WebHook(unittest.TestCase):
         self.assertTrue(self.webhook.id in [w.id for w in webhooks])
 
     def test_list_webhooks(self):
-        self.app.webhooks.create(url=self.url)
+        self.app.webhooks.create(data={'url': self.url})
         self.assertEqual(len(self.app.webhooks.all()), 2)
 
     def test_retrieve_webhook(self):
@@ -36,7 +36,7 @@ class WebHook(unittest.TestCase):
         self.assertEqual(self.webhook, retrieved_webhook)
 
     def test_list_page_size(self):
-        self.app.webhooks.create(url=self.url)
+        self.app.webhooks.create(data={'url': self.url})
         webhooks = self.app.webhooks.all(page_size=1)
         self.assertEqual(len(webhooks), 1)
         self.assertEqual(len(self.app.webhooks.all()), 2)
