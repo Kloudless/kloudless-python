@@ -50,18 +50,21 @@ Here are the configuration options:
 
 ### Resources
 
-Here are the resource classes available:
+Here are some of the popular resource classes available:
 
 * `Account`
 * `File`
 * `Folder`
 * `Link`
-* `Key`
 * `Search`
 * `Recent`
 * `Events`
 * `Multipart`
 * `Property`
+* `Permission`
+* `CRMObject`
+
+A full list can be viewed in [resources.py](https://github.com/Kloudless/kloudless-python/blob/master/kloudless/resources.py).
 
 Each class has the following methods where applicable:
 
@@ -83,16 +86,17 @@ Parameters mentioned above:
 
 #### Accessing nested resources
 
-The `Account` model has some helper attributes to make using class methods easier:
+The `Account` model has some helper attributes to make using class methods easier. For example:
 
 * `links` references the Link class
 * `files` references the File class
 * `folders` references the Folder class
-* `keys` references the Key class
 * `search` references the Search class
 * `recent` references the Recent class
 * `events` references the Events class
 * `multipart` references the Multipart class
+
+A full list can be viewed under the `Account` class in [resources.py](https://github.com/Kloudless/kloudless-python/blob/master/kloudless/resources.py).
 
 ## Examples
 
@@ -135,14 +139,14 @@ folder IDs respectively.
 >>> f.refresh() # Pulls latest metadata given the ID.
 ```
 
-Another example retrieving key information a few different ways:
+Another example retrieving link information a few different ways:
 
 ```python
 # A few different ways
->>> key = kloudless.Key.all(parent_resource=account)[0]
->>> key = account.keys.retrieve(id=key.id)
->>> key = kloudless.Key.retrieve(id=key.id, parent_resource=account)
->>> key = kloudless.Key(id=key.id); key.refresh();
+>>> link = kloudless.Link.all(parent_resource=account)[0]
+>>> link = account.links.retrieve(id=link.id)
+>>> link = kloudless.Link.retrieve(id=link.id, parent_resource=account)
+>>> link = kloudless.Link(id=link.id); link.refresh();
 ```
 
 ### Moving a file
