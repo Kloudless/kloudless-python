@@ -143,6 +143,7 @@ class File(unittest.TestCase):
         properties = parse(self.file.properties.all())
         self.assertEqual(len(properties), 0)
 
+    @utils.allow(services=['s3'])
     def test_upload_url(self):
         contents = self.account.folders().contents()
         name = 'test_file_name'
