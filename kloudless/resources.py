@@ -53,10 +53,6 @@ class BaseResource(dict):
                     "%s object's parent." %
                     (self._parent_resource_class,
                      self.__class__.__name__))
-            elif not isinstance(self._parent_resource,
-                                self._parent_resource_class):
-                raise KException("The parent resource must be a %s object." %
-                                 self._parent_resource_class)
 
     def populate(self, data):
         """
