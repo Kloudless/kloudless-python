@@ -44,7 +44,9 @@ class Permissions(unittest.TestCase):
                 else:
                     self.assertIn(perm.email, self.new_roles)
                     self.assertEqual(perm.role, self.new_roles.get(perm.email))
-                self.assertTrue(owner_exists)
+
+        if self.account.service not in readonly_permissions:
+            self.assertTrue(owner_exists)
 
     # Folder List
     def test_folder_permissions_list(self):

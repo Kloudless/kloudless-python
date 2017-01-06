@@ -414,7 +414,7 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
         params = {} if params is None else params
         data = {} if data is None else data
 
-        convert_path = "%s/%s" % (self.detail_path(), 'convert_id')
+        convert_path = "%s/%s" % (self.detail_path(), 'storage/convert_id')
 
         response = request(self._api_session.post, convert_path,
                            configuration=self._configuration, data=data,
