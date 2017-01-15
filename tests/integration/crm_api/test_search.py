@@ -24,7 +24,6 @@ class CRMSearch(unittest.TestCase):
         objects = self.account.crm_search.all(q=query, lang=lang)
         if objects:
             obj = objects[0]
-            self.assertTrue('type' in obj)
             self.assertTrue('raw' in obj)
 
         self.assertTrue(objects)

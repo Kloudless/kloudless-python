@@ -27,7 +27,7 @@ class CRMCampaign(unittest.TestCase):
         # assert properties
         if objects:
             obj = objects[0]
-            self.assertEqual(obj.type, 'Campaign')
+            self.assertEqual(obj.type, 'campaign')
             self.assertTrue('raw' in obj)
 
     @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
@@ -35,7 +35,7 @@ class CRMCampaign(unittest.TestCase):
         obj = self.account.crm_campaigns.retrieve(self.obj.id)
         # assert Campaign properties
         self.assertEqual(obj.id, self.obj.id)
-        self.assertEqual(obj.type, 'Campaign')
+        self.assertEqual(obj.type, 'campaign')
         self.assertTrue('raw' in obj)
 
         self.assertTrue('created' in obj)
