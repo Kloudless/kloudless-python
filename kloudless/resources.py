@@ -6,6 +6,7 @@ from . import config
 import inspect
 import json
 import requests
+import six
 import warnings
 
 
@@ -68,7 +69,7 @@ class BaseResource(dict):
             if k in self._serializers:
                 data[k] = self._serializers[k][1](v)
 
-        for k, v in data.iteritems():
+        for k, v in six.iteritems(data):
             super(BaseResource, self).__setitem__(
                 k, self.__class__.create_from_data(
                     v, parent_resource=self._parent_resource,
@@ -110,7 +111,7 @@ class BaseResource(dict):
             to populate the resource.
         """
         serialized = {}
-        for k, v in resource_data.iteritems():
+        for k, v in six.iteritems(resource_data):
             if isinstance(v, BaseResource):
                 serialized[k] = v.serialize(v)
             elif k in cls._serializers:
@@ -142,7 +143,7 @@ class BaseResource(dict):
             raise AttributeError(k)
         try:
             return self[k]
-        except KeyError, e:
+        except KeyError as e:
             raise AttributeError(*e.args)
 
     def __setitem__(self, k, v):
@@ -180,7 +181,7 @@ class AnnotatedList(list):
             return all_data
 
         objects = None
-        for k, v in all_data.iteritems():
+        for k, v in six.iteritems(all_data):
             if k in ['objects', 'permissions'] and isinstance(v, list):
                 objects = v
             else:
@@ -270,7 +271,7 @@ class UpdateMixin(object):
         data = self.serialize(self)
 
         new_data = {}
-        for k, v in data.iteritems():
+        for k, v in six.iteritems(data):
             if k not in self._previous_data or self._previous_data[k] != v:
                 # Attribute is new or was updated
                 new_data[k] = v
@@ -398,7 +399,7 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
                               'token_secret', 'refresh_token', 'token_expiry',
                               'refresh_token_expiry']
         serialized = {}
-        for k, v in resource_data.iteritems():
+        for k, v in six.iteritems(resource_data):
             if isinstance(v, BaseResource):
                 serialized[k] = v.serialize_account(v)
             elif k not in account_properties:
@@ -985,4 +986,4 @@ resources = {
     'apikey': ApiKey,
     'webhook': WebHook,
 }
-resource_types = {v: k for k, v in resources.iteritems()}
+resource_types = {v: k for k, v in six.iteritems(resources)}

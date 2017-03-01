@@ -1,5 +1,7 @@
 from . import throttling
 
+import six
+
 _configuration = {
     'api_key': None,
     'dev_key': None,
@@ -26,7 +28,7 @@ def configure(**params):
 
 def merge(config):
     result = _configuration.copy()
-    for k, v in config.iteritems():
+    for k, v in six.iteritems(config):
         if k in result:
             result[k] = v
     return result
