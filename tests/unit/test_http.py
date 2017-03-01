@@ -1,7 +1,7 @@
 import requests
 
 import helpers
-from sdk import http, exceptions
+from kloudless import http, exceptions
 
 def test_unconfigured_request():
     try:

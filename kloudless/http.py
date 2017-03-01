@@ -37,7 +37,7 @@ _get_requestor = functools.partial
 def request(method, path, configuration=None, **kwargs):
     if configuration is None: configuration = {}
     configuration = config.merge(configuration)
-    
+
     if path.startswith('applications'):
         if not configuration['dev_key']:
             raise exceptions.ConfigurationException(
@@ -47,7 +47,7 @@ def request(method, path, configuration=None, **kwargs):
                 "requests.")
 
         kwargs['auth'] = DevKeyAuth(configuration['dev_key'])
-    
+
     elif configuration['api_key']:
         kwargs['auth'] = APIKeyAuth(configuration['api_key'])
     elif configuration['token']:
