@@ -2,6 +2,8 @@ import helpers
 
 import kloudless
 
+import six
+
 def test_configure():
     """
     This is a basic test to make sure that the configuration mechanism works.
@@ -11,6 +13,6 @@ def test_configure():
                "api_version": 31337,
                "base_url": "example.com"}
     kloudless.configure(**configs)
-    for key in configs.iterkeys():
+    for key in six.iterkeys(configs):
         assert configs[key] == kloudless.config._configuration[key]
     kloudless.configure(**default_configs)

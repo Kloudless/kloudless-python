@@ -12,17 +12,14 @@ def to_datetime(timestamp):
     """
     if isinstance(timestamp, datetime) or timestamp is None:
         return timestamp
-    elif isinstance(timestamp, basestring):
-        return dateutil.parser.parse(timestamp)
-    else:
-        raise Exception("Unable to convert %s to a datetime object." %
-                        timestamp)
+
+    return dateutil.parser.parse(timestamp)
 
 def to_iso(obj):
     """
     Converts datetime object to an ISO 8601 timestamp.
     """
-    if isinstance(obj, basestring) or obj is None:
+    if isinstance(obj, str) or obj is None:
         return obj
     elif isinstance(obj, datetime):
         timestamp = obj.isoformat()
