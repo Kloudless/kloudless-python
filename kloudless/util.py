@@ -3,6 +3,8 @@ import logging
 import dateutil.parser
 from datetime import datetime
 
+import six
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ def to_iso(obj):
     """
     Converts datetime object to an ISO 8601 timestamp.
     """
-    if isinstance(obj, str) or obj is None:
+    if isinstance(obj, six.string_types) or obj is None:
         return obj
     elif isinstance(obj, datetime):
         timestamp = obj.isoformat()
