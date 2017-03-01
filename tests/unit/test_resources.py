@@ -176,11 +176,15 @@ def test_file_upload():
             assert file_data[attr] == getattr(file_obj, attr)
         mock_req.assert_called_with(File._api_session.post,
                                     'accounts/%s/storage/files' % account.id,
-                                    data={'metadata':json.dumps({
+                                    data=helpers.file_contents,
+                                    headers={
+                                        'Content-Type':
+                                            'application/octet-stream',
+                                        'X-Kloudless-Metadata': json.dumps({
                                                 'name': file_data['name'],
-                                                'parent_id': 'root'})},
-                                    files={'file': helpers.file_contents},
-                                    params={},
+                                                'parent_id': 'root'})
+                                    },
+                                    params=None,
                                     configuration=None)
 
 @helpers.configured_test
