@@ -11,7 +11,8 @@ from kloudless.resources import Account, Folder, File
 @helpers.configured_test
 def test_account_list():
     resp = Response()
-    resp._content = helpers.account_list
+    resp._content = helpers.account_list.encode('utf-8')
+    resp.encoding = 'utf-8'
     with patch('kloudless.resources.request') as mock_req:
         mock_req.return_value = resp
         accounts = Account().all()
@@ -22,7 +23,8 @@ def test_account_list():
 def test_account_retrieve():
     with patch('kloudless.resources.request') as mock_req:
         resp = Response()
-        resp._content = helpers.account
+        resp._content = helpers.account.encode('utf-8')
+        resp.encoding = 'utf-8'
         mock_req.return_value = resp
         account_data = json.loads(helpers.account)
         account = Account().retrieve(account_data['id'])
@@ -39,7 +41,8 @@ def test_folder_contents():
     account = Account.create_from_data(json.loads(helpers.account))
     with patch('kloudless.resources.request') as mock_req:
         resp = Response()
-        resp._content = helpers.root_folder_contents
+        resp._content = helpers.root_folder_contents.encode('utf-8')
+        resp.encoding = 'utf-8'
         mock_req.return_value = resp
         folder = account.folders()
         contents = folder.contents()
@@ -55,7 +58,8 @@ def test_folder_metadata():
     account = Account.create_from_data(json.loads(helpers.account))
     with patch('kloudless.resources.request') as mock_req:
         resp = Response()
-        resp._content = helpers.folder_data
+        resp._content = helpers.folder_data.encode('utf-8')
+        resp.encoding = 'utf-8'
         mock_req.return_value = resp
         folder_data = json.loads(helpers.folder_data)
         folder = Folder.retrieve(id=folder_data['id'],
@@ -76,7 +80,8 @@ def test_folder_creation():
     with patch('kloudless.resources.request') as mock_req:
         resp = Response()
         resp.status_code = 201
-        resp._content = helpers.folder_data
+        resp._content = helpers.folder_data.encode('utf-8')
+        resp.encoding = 'utf-8'
         mock_req.return_value = resp
         folder = Folder.create(parent_resource=account,
                                data={'name': "TestFolder",
@@ -113,7 +118,8 @@ def test_file_metadata():
     file_data = json.loads(helpers.file_data)
     with patch('kloudless.resources.request') as mock_req:
         resp = Response()
-        resp._content = helpers.file_data
+        resp._content = helpers.file_data.encode('utf-8')
+        resp.encoding = 'utf-8'
         mock_req.return_value = resp
         file_obj = File.retrieve(id=file_data['id'],
                                  parent_resource=account)
@@ -165,7 +171,8 @@ def test_file_upload():
     file_data = json.loads(helpers.file_data)
     with patch('kloudless.resources.request') as mock_req:
         resp = Response()
-        resp._content = helpers.file_data
+        resp._content = helpers.file_data.encode('utf-8')
+        resp.encoding = 'utf-8'
         mock_req.return_value = resp
         file_obj = File.create(parent_resource=account,
                                file_name=file_data['name'],
@@ -196,9 +203,11 @@ def test_file_update():
         resp = Response()
         new_data = file_data.copy()
         new_data['name'] = 'NewFileName'
-        resp._content = json.dumps(new_data)
+        resp._content = json.dumps(new_data).encode('utf-8')
+        resp.encoding = 'utf-8'
         account_resp = Response()
-        account_resp._content = helpers.account
+        account_resp._content = helpers.account.encode('utf-8')
+        account_resp.encoding = 'utf-8'
         mock_req.side_effect = (resp,account_resp)
         file_obj.name = 'NewFileName'
         file_obj.parent_id = 'root'
@@ -228,7 +237,8 @@ def test_file_copy():
         resp = Response()
         new_data = file_data.copy()
         new_data['name'] = 'NewFileName'
-        resp._content = json.dumps(new_data)
+        resp._content = json.dumps(new_data).encode('utf-8')
+        resp.encoding = 'utf-8'
         account_resp = Response()
         account_resp._content = helpers.account
         mock_req.side_effect = (resp,account_resp)
