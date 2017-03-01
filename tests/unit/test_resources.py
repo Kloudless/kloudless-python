@@ -46,7 +46,7 @@ def test_folder_contents():
         assert len(contents) > 0
         assert all([(isinstance(x, Folder) or isinstance(x, File)) for x in contents])
         mock_req.assert_called_with(folder._api_session.get,
-                                    ('accounts/%s/folders/root/contents'
+                                    ('accounts/%s/storage/folders/root/contents'
                                         % account.id),
                                     configuration=account._configuration)
 
@@ -64,7 +64,7 @@ def test_folder_metadata():
         for attr in ['id', 'name', 'type', 'size', 'account']:
             assert folder_data[attr] == getattr(folder, attr)
         mock_req.assert_called_with(Folder._api_session.get,
-                                    ('accounts/%s/folders/%s'
+                                    ('accounts/%s/storage/folders/%s'
                                         % (account.id, folder_data['id'])),
                                     configuration=None,
                                     params={})
@@ -85,7 +85,7 @@ def test_folder_creation():
         for attr in ['id', 'name', 'type', 'size', 'account']:
             assert folder_data[attr] == getattr(folder, attr)
         mock_req.assert_called_with(Folder._api_session.post,
-                                    'accounts/%s/folders' % account.id,
+                                    'accounts/%s/storage/folders' % account.id,
                                     configuration=None, params={},
                                     data={'name': 'TestFolder',
                                           'parent_id': 'root'})
@@ -102,7 +102,7 @@ def test_folder_delete():
                                          parent_resource=account)
         folder.delete()
         mock_req.assert_called_with(Folder._api_session.delete,
-                                    ('accounts/%s/folders/%s'
+                                    ('accounts/%s/storage/folders/%s'
                                      % (account.id, folder_data['id'])),
                                     configuration=account._configuration,
                                     params={})
@@ -121,7 +121,7 @@ def test_file_metadata():
         for attr in ['id', 'name', 'type', 'size', 'account']:
             assert file_data[attr] == getattr(file_obj, attr)
         mock_req.assert_called_with(File._api_session.get,
-                                    ('accounts/%s/files/%s'
+                                    ('accounts/%s/storage/files/%s'
                                         % (account.id, file_data['id'])),
                                     configuration=None,
                                     params={})
@@ -138,7 +138,7 @@ def test_file_contents():
         file_contents = file_obj.contents()
         assert isinstance(file_contents, Response)
         mock_req.assert_called_with(file_obj._api_session.get,
-                                    ('accounts/%s/files/%s/contents'
+                                    ('accounts/%s/storage/files/%s/contents'
                                         % (account.id, file_data['id'])),
                                     configuration=file_obj._configuration,
                                     stream=True)
@@ -154,7 +154,7 @@ def test_file_delete():
         mock_req.return_value = resp
         file_obj.delete()
         mock_req.assert_called_with(file_obj._api_session.delete,
-                                    ('accounts/%s/files/%s'
+                                    ('accounts/%s/storage/files/%s'
                                         % (account.id, file_data['id'])),
                                     configuration=file_obj._configuration,
                                     params={})
@@ -175,7 +175,7 @@ def test_file_upload():
         for attr in ['id', 'name', 'type', 'size', 'account']:
             assert file_data[attr] == getattr(file_obj, attr)
         mock_req.assert_called_with(File._api_session.post,
-                                    'accounts/%s/files' % account.id,
+                                    'accounts/%s/storage/files' % account.id,
                                     data={'metadata':json.dumps({
                                                 'name': file_data['name'],
                                                 'parent_id': 'root'})},
@@ -202,7 +202,7 @@ def test_file_update():
         expected_calls = [
                           # This is updating the file
                           call(file_obj._api_session.patch,
-                               'accounts/%s/files/%s' % (account.id,
+                               'accounts/%s/storage/files/%s' % (account.id,
                                                          file_data['id']),
                                params={},
                                data={'name': u'NewFileName',
@@ -232,7 +232,7 @@ def test_file_copy():
         expected_calls = [
                           # This is copying the file
                           call(file_obj._api_session.post,
-                               'accounts/%s/files/%s/copy' % (account.id,
+                               'accounts/%s/storage/files/%s/copy' % (account.id,
                                                          file_data['id']),
                                data={'name': u'NewFileName',
                                      'parent_id': 'root'},
