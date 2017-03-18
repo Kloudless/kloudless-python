@@ -75,8 +75,11 @@ class File(unittest.TestCase):
 
     # Update [update contents]
     def test_put_file(self):
-        self.file.update(file_data='hello there')
-        self.assertTrue(self.file.contents().text == 'hello there')
+        expected_file_contents = u'h\xe9llo there'.encode('utf8')
+        self.file.update(file_data=expected_file_contents)
+        file_contents = self.file.contents().content
+        self.assertTrue(file_contents == expected_file_contents)
+
 
     # Delete
     def test_delete_file(self):
@@ -84,8 +87,7 @@ class File(unittest.TestCase):
             self.file.delete(permanent=True)
             read_file = self.account.files.retrieve(self.file.id)
         except sdk.exceptions.KloudlessException, e:
-            error_data = json.loads(str(e).split('Error data: ')[1])
-            self.assertEqual(error_data['status_code'], 404)
+            self.assertEqual(e.status, 404)
 
     @utils.allow(services=['box', 'egnyte', 'gdrive'])
     def test_properties(self):
