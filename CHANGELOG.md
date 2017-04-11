@@ -1,6 +1,6 @@
 # Change Log
 
-## 1.1.0
+## 1.1.1
 
 #### New Features
 * Python 3 support added.

@@ -20,6 +20,12 @@ def version():
     matches = re.findall("('|\")(\S+)('|\")", text)
     return matches[0][1]
 
+def long_description():
+    if os.path.exists(opj(curdir, 'README.rst')):
+        return read(opj(curdir, 'README.rst'))
+    else:
+        return read(opj(curdir, 'README.md'))
+
 install_requires=[
     'requests>=1.0',
     'python-dateutil',
@@ -39,7 +45,7 @@ if __name__ == '__main__':
         author_email='hello@kloudless.com',
         version=version(),
         description = "Python library for the Kloudless API",
-        long_description=read(opj(curdir, 'README.md')),
+        long_description=long_description(),
         url='https://kloudless.com/',
         install_requires=install_requires,
         license='MIT',

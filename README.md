@@ -2,7 +2,6 @@ Python library for the Kloudless API
 =====================================
 
 Python library for the [Kloudless API](https://developers.kloudless.com).
-This is in beta and under significant development.
 
 ## Installation
 
