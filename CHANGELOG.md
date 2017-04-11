@@ -1,5 +1,14 @@
 # Change Log
 
+## 1.1.0
+
+#### New Features
+* Python 3 support added.
+
+#### Bug-fixes
+* AccountKey references removed.
+* Improving permissions endpoint compatibility with services like Google Drive.
+
 ## 1.0.0
 
 * The API version has been updated to `v1`. This introduces backwards
