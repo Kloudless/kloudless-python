@@ -233,12 +233,6 @@ API_KEY='...' DEV_KEY='...' BASE_URL='...' python test.py
 
 An account for each service will be obtained from the API to run tests for.
 
-## TODO
-
-* Expand documentation.
-* Distribute via package server.
-* Fix moving files/folders between folders.
-
 ## Acknowledgements
 
 * [requests](https://github.com/kennethreitz/requests) makes the API requests easy.
