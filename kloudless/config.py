@@ -9,7 +9,14 @@ _configuration = {
     'api_version': '1',
     'base_url': 'https://api.kloudless.com',
     'throttle_retry_strategy': throttling.ExpFallback(),
+    'headers': {
+        # Set to a value other than None to include the header in each
+        # API request.
+        'X-Kloudless-Raw-Data': None,
+        'X-Kloudless-As-User': None,
+        # Include any other headers here you would like to be sent.
     }
+}
 
 def configure(**params):
     """Update configuration based on params. Returns new configuration.

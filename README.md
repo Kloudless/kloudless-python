@@ -46,6 +46,8 @@ Here are the configuration options:
   if it is rate-limited, or by checking the Retry-After header in the response.
   Set to `None` to never retry. You can also set this to your own sub-class to
   handle retries in some custom manner. See `throttling.py` for more information.
+* `headers`: A dictionary of headers to send on every request. Headers included
+  on individual requests will take precedence. See `config.py` for some examples.
 
 ### Resources
 

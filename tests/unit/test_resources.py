@@ -46,7 +46,7 @@ def test_folder_contents():
         resp.encoding = 'utf-8'
         mock_req.return_value = resp
         folder = account.folders()
-        contents = folder.contents(user_headers={'k': 'v'})
+        contents = folder.contents(headers={'k': 'v'})
         assert len(contents) > 0
         assert all([(isinstance(x, Folder) or isinstance(x, File)) for x in contents])
         mock_req.assert_called_with(folder._api_session.get,
@@ -185,7 +185,7 @@ def test_file_upload():
         file_obj = File.create(parent_resource=account,
                                file_name=file_data['name'],
                                parent_id='root',
-                               user_headers={'k': 'v'},
+                               headers={'k': 'v'},
                                file_data=helpers.file_contents)
         assert isinstance(file_obj, File)
         for attr in ['id', 'name', 'type', 'size', 'account']:
