@@ -34,6 +34,7 @@ def test_account_retrieve():
         mock_req.assert_called_with(account._api_session.get,
                                     'accounts/%s' % account_data['id'],
                                     configuration=None,
+                                    headers=None,
                                     params={})
 
 @helpers.configured_test
@@ -45,13 +46,14 @@ def test_folder_contents():
         resp.encoding = 'utf-8'
         mock_req.return_value = resp
         folder = account.folders()
-        contents = folder.contents()
+        contents = folder.contents(headers={'k': 'v'})
         assert len(contents) > 0
         assert all([(isinstance(x, Folder) or isinstance(x, File)) for x in contents])
         mock_req.assert_called_with(folder._api_session.get,
                                     ('accounts/%s/storage/folders/root/contents'
                                         % account.id),
-                                    configuration=account._configuration)
+                                    configuration=account._configuration,
+                                    headers={'k': 'v'})
 
 @helpers.configured_test
 def test_folder_metadata():
@@ -71,6 +73,7 @@ def test_folder_metadata():
                                     ('accounts/%s/storage/folders/%s'
                                         % (account.id, folder_data['id'])),
                                     configuration=None,
+                                    headers=None,
                                     params={})
 
 @helpers.configured_test
@@ -92,6 +95,7 @@ def test_folder_creation():
         mock_req.assert_called_with(Folder._api_session.post,
                                     'accounts/%s/storage/folders' % account.id,
                                     configuration=None, params={},
+                                    headers=None,
                                     data={'name': 'TestFolder',
                                           'parent_id': 'root'})
 
@@ -110,6 +114,7 @@ def test_folder_delete():
                                     ('accounts/%s/storage/folders/%s'
                                      % (account.id, folder_data['id'])),
                                     configuration=account._configuration,
+                                    headers=None,
                                     params={})
 
 @helpers.configured_test
@@ -130,6 +135,7 @@ def test_file_metadata():
                                     ('accounts/%s/storage/files/%s'
                                         % (account.id, file_data['id'])),
                                     configuration=None,
+                                    headers=None,
                                     params={})
 
 @helpers.configured_test
@@ -147,6 +153,7 @@ def test_file_contents():
                                     ('accounts/%s/storage/files/%s/contents'
                                         % (account.id, file_data['id'])),
                                     configuration=file_obj._configuration,
+                                    headers=None,
                                     stream=True)
 
 @helpers.configured_test
@@ -163,6 +170,7 @@ def test_file_delete():
                                     ('accounts/%s/storage/files/%s'
                                         % (account.id, file_data['id'])),
                                     configuration=file_obj._configuration,
+                                    headers=None,
                                     params={})
 
 @helpers.configured_test
@@ -177,6 +185,7 @@ def test_file_upload():
         file_obj = File.create(parent_resource=account,
                                file_name=file_data['name'],
                                parent_id='root',
+                               headers={'k': 'v'},
                                file_data=helpers.file_contents)
         assert isinstance(file_obj, File)
         for attr in ['id', 'name', 'type', 'size', 'account']:
@@ -185,6 +194,7 @@ def test_file_upload():
                                     'accounts/%s/storage/files' % account.id,
                                     data=helpers.file_contents,
                                     headers={
+                                        'k': 'v',
                                         'Content-Type':
                                             'application/octet-stream',
                                         'X-Kloudless-Metadata': json.dumps({
@@ -220,10 +230,12 @@ def test_file_update():
                                params={},
                                data={'name': u'NewFileName',
                                      'parent_id': 'root'},
+                               headers=None,
                                configuration=file_obj._configuration),
                           # This is refreshing the parent resource
                           call(account._api_session.get,
                                'accounts/%s' % account.id,
+                               headers=None,
                                configuration=account._configuration),
                          ]
         mock_req.assert_has_calls(expected_calls)
@@ -250,6 +262,7 @@ def test_file_copy():
                                                          file_data['id']),
                                data={'name': u'NewFileName',
                                      'parent_id': 'root'},
+                               headers=None,
                                configuration=file_obj._configuration),
                          ]
         mock_req.assert_has_calls(expected_calls)

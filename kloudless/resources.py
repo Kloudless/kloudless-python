@@ -200,10 +200,12 @@ def allow_proxy(func):
 class ListMixin(object):
     @classmethod
     @allow_proxy
-    def all(cls, parent_resource=None, configuration=None, **params):
+    def all(cls, parent_resource=None, configuration=None,
+            headers=None, **params):
         response = request(cls._api_session.get,
                            cls.list_path(parent_resource),
-                           configuration=configuration, params=params)
+                           configuration=configuration,
+                           headers=headers, params=params)
         data = cls.create_from_data(
             response.json(), parent_resource=parent_resource,
             configuration=configuration)
@@ -213,20 +215,23 @@ class ListMixin(object):
 class RetrieveMixin(object):
     @classmethod
     @allow_proxy
-    def retrieve(cls, id, parent_resource=None, configuration=None, **params):
+    def retrieve(cls, id, parent_resource=None, configuration=None,
+                 headers=None, **params):
         instance = cls(id=id, parent_resource=parent_resource,
                        configuration=configuration)
         response = request(cls._api_session.get, instance.detail_path(),
-                           configuration=configuration, params=params)
+                           configuration=configuration,
+                           headers=headers, params=params)
         instance.populate(response.json())
         return instance
 
-    def refresh(self):
+    def refresh(self, headers=None):
         """
         Retrieves and sets new metadata for the resource.
         """
         response = request(self._api_session.get, self.detail_path(),
-                           configuration=self._configuration)
+                           configuration=self._configuration,
+                           headers=headers)
         self.populate(response.json())
 
 
@@ -238,7 +243,7 @@ class CreateMixin(object):
     @classmethod
     @allow_proxy
     def create(cls, data=None, params=None, method='post',
-               parent_resource=None, configuration=None):
+               parent_resource=None, configuration=None, headers=None):
         """
         params: A dict containing query parameters.
         data: A dict containing data.
@@ -253,8 +258,8 @@ class CreateMixin(object):
         if not params:
             params = {}
         response = request(method, cls.list_path(parent_resource),
-                           configuration=configuration, data=data,
-                           params=params)
+                           configuration=configuration, headers=headers,
+                           data=data, params=params)
         return cls.create_from_data(
             response.json(), parent_resource=parent_resource,
             configuration=configuration)
@@ -267,7 +272,7 @@ class UpdateMixin(object):
         """
         return new_data
 
-    def save(self, **params):
+    def save(self, headers=None, **params):
         data = self.serialize(self)
 
         new_data = {}
@@ -288,7 +293,8 @@ class UpdateMixin(object):
                                      "to update.")
             response = request(self._api_session.patch, self.detail_path(),
                                configuration=self._configuration,
-                               data=new_data, params=params)
+                               headers=headers, data=new_data,
+                               params=params)
             self.populate(response.json())
 
             # For some resources (eg: File/Folder), the parent resource could
@@ -309,20 +315,22 @@ class UpdateMixin(object):
 
 
 class DeleteMixin(object):
-    def delete(self, **params):
+    def delete(self, headers=None, **params):
         request(self._api_session.delete, self.detail_path(),
-                configuration=self._configuration, params=params)
+                configuration=self._configuration,
+                headers=headers, params=params)
         self.populate({})
 
 
 class CopyMixin(object):
-    def _copy(self, **data):
+    def _copy(self, headers=None, **data):
         """
         Copy the file/folder to another location.
         """
         response = request(self._api_session.post,
                            "%s/copy" % self.detail_path(),
-                           configuration=self._configuration, data=data)
+                           configuration=self._configuration,
+                           headers=headers, data=data)
         return self.__class__.create_from_data(
             response.json(), parent_resource=self._parent_resource,
             configuration=self._configuration)
@@ -410,22 +418,22 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
                 serialized[k] = v
         return serialized
 
-    def convert(self, data=None, params=None):
+    def convert(self, headers=None, data=None, params=None):
         params = {} if params is None else params
         data = {} if data is None else data
 
         convert_path = "%s/%s" % (self.detail_path(), 'storage/convert_id')
 
         response = request(self._api_session.post, convert_path,
-                           configuration=self._configuration, data=data,
-                           params=params)
+                           configuration=self._configuration,
+                           headers=headers, data=data, params=params)
 
         return response.json()
 
-    def save(self, **params):
+    def save(self, headers=None, **params):
         # TODO: add in fields token, token_secret, refresh_token
         request(self._api_session.patch, self.detail_path(),
-                configuration=self._configuration,
+                configuration=self._configuration, headers=headers,
                 data=self.serialize_account(self), params=params)
 
     @property
@@ -559,41 +567,45 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
     @classmethod
     @allow_proxy
     def create(cls, file_name='', parent_id='root', file_data='', params=None,
-               parent_resource=None, configuration=None):
+               headers=None, parent_resource=None, configuration=None):
         """
         This handles file uploads.
         `file_data` can be either a string with file data in it or a
         file-like object.
         """
-        headers = {
+        all_headers = {
             'X-Kloudless-Metadata': json.dumps({
                 'name': file_name,
                 'parent_id': parent_id,
             }),
             'Content-Type': 'application/octet-stream',
         }
+        all_headers.update(headers or {})
+
         response = request(cls._api_session.post, cls.list_path(parent_resource),
-                           data=file_data, params=params, headers=headers,
+                           data=file_data, params=params, headers=all_headers,
                            configuration=configuration)
         return cls.create_from_data(
             response.json(), parent_resource=parent_resource,
             configuration=configuration)
 
-    def update(self, file_data='', params=None):
+    def update(self, file_data='', params=None, headers=None):
         """
         This overwites the file specified by 'file_id' with the contents of
         `file_data`.
         `file_data` can be either a string with file data in it or a
         file-like object.
         """
-        headers = {'Content-Type': 'application/octet-stream'}
+        headers = headers or {}
+        headers.setdefault('Content-Type', 'application/octet-stream')
+
         response = request(self._api_session.put, self.detail_path(),
                            data=file_data, params=params, headers=headers,
                            configuration=self._configuration)
         self.populate(response.json())
         return True
 
-    def contents(self):
+    def contents(self, headers=None):
         """
         This handles file downloads. It returns a requests.Response object
         with contents:
@@ -609,20 +621,21 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
         """
         response = request(self._api_session.get,
                            "%s/contents" % self.detail_path(),
-                           configuration=self._configuration, stream=True)
+                           configuration=self._configuration,
+                           headers=headers, stream=True)
         return response
 
-    def copy_file(self, **data):
-        return self._copy(**data)
+    def copy_file(self, headers=None, **data):
+        return self._copy(headers=headers, **data)
 
     @classmethod
     @allow_proxy
     def upload_url(cls, data=None, params=None,
-                   parent_resource=None, configuration=None):
+                   parent_resource=None, configuration=None, headers=None):
         upload_url_path = "%s/%s" % (cls.list_path(parent_resource), 'upload_url')
         response = request(cls._api_session.post, upload_url_path,
                            configuration=configuration, data=data or {},
-                           params=params or {})
+                           params=params or {}, headers=headers)
         return response.json()
 
 
@@ -635,17 +648,18 @@ class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
         kwargs.setdefault('id', 'root')
         super(Folder, self).__init__(*args, **kwargs)
 
-    def contents(self):
+    def contents(self, headers=None):
         response = request(self._api_session.get,
                            "%s/contents" % self.detail_path(),
-                           configuration=self._configuration)
+                           configuration=self._configuration,
+                           headers=headers)
         data = self.create_from_data(
             response.json(), parent_resource=self._parent_resource,
             configuration=self._configuration)
         return AnnotatedList(data)
 
-    def copy_folder(self, **data):
-        return self._copy(**data)
+    def copy_folder(self, headers=None, **data):
+        return self._copy(headers=headers, **data)
 
 
 class Link(AccountBaseResource, ReadMixin, WriteMixin):
@@ -665,10 +679,11 @@ class Events(AccountBaseResource, ListMixin):
 
     @classmethod
     @allow_proxy
-    def latest_cursor(cls, parent_resource=None, configuration=None):
+    def latest_cursor(cls, parent_resource=None, configuration=None,
+                      headers=None):
         response = request(cls._api_session.get,
                            "%s/latest" % cls.list_path(parent_resource),
-                           configuration=configuration)
+                           configuration=configuration, headers=headers)
         data = response.json()
         if 'cursor' in data:
             return data['cursor']
@@ -685,7 +700,8 @@ class Multipart(AccountBaseResource, RetrieveMixin, CreateMixin, DeleteMixin):
     _path_segment = 'storage/multipart'
 
     def upload_chunk(self, part_number=None, data='',
-                     parent_resource=None, configuration=None, **params):
+                     parent_resource=None, configuration=None,
+                     headers=None, **params):
         """
         This handles uploading chunks of the file, after a multipart upload has
         been initiated.
@@ -694,19 +710,23 @@ class Multipart(AccountBaseResource, RetrieveMixin, CreateMixin, DeleteMixin):
         file-like object.
         """
         params.update({'part_number': part_number})
-        headers = {'Content-Type': 'application/octet-stream'}
+
+        headers = headers or {}
+        headers.setdefault('Content-Type', 'application/octet-stream')
+
         request(self._api_session.put, self.detail_path(),
                 data=data, params=params, headers=headers,
                 configuration=configuration)
         return True
 
-    def complete(self, **params):
+    def complete(self, headers=None, **params):
         """
         Completes the multipart upload and returns a File object.
         """
         response = request(self._api_session.post,
                            "%s/complete" % self.detail_path(),
-                           params=params, configuration=self._configuration)
+                           params=params, configuration=self._configuration,
+                           headers=headers)
         return File.create_from_data(
             response.json(), parent_resource=self._parent_resource,
             configuration=self._configuration)
@@ -717,10 +737,12 @@ class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
 
     @classmethod
     @allow_proxy
-    def all(cls, parent_resource=None, configuration=None, **params):
+    def all(cls, parent_resource=None, configuration=None,
+            headers=None, **params):
         response = request(cls._api_session.get,
                            cls.list_path(parent_resource),
-                           configuration=configuration, params=params)
+                           configuration=configuration, headers=headers,
+                           params=params)
 
         response_json = response.json()
         permissions = response_json.get('permissions')
@@ -735,20 +757,22 @@ class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
     @classmethod
     @allow_proxy
     def create(cls, params=None, parent_resource=None, configuration=None,
-               data=None):
+               data=None, headers=None):
         return super(Permission, cls).create(params=params,
                                              parent_resource=parent_resource,
                                              configuration=configuration,
-                                             method='put', data=data)
+                                             method='put', data=data,
+                                             headers=headers)
 
     @classmethod
     @allow_proxy
     def update(cls, params=None, parent_resource=None, configuration=None,
-               data=None):
+               data=None, headers=None):
         return super(Permission, cls).create(params=params,
                                              parent_resource=parent_resource,
                                              configuration=configuration,
-                                             method='patch', data=data)
+                                             method='patch', data=data,
+                                             headers=headers)
 
 
 class Property(FileSystemBaseResource):
@@ -756,47 +780,49 @@ class Property(FileSystemBaseResource):
 
     @classmethod
     @allow_proxy
-    def all(cls, parent_resource=None, configuration=None):
+    def all(cls, parent_resource=None, configuration=None, headers=None):
         """
         Returns a full list of custom properties associated with this file.
         """
         response = request(cls._api_session.get,
                            cls.list_path(parent_resource),
-                           configuration=configuration)
+                           configuration=configuration, headers=headers)
         return response.json()
 
     @classmethod
     @allow_proxy
-    def update(cls, parent_resource=None, configuration=None, data=None,
-               **params):
+    def update(cls, parent_resource=None, configuration=None, headers=None,
+               data=None, **params):
         """
         Updates custom properties associated with this file.
         'data' should be a list of dicts containing key/value pairs.
         """
         response = request(cls._api_session.patch,
                            cls.list_path(parent_resource),
-                           configuration=configuration, data=data,
-                           params=params)
+                           configuration=configuration, headers=headers,
+                           data=data, params=params)
         return response.json()
 
     @classmethod
     @allow_proxy
-    def delete_all(cls, parent_resource=None, configuration=None):
+    def delete_all(cls, parent_resource=None, configuration=None,
+                   headers=None):
         """
         Deletes all custom properties associated with this file.
         """
         request(cls._api_session.delete, cls.list_path(parent_resource),
-                configuration=configuration)
+                configuration=configuration, headers=headers)
         return True
 
 
 class User(AccountBaseResource, ReadMixin):
     _path_segment = 'team/users'
 
-    def get_groups(self, **params):
+    def get_groups(self, headers=None, **params):
         response = request(self._api_session.get, "%s/%s" %
                            (self.detail_path(), "memberships"),
-                           configuration=self._configuration, params=params)
+                           configuration=self._configuration,
+                           headers=headers, params=params)
 
         data = Group.create_from_data(
             response.json(), parent_resource=self._parent_resource,
@@ -807,10 +833,11 @@ class User(AccountBaseResource, ReadMixin):
 class Group(AccountBaseResource, ReadMixin):
     _path_segment = 'team/groups'
 
-    def get_users(self, **params):
+    def get_users(self, headers=None, **params):
         response = request(self._api_session.get, "%s/%s" %
                            (self.detail_path(), "members"),
-                           configuration=self._configuration, params=params)
+                           configuration=self._configuration,
+                           headers=headers, params=params)
 
         data = User.create_from_data(
             response.json(), parent_resource=self._parent_resource,
@@ -828,32 +855,37 @@ class CRMObject(AccountBaseResource, ListMixin, CreateMixin, RetrieveMixin,
 
     @classmethod
     @allow_proxy
-    def all(cls, parent_resource=None, configuration=None, **params):
+    def all(cls, parent_resource=None, configuration=None,
+            headers=None, **params):
         if cls.raw_type is not None:
             params['raw_type'] = cls.raw_type
         return super(CRMObject, cls).all(parent_resource=parent_resource,
-                                         configuration=configuration, **params)
+                                         configuration=configuration,
+                                         headers=headers, **params)
 
     @classmethod
     @allow_proxy
     def create(cls, params=None, parent_resource=None, configuration=None,
-               method='post', data=None):
+               headers=None, method='post', data=None):
         params = {} if params is None else params
         if cls.raw_type is not None:
             params['raw_type'] = cls.raw_type
         return super(CRMObject, cls).create(params=params,
                                             parent_resource=parent_resource,
                                             configuration=configuration,
+                                            headers=headers,
                                             method=method, data=data)
 
     @classmethod
     @allow_proxy
-    def retrieve(cls, id, parent_resource=None, configuration=None, **params):
+    def retrieve(cls, id, parent_resource=None, configuration=None,
+                 headers=None, **params):
         if cls.raw_type is not None:
             params['raw_type'] = cls.raw_type
         return super(CRMObject, cls).retrieve(id,
                                               parent_resource=parent_resource,
                                               configuration=configuration,
+                                              headers=headers,
                                               **params)
 
     def save(self, **params):

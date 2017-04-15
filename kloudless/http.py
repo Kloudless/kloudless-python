@@ -5,7 +5,9 @@ from . import exceptions
 import functools
 import json
 import time
+import six
 from abc import ABCMeta, abstractproperty
+from requests.structures import CaseInsensitiveDict
 
 class BaseAuth:
     __metaclass__ = ABCMeta
@@ -64,13 +66,21 @@ def request(method, path, configuration=None, **kwargs):
                          configuration['api_version'],
                          path)
 
-    headers = kwargs.setdefault('headers', {})
 
+    headers = kwargs['headers'] = CaseInsensitiveDict(kwargs.get('headers') or {})
+
+    # Set default headers if not present
+    for header_key, header_val in six.iteritems(configuration.get('headers') or {}):
+        if header_val is not None and header_key not in headers:
+            headers[header_key] = header_val
+
+    # Set content type
     if kwargs.get('data'):
         ctype = headers.setdefault('Content-Type', 'application/json')
         if ctype.lower() == 'application/json':
             kwargs['data'] = json.dumps(kwargs['data'])
 
+    # Make request
     requestor = _get_requestor(method, url, **kwargs)
     response = _request(requestor, configuration)
     return response
