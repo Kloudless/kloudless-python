@@ -1,11 +1,11 @@
 # Change Log
 
+## 1.1.2
+* Per-request and globally configurable headers now supported.
+
 ## 1.1.1
 
-#### New Features
 * Python 3 support added.
-
-#### Bug-fixes
 * AccountKey references removed.
 * Improving permissions endpoint compatibility with services like Google Drive.
 
