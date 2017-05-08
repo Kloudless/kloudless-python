@@ -89,61 +89,98 @@ class File(unittest.TestCase):
         except sdk.exceptions.KloudlessException, e:
             self.assertEqual(e.status, 404)
 
-    @utils.allow(services=['box', 'egnyte', 'gdrive'])
+    @utils.allow(services=['gdrive'])
+    def test_permissions(self):
+        # GET Permissions of File
+        permissions = self.file.permissions.all()
+
+        # Assertion
+        self.assertEqual(len(permissions["permissions"]), 1)
+        for permission in permissions["permissions"]:
+            self.assertEqual(permission['role'], 'owner')
+            self.assertEqual(permission['type'], 'user')
+
+        # Create Permissions of File
+        permissions = [{
+            'type': 'user',
+            'role': 'reader',
+            'email': 'gchiou@kloudless.com'
+        }]
+        self.file.permissions.create(data=permissions)
+
+        # Assertion
+        permissions = self.file.permissions.all()
+        self.assertEqual(len(permissions["permissions"]), 2)
+        for permission in permissions["permissions"]:
+            self.assertIn(permission['role'], ['owner', 'reader'])
+            self.assertEqual(permission['type'], 'user')
+
+        # Update Permissions of File
+        permissions = [{
+            'type': 'user',
+            'role': 'writer',
+            'email': 'gchiou@kloudless.com'
+        }]
+        self.file.permissions.update(data=permissions)
+
+        # Assertion
+        permissions = self.file.permissions.all()
+        self.assertEqual(len(permissions["permissions"]), 2)
+        for permission in permissions["permissions"]:
+            self.assertIn(permission['role'], ['owner', 'writer'])
+            self.assertEqual(permission['type'], 'user')
+
+        # Test Update to clear all extra Permissions of File
+        permissions = []
+        self.file.permissions.update(data=permissions)
+
+        # Assertion
+        permissions = self.file.permissions.all()
+        self.assertEqual(len(permissions["permissions"]), 1)
+        for permission in permissions["permissions"]:
+            self.assertEqual(permission['role'], 'owner')
+            self.assertEqual(permission['type'], 'user')
+
+    @utils.allow(services=['egnyte', 'gdrive'])
     def test_properties(self):
-        def parse(properties):
-            result = {}
-            for prop in properties['properties']:
-                result[prop['key']] = prop['value']
-            return result
+        # GET Properties of File
+        properties = self.file.properties.all()
 
-        self.file.properties.delete_all()
-        # Test PATCH
-        time.sleep(0.5)
-        properties = self.file.properties.update(data=[
-            {
-                'key': 'key1',
-                'value': 'value1'
-            },
-            {
-                'key': 'key2',
-                'value': 'value2'
-            }
-        ])
+        # Assertion
+        self.assertEqual(len(properties["properties"]), 0)
 
-        properties = parse(properties)
-        self.assertEqual(len(properties), 2)
-        self.assertEqual(properties['key1'], 'value1')
-        self.assertEqual(properties['key2'], 'value2')
+        # ADD Properties of File
+        properties = [
+            {'key': 'key1', 'value': 'value1'},
+            {'key': 'key2', 'value': 'value2'}
+        ]
+        properties = self.file.properties.update(data=properties)
 
-        time.sleep(0.5)
-        self.file.properties.update(data=[
-            {
-                'key': 'key1', # delete property
-                'value': None
-            },
-            {
-                'key': 'key2', # update property
-                'value': 'hello'
-            },
-            {
-                'key': 'key3', # add property
-                'value': 'value3'
-            }
-        ])
+        # Assertion
+        self.assertEqual(len(properties["properties"]), 2)
+        for prop in properties["properties"]:
+            self.assertIn(prop["key"], ["key1", "key2"])
+            self.assertIn(prop["value"], ["value1", "value2"])
 
-        # Test GET
-        time.sleep(0.5)
-        properties = parse(self.file.properties.all())
-        self.assertEqual(len(properties), 2)
-        self.assertEqual(properties['key2'], 'hello')
-        self.assertEqual(properties['key3'], 'value3')
+        # Update and Delete Properties of File
+        properties = [
+            {'key': 'key1', 'value': None}, # delete property
+            {'key': 'key2', 'value': 'hello'}, # update property
+            {'key': 'key3', 'value': 'value3'} # add property
+        ]
+        properties = self.file.properties.update(data=properties)
 
-        # Test DELETE
-        self.file.properties.delete_all()
-        time.sleep(0.5)
-        properties = parse(self.file.properties.all())
-        self.assertEqual(len(properties), 0)
+        # Assertion
+        self.assertEqual(len(properties["properties"]), 2)
+        for prop in properties["properties"]:
+            self.assertIn(prop["key"], ["key3", "key2"])
+            self.assertIn(prop["value"], ["value3", "hello"])
+
+        # Delete All Properties of File
+        delete_all = self.file.properties.delete_all()
+
+        # Assertion
+        self.assertTrue(delete_all)
 
     @utils.allow(services=['s3'])
     def test_upload_url(self):

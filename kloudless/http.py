@@ -6,8 +6,11 @@ import functools
 import json
 import time
 import six
+import urllib
+
 from abc import ABCMeta, abstractproperty
 from requests.structures import CaseInsensitiveDict
+
 
 class BaseAuth:
     __metaclass__ = ABCMeta
@@ -62,10 +65,11 @@ def request(method, path, configuration=None, **kwargs):
             "requests. You can get a Bearer token by authenticating an account and "
             "set it by calling 'kloudless.configure(token=\"TOKEN\")' as well.")
 
+    path = urllib.quote(path)
+
     url = "%s/v%s/%s" % (configuration['base_url'],
                          configuration['api_version'],
                          path)
-
 
     headers = kwargs['headers'] = CaseInsensitiveDict(kwargs.get('headers') or {})
 

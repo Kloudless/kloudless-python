@@ -242,7 +242,7 @@ class ReadMixin(RetrieveMixin, ListMixin):
 class CreateMixin(object):
     @classmethod
     @allow_proxy
-    def create(cls, data=None, params=None, method='post',
+    def create(cls, data=None, params=None, method='post', data_type=None,
                parent_resource=None, configuration=None, headers=None):
         """
         params: A dict containing query parameters.
@@ -253,7 +253,10 @@ class CreateMixin(object):
         if not data:
             data = {}
 
-        data = cls.serialize(data)
+        if data_type == "list":
+            data = [cls.serialize(data_dict) for data_dict in data]
+        else:
+            data = cls.serialize(data)
 
         if not params:
             params = {}
@@ -745,37 +748,30 @@ class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
                            params=params)
 
         response_json = response.json()
-        permissions = response_json.get('permissions')
-        for perm in permissions:
-            perm['type'] = 'permission'
-        response_json['permissions'] = permissions
-        data = cls.create_from_data(
-            response_json, parent_resource=parent_resource,
-            configuration=configuration)
-        return AnnotatedList(data)
+        return response_json
 
     @classmethod
     @allow_proxy
     def create(cls, params=None, parent_resource=None, configuration=None,
                data=None, headers=None):
-        return super(Permission, cls).create(params=params,
+        return super(Permission, cls).create(params=params, data_type="list",
                                              parent_resource=parent_resource,
                                              configuration=configuration,
-                                             method='put', data=data,
+                                             method='patch', data=data,
                                              headers=headers)
 
     @classmethod
     @allow_proxy
     def update(cls, params=None, parent_resource=None, configuration=None,
                data=None, headers=None):
-        return super(Permission, cls).create(params=params,
+        return super(Permission, cls).create(params=params, data_type="list",
                                              parent_resource=parent_resource,
                                              configuration=configuration,
-                                             method='patch', data=data,
+                                             method='put', data=data,
                                              headers=headers)
 
 
-class Property(FileSystemBaseResource):
+class Property(FileSystemBaseResource, CreateMixin):
     _path_segment = 'properties'
 
     @classmethod
@@ -797,11 +793,11 @@ class Property(FileSystemBaseResource):
         Updates custom properties associated with this file.
         'data' should be a list of dicts containing key/value pairs.
         """
-        response = request(cls._api_session.patch,
-                           cls.list_path(parent_resource),
-                           configuration=configuration, headers=headers,
-                           data=data, params=params)
-        return response.json()
+        return super(Property, cls).create(params=params, data_type="list",
+                                             parent_resource=parent_resource,
+                                             configuration=configuration,
+                                             method='patch', data=data,
+                                             headers=headers)
 
     @classmethod
     @allow_proxy

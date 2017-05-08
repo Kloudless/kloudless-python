@@ -59,7 +59,7 @@ def create_or_get_test_folder(account, parent_id='root', name=None):
 def create_test_file(account, folder=None, file_name=None,
                      file_data='test', overwrite=True):
     if not file_name:
-        file_name = u't\xe9st file %s.txt' % random.randint(0, 10e8)
+        file_name = u'test_file_%s.txt' % random.randint(0, 10e8)
     if not folder:
         folder = create_or_get_test_folder(account)
     return account.files.create(file_name=file_name, parent_id=folder.id,
