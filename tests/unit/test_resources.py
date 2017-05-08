@@ -1,5 +1,8 @@
 import json
 import requests
+import copy
+import datetime
+import pytz
 
 from mock import MagicMock, patch, call
 from requests.models import Response
@@ -266,3 +269,98 @@ def test_file_copy():
                                configuration=file_obj._configuration),
                          ]
         mock_req.assert_has_calls(expected_calls)
+
+
+@helpers.configured_test
+def test_file_property_list():
+    account = Account.create_from_data(json.loads(helpers.account))
+    file_data =  json.loads(helpers.file_data)
+    file_obj = File.create_from_data(file_data, parent_resource=account)
+    property_data = json.loads(helpers.property_data) 
+    properties = property_data.get('properties')
+    with patch('kloudless.resources.request') as mock_req:
+        resp = Response()
+        resp._content = helpers.property_data.encode('utf-8')
+        resp.encoding = 'utf-8'
+        mock_req.return_value = resp
+        properties_obj = kloudless.resources.Property.all(parent_resource=file_obj)
+        assert properties_obj is not None
+        props = properties_obj.get('properties')
+        assert len(props) > 0
+        index = 0
+        for prop in props:
+            for attr in ['key', 'value', 'created', 'modified']:
+                assert prop.get(attr) == properties[index].get(attr)
+            index += 1
+        mock_req.assert_called_with(kloudless.resources.Property._api_session.get,
+                'accounts/%s/storage/files/%s/properties' % (account['id'],
+                    file_obj['id']),
+                configuration=None,
+                headers=None)
+
+
+@helpers.configured_test
+def test_file_property_patch():
+    account = Account.create_from_data(json.loads(helpers.account))
+    file_data =  json.loads(helpers.file_data)
+    file_obj = File.create_from_data(file_data, parent_resource=account)
+    property_data = json.loads(helpers.property_data)
+    properties = property_data.get('properties')
+    sorted(properties)
+    new_properties = copy.deepcopy(properties)
+    new_properties[0]['value'] = 'test update'
+    # remove the second one
+    new_properties.remove(new_properties[1])
+    new_properties.append({
+        'key':'newkey',
+        'value': 'newvalue',
+        'created': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+        'modified': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+        })
+    content = json.dumps(new_properties)
+    with patch('kloudless.resources.request') as mock_req:
+        resp = Response()
+        resp._content = content
+        resp.encoding = 'utf-8'
+        resp.status_code = 200
+        mock_req.return_value = resp
+        updated_properties = kloudless.resources.Property.update(
+                parent_resource=file_obj,data=new_properties)
+        assert updated_properties is not None
+        assert len(updated_properties) == 2
+        sorted(updated_properties)
+        index = 0
+        for prop in updated_properties:
+            for attr in ['key', 'value', 'created', 'modified']:
+                if attr == 'created' or attr == 'modified':
+                    datetime_obj = datetime.datetime.strptime(
+                            new_properties[index].get(attr),
+                            '%Y-%m-%dT%H:%M:%S.%fZ')
+                    datetime_obj_utc = datetime_obj.replace(
+                            tzinfo=pytz.timezone('UTC'))
+                    assert prop.get(attr) == datetime_obj_utc
+                else:
+                    assert prop.get(attr) == new_properties[index].get(attr)
+            index += 1
+        mock_req.asssert_called_with(kloudless.resources.Property._api_session.patch,
+                'accounts/%s/storage/files/%s/properties' %
+                (account['id'], file_obj['id']),
+                configuration=file_obj._configuration,
+                headers=None)
+
+@helpers.configured_test
+def test_file_property_delete():
+    account = Account.create_from_data(json.loads(helpers.account))
+    file_data =  json.loads(helpers.file_data)
+    file_obj = File.create_from_data(file_data, parent_resource=account)
+    with patch('kloudless.resources.request') as mock_req:
+        resp = Response()
+        resp.status_code = 204
+        mock_req.return_value = resp
+        deleted_properties = kloudless.resources.Property.delete_all(
+                parent_resource=file_obj)
+        assert deleted_properties is not None
+        mock_req.assert_called_with(kloudless.resources.Property._api_session.delete,
+                'accounts/%s/storage/files/%s/properties' % 
+                (account['id'], file_obj['id']), configuration=None,
+                headers=None)

@@ -35,3 +35,4 @@ file_data =  '{"account": "7", "name": "derp.burp", "created": "2013-11-27T01:23
 
 file_contents = "Woooo this is a test file!"
 
+property_data = '{"properties": [{"key": "department", "value": "engineering", "created": "2015-03-17T20:42:18.627533Z", "modified": "2015-03-17T20:42:18.627533Z"}, { "key": "readonly", "value": "true", "created": "2015-03-17T20:42:18.627533Z", "modified": "2015-03-17T20:42:18.627533Z"}]}'

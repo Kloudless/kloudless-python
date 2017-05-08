@@ -794,10 +794,10 @@ class Property(FileSystemBaseResource, CreateMixin):
         'data' should be a list of dicts containing key/value pairs.
         """
         return super(Property, cls).create(params=params, data_type="list",
-                                             parent_resource=parent_resource,
-                                             configuration=configuration,
-                                             method='patch', data=data,
-                                             headers=headers)
+                                           parent_resource=parent_resource,
+                                           configuration=configuration,
+                                           method='patch', data=data,
+                                           headers=headers)
 
     @classmethod
     @allow_proxy
