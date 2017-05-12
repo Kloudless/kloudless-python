@@ -165,12 +165,12 @@ def test_folder_permissions_patch_and_put():
     new_permissions[0]["name"] = "Test1"
     # prepare response data for create
     permissions.append(new_permissions[0])
-    sorted(permissions)
+    sorted(permissions, key=lambda x:sorted(x.keys()))
     permission_data['permissions'] = permissions
     content = json.dumps(permission_data)
     with patch('kloudless.resources.request') as mock_req:
         resp = Response()
-        resp._content = content
+        resp._content = content.encode('utf-8')
         resp.encoding = 'utf-8'
         resp.status_code = 200
         mock_req.return_value = resp
@@ -178,7 +178,7 @@ def test_folder_permissions_patch_and_put():
                 parent_resource=folder_obj, data=new_permissions)
         assert permissions_obj is not None
         perms = permissions_obj.get('permissions')
-        sorted(perms)
+        sorted(perms, key=lambda x:sorted(x.keys()))
         assert len(perms) > 0
         index = 0
         for perm in perms:
@@ -199,12 +199,12 @@ def test_folder_permissions_patch_and_put():
     permission_data = json.loads(helpers.permission_data)
     permissions = permission_data.get('permissions')
     permissions.append(new_permissions[0])
-    sorted(permissions)
+    sorted(permissions, key=lambda x:sorted(x.keys()))
     permission_data['permissions'] = permissions
     content = json.dumps(permission_data)
     with patch('kloudless.resources.request') as mock_req:
         resp = Response()
-        resp._content = content
+        resp._content = content.encode('utf-8')
         resp.encoding = 'utf-8'
         resp.status_code = 200
         mock_req.return_value = resp
@@ -212,7 +212,7 @@ def test_folder_permissions_patch_and_put():
                 parent_resource=folder_obj, data=new_permissions)
         assert permissions_obj is not None
         perms = permissions_obj.get('permissions')
-        sorted(perms)
+        sorted(perms, key=lambda x:sorted(x.keys()))
         assert len(perms) > 0
         index = 0
         for perm in perms:
@@ -411,7 +411,7 @@ def test_file_property_patch():
     file_obj = File.create_from_data(file_data, parent_resource=account)
     property_data = json.loads(helpers.property_data)
     properties = property_data.get('properties')
-    sorted(properties)
+    sorted(properties, key=lambda x:sorted(x.keys()))
     new_properties = copy.deepcopy(properties)
     new_properties[0]['value'] = 'test update'
     # remove the second one
@@ -425,7 +425,7 @@ def test_file_property_patch():
     content = json.dumps(new_properties)
     with patch('kloudless.resources.request') as mock_req:
         resp = Response()
-        resp._content = content
+        resp._content = content.encode('utf-8')
         resp.encoding = 'utf-8'
         resp.status_code = 200
         mock_req.return_value = resp
@@ -433,7 +433,7 @@ def test_file_property_patch():
                 parent_resource=file_obj,data=new_properties)
         assert updated_properties is not None
         assert len(updated_properties) == 2
-        sorted(updated_properties)
+        sorted(updated_properties, key=lambda x:sorted(x.keys()))
         index = 0
         for prop in updated_properties:
             for attr in ['key', 'value', 'created', 'modified']:
@@ -514,12 +514,12 @@ def test_file_permissions_patch_and_put():
     new_permissions[0]["name"] = "Test1"
     # prepare response data for create
     permissions.append(new_permissions[0])
-    sorted(permissions)
+    sorted(permissions, key=lambda x:sorted(x.keys()))
     permission_data['permissions'] = permissions
     content = json.dumps(permission_data)
     with patch('kloudless.resources.request') as mock_req:
         resp = Response()
-        resp._content = content
+        resp._content = content.encode('utf-8')
         resp.encoding = 'utf-8'
         resp.status_code = 200
         mock_req.return_value = resp
@@ -527,7 +527,7 @@ def test_file_permissions_patch_and_put():
                 parent_resource=file_obj, data=new_permissions)
         assert permissions_obj is not None
         perms = permissions_obj.get('permissions')
-        sorted(perms)
+        sorted(perms, key=lambda x:sorted(x.keys()))
         assert len(perms) > 0
         index = 0
         for perm in perms:
@@ -548,12 +548,12 @@ def test_file_permissions_patch_and_put():
     permission_data = json.loads(helpers.permission_data)
     permissions = permission_data.get('permissions')
     permissions.append(new_permissions[0])
-    sorted(permissions)
+    sorted(permissions, key=lambda x:sorted(x.keys()))
     permission_data['permissions'] = permissions
     content = json.dumps(permission_data)
     with patch('kloudless.resources.request') as mock_req:
         resp = Response()
-        resp._content = content
+        resp._content = content.encode('utf-8')
         resp.encoding = 'utf-8'
         resp.status_code = 200
         mock_req.return_value = resp
@@ -561,7 +561,7 @@ def test_file_permissions_patch_and_put():
                 parent_resource=file_obj, data=new_permissions)
         assert permissions_obj is not None
         perms = permissions_obj.get('permissions')
-        sorted(perms)
+        sorted(perms, key=lambda x:sorted(x.keys()))
         assert len(perms) > 0
         index = 0
         for perm in perms:

@@ -104,7 +104,7 @@ class File(unittest.TestCase):
         permissions = [{
             'type': 'user',
             'role': 'reader',
-            'email': 'gchiou@kloudless.com'
+            'email': 'pankul@kloudless.com'
         }]
         self.file.permissions.create(data=permissions)
 
