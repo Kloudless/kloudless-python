@@ -121,6 +121,113 @@ def test_folder_delete():
                                     params={})
 
 @helpers.configured_test
+def test_folder_permissions_list():
+    account = Account.create_from_data(json.loads(helpers.account))
+    folder_data = json.loads(helpers.folder_data)
+    folder_obj = Folder.create_from_data(folder_data, parent_resource=account)
+    permission_data = json.loads(helpers.permission_data)
+    permissions = permission_data.get('permissions')
+    with patch('kloudless.resources.request') as mock_req:
+        resp = Response()
+        resp._content = helpers.permission_data.encode('utf-8')
+        resp.encoding = 'utf-8'
+        mock_req.return_value = resp
+        resp = Response()
+        permissions_obj = kloudless.resources.Permission.all(parent_resource=folder_obj)
+        assert permissions_obj is not None
+        perms = permissions_obj.get('permissions')
+        assert len(perms) > 0
+        index = 0
+        for perm in perms:
+            for attr in ['role', 'email', 'type', 'id', 'name']:
+                assert perm.get(attr) == permissions[index].get(attr)
+            index += 1
+        mock_req.assert_called_with(
+            kloudless.resources.Permission._api_session.get,
+            'accounts/%s/storage/folders/%s/permissions' % (account['id'], folder_obj['id']),
+            configuration=None,
+            headers=None,
+            params={}
+        )
+
+@helpers.configured_test
+def test_folder_permissions_patch_and_put():
+    account = Account.create_from_data(json.loads(helpers.account))
+    folder_data = json.loads(helpers.folder_data)
+    folder_obj = Folder.create_from_data(folder_data, parent_resource=account)
+    permission_data = json.loads(helpers.permission_data)
+    permissions = permission_data.get('permissions')
+    # Prepare new permissions data to create
+    new_permissions = copy.deepcopy(permissions)
+    new_permissions[0]["role"] = "reader"
+    new_permissions[0]["email"] = "test1@example.com"
+    new_permissions[0]["id"] = "test1"
+    new_permissions[0]["name"] = "Test1"
+    # prepare response data for create
+    permissions.append(new_permissions[0])
+    sorted(permissions)
+    permission_data['permissions'] = permissions
+    content = json.dumps(permission_data)
+    with patch('kloudless.resources.request') as mock_req:
+        resp = Response()
+        resp._content = content
+        resp.encoding = 'utf-8'
+        resp.status_code = 200
+        mock_req.return_value = resp
+        permissions_obj = kloudless.resources.Permission.create(
+                parent_resource=folder_obj, data=new_permissions)
+        assert permissions_obj is not None
+        perms = permissions_obj.get('permissions')
+        sorted(perms)
+        assert len(perms) > 0
+        index = 0
+        for perm in perms:
+            for attr in ['role', 'email', 'type', 'id', 'name']:
+                assert perm.get(attr) == permissions[index].get(attr)
+            index += 1
+        mock_req.asssert_called_with(
+            kloudless.resources.Permission._api_session.patch,
+            'accounts/%s/storage/folders/%s/permissions' % (account['id'], folder_obj['id']),
+            configuration=folder_obj._configuration,
+            headers=None,
+            params={}
+        )
+    # Prepare new permissions data to update
+    new_permissions = copy.deepcopy(new_permissions)
+    new_permissions[0]["role"] = "writer"
+    # prepare response data for update
+    permission_data = json.loads(helpers.permission_data)
+    permissions = permission_data.get('permissions')
+    permissions.append(new_permissions[0])
+    sorted(permissions)
+    permission_data['permissions'] = permissions
+    content = json.dumps(permission_data)
+    with patch('kloudless.resources.request') as mock_req:
+        resp = Response()
+        resp._content = content
+        resp.encoding = 'utf-8'
+        resp.status_code = 200
+        mock_req.return_value = resp
+        permissions_obj = kloudless.resources.Permission.create(
+                parent_resource=folder_obj, data=new_permissions)
+        assert permissions_obj is not None
+        perms = permissions_obj.get('permissions')
+        sorted(perms)
+        assert len(perms) > 0
+        index = 0
+        for perm in perms:
+            for attr in ['role', 'email', 'type', 'id', 'name']:
+                assert perm.get(attr) == permissions[index].get(attr)
+            index += 1
+        mock_req.asssert_called_with(
+            kloudless.resources.Permission._api_session.put,
+            'accounts/%s/storage/folders/%s/permissions' % (account['id'], folder_obj['id']),
+            configuration=folder_obj._configuration,
+            headers=None,
+            params={}
+        )
+
+@helpers.configured_test
 def test_file_metadata():
     account = Account.create_from_data(json.loads(helpers.account))
     file_data = json.loads(helpers.file_data)
@@ -270,13 +377,12 @@ def test_file_copy():
                          ]
         mock_req.assert_has_calls(expected_calls)
 
-
 @helpers.configured_test
 def test_file_property_list():
     account = Account.create_from_data(json.loads(helpers.account))
     file_data =  json.loads(helpers.file_data)
     file_obj = File.create_from_data(file_data, parent_resource=account)
-    property_data = json.loads(helpers.property_data) 
+    property_data = json.loads(helpers.property_data)
     properties = property_data.get('properties')
     with patch('kloudless.resources.request') as mock_req:
         resp = Response()
@@ -297,7 +403,6 @@ def test_file_property_list():
                     file_obj['id']),
                 configuration=None,
                 headers=None)
-
 
 @helpers.configured_test
 def test_file_property_patch():
@@ -361,6 +466,112 @@ def test_file_property_delete():
                 parent_resource=file_obj)
         assert deleted_properties is not None
         mock_req.assert_called_with(kloudless.resources.Property._api_session.delete,
-                'accounts/%s/storage/files/%s/properties' % 
+                'accounts/%s/storage/files/%s/properties' %
                 (account['id'], file_obj['id']), configuration=None,
                 headers=None)
+
+@helpers.configured_test
+def test_file_permissions_list():
+    account = Account.create_from_data(json.loads(helpers.account))
+    file_data =  json.loads(helpers.file_data)
+    file_obj = File.create_from_data(file_data, parent_resource=account)
+    permission_data = json.loads(helpers.permission_data)
+    permissions = permission_data.get('permissions')
+    with patch('kloudless.resources.request') as mock_req:
+        resp = Response()
+        resp._content = helpers.permission_data.encode('utf-8')
+        resp.encoding = 'utf-8'
+        mock_req.return_value = resp
+        permissions_obj = kloudless.resources.Permission.all(parent_resource=file_obj)
+        assert permissions_obj is not None
+        perms = permissions_obj.get('permissions')
+        assert len(perms) > 0
+        index = 0
+        for perm in perms:
+            for attr in ['role', 'email', 'type', 'id', 'name']:
+                assert perm.get(attr) == permissions[index].get(attr)
+            index += 1
+        mock_req.assert_called_with(
+            kloudless.resources.Permission._api_session.get,
+            'accounts/%s/storage/files/%s/permissions' % (account['id'], file_obj['id']),
+            configuration=None,
+            headers=None,
+            params={}
+        )
+
+@helpers.configured_test
+def test_file_permissions_patch_and_put():
+    account = Account.create_from_data(json.loads(helpers.account))
+    file_data =  json.loads(helpers.file_data)
+    file_obj = File.create_from_data(file_data, parent_resource=account)
+    permission_data = json.loads(helpers.permission_data)
+    permissions = permission_data.get('permissions')
+    # Prepare new permissions data to create
+    new_permissions = copy.deepcopy(permissions)
+    new_permissions[0]["role"] = "reader"
+    new_permissions[0]["email"] = "test1@example.com"
+    new_permissions[0]["id"] = "test1"
+    new_permissions[0]["name"] = "Test1"
+    # prepare response data for create
+    permissions.append(new_permissions[0])
+    sorted(permissions)
+    permission_data['permissions'] = permissions
+    content = json.dumps(permission_data)
+    with patch('kloudless.resources.request') as mock_req:
+        resp = Response()
+        resp._content = content
+        resp.encoding = 'utf-8'
+        resp.status_code = 200
+        mock_req.return_value = resp
+        permissions_obj = kloudless.resources.Permission.create(
+                parent_resource=file_obj, data=new_permissions)
+        assert permissions_obj is not None
+        perms = permissions_obj.get('permissions')
+        sorted(perms)
+        assert len(perms) > 0
+        index = 0
+        for perm in perms:
+            for attr in ['role', 'email', 'type', 'id', 'name']:
+                assert perm.get(attr) == permissions[index].get(attr)
+            index += 1
+        mock_req.asssert_called_with(
+            kloudless.resources.Permission._api_session.patch,
+            'accounts/%s/storage/files/%s/permissions' % (account['id'], file_obj['id']),
+            configuration=file_obj._configuration,
+            headers=None,
+            params={}
+        )
+    # Prepare new permissions data to update
+    new_permissions = copy.deepcopy(new_permissions)
+    new_permissions[0]["role"] = "writer"
+    # prepare response data for update
+    permission_data = json.loads(helpers.permission_data)
+    permissions = permission_data.get('permissions')
+    permissions.append(new_permissions[0])
+    sorted(permissions)
+    permission_data['permissions'] = permissions
+    content = json.dumps(permission_data)
+    with patch('kloudless.resources.request') as mock_req:
+        resp = Response()
+        resp._content = content
+        resp.encoding = 'utf-8'
+        resp.status_code = 200
+        mock_req.return_value = resp
+        permissions_obj = kloudless.resources.Permission.create(
+                parent_resource=file_obj, data=new_permissions)
+        assert permissions_obj is not None
+        perms = permissions_obj.get('permissions')
+        sorted(perms)
+        assert len(perms) > 0
+        index = 0
+        for perm in perms:
+            for attr in ['role', 'email', 'type', 'id', 'name']:
+                assert perm.get(attr) == permissions[index].get(attr)
+            index += 1
+        mock_req.asssert_called_with(
+            kloudless.resources.Permission._api_session.put,
+            'accounts/%s/storage/files/%s/permissions' % (account['id'], file_obj['id']),
+            configuration=file_obj._configuration,
+            headers=None,
+            params={}
+        )
