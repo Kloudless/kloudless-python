@@ -182,7 +182,7 @@ class AnnotatedList(list):
 
         objects = None
         for k, v in six.iteritems(all_data):
-            if k in ['objects', 'permissions'] and isinstance(v, list):
+            if k in ['objects', 'permissions', 'properties'] and isinstance(v, list):
                 objects = v
             else:
                 setattr(self, k, v)
@@ -242,7 +242,7 @@ class ReadMixin(RetrieveMixin, ListMixin):
 class CreateMixin(object):
     @classmethod
     @allow_proxy
-    def create(cls, data=None, params=None, method='post', data_type=None,
+    def create(cls, data=None, params=None, method='post',
                parent_resource=None, configuration=None, headers=None):
         """
         params: A dict containing query parameters.
@@ -253,8 +253,8 @@ class CreateMixin(object):
         if not data:
             data = {}
 
-        if data_type == "list":
-            data = [cls.serialize(data_dict) for data_dict in data]
+        if type(data) in [list, tuple]:
+            data = [cls.serialize(data_obj) for data_obj in data]
         else:
             data = cls.serialize(data)
 
@@ -748,42 +748,38 @@ class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
                            params=params)
 
         response_json = response.json()
-        return response_json
+        permissions = response_json.get('permissions')
+        for perm in permissions:
+            perm['type'] = 'permission'
+        response_json['permissions'] = permissions
+        data = cls.create_from_data(
+            response_json, parent_resource=parent_resource,
+            configuration=configuration)
+        return AnnotatedList(data)
 
     @classmethod
     @allow_proxy
     def create(cls, params=None, parent_resource=None, configuration=None,
                data=None, headers=None):
-        return super(Permission, cls).create(params=params, data_type="list",
+        return super(Permission, cls).create(params=params,
                                              parent_resource=parent_resource,
                                              configuration=configuration,
-                                             method='patch', data=data,
+                                             method='put', data=data,
                                              headers=headers)
 
     @classmethod
     @allow_proxy
     def update(cls, params=None, parent_resource=None, configuration=None,
                data=None, headers=None):
-        return super(Permission, cls).create(params=params, data_type="list",
+        return super(Permission, cls).create(params=params,
                                              parent_resource=parent_resource,
                                              configuration=configuration,
-                                             method='put', data=data,
+                                             method='patch', data=data,
                                              headers=headers)
 
 
-class Property(FileSystemBaseResource, CreateMixin):
+class Property(FileSystemBaseResource, ListMixin, CreateMixin):
     _path_segment = 'properties'
-
-    @classmethod
-    @allow_proxy
-    def all(cls, parent_resource=None, configuration=None, headers=None):
-        """
-        Returns a full list of custom properties associated with this file.
-        """
-        response = request(cls._api_session.get,
-                           cls.list_path(parent_resource),
-                           configuration=configuration, headers=headers)
-        return response.json()
 
     @classmethod
     @allow_proxy
@@ -793,7 +789,7 @@ class Property(FileSystemBaseResource, CreateMixin):
         Updates custom properties associated with this file.
         'data' should be a list of dicts containing key/value pairs.
         """
-        return super(Property, cls).create(params=params, data_type="list",
+        return super(Property, cls).create(params=params,
                                            parent_resource=parent_resource,
                                            configuration=configuration,
                                            method='patch', data=data,

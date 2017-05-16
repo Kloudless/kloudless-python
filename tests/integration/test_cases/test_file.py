@@ -6,6 +6,8 @@ import time
 
 import utils
 import sdk
+import helpers
+
 
 class File(unittest.TestCase):
 
@@ -91,55 +93,7 @@ class File(unittest.TestCase):
 
     @utils.allow(services=['gdrive'])
     def test_permissions(self):
-        # GET Permissions of File
-        permissions = self.file.permissions.all()
-
-        # Assertion
-        self.assertEqual(len(permissions["permissions"]), 1)
-        for permission in permissions["permissions"]:
-            self.assertEqual(permission['role'], 'owner')
-            self.assertEqual(permission['type'], 'user')
-
-        # Create Permissions of File
-        permissions = [{
-            'type': 'user',
-            'role': 'reader',
-            'email': 'pankul@kloudless.com'
-        }]
-        self.file.permissions.create(data=permissions)
-
-        # Assertion
-        permissions = self.file.permissions.all()
-        self.assertEqual(len(permissions["permissions"]), 2)
-        for permission in permissions["permissions"]:
-            self.assertIn(permission['role'], ['owner', 'reader'])
-            self.assertEqual(permission['type'], 'user')
-
-        # Update Permissions of File
-        permissions = [{
-            'type': 'user',
-            'role': 'writer',
-            'email': 'gchiou@kloudless.com'
-        }]
-        self.file.permissions.update(data=permissions)
-
-        # Assertion
-        permissions = self.file.permissions.all()
-        self.assertEqual(len(permissions["permissions"]), 2)
-        for permission in permissions["permissions"]:
-            self.assertIn(permission['role'], ['owner', 'writer'])
-            self.assertEqual(permission['type'], 'user')
-
-        # Test Update to clear all extra Permissions of File
-        permissions = []
-        self.file.permissions.update(data=permissions)
-
-        # Assertion
-        permissions = self.file.permissions.all()
-        self.assertEqual(len(permissions["permissions"]), 1)
-        for permission in permissions["permissions"]:
-            self.assertEqual(permission['role'], 'owner')
-            self.assertEqual(permission['type'], 'user')
+        helpers.permission_testing(self, self.file)
 
     @utils.allow(services=['egnyte', 'gdrive'])
     def test_properties(self):
@@ -147,7 +101,7 @@ class File(unittest.TestCase):
         properties = self.file.properties.all()
 
         # Assertion
-        self.assertEqual(len(properties["properties"]), 0)
+        self.assertEqual(len(properties), 0)
 
         # ADD Properties of File
         properties = [
@@ -155,10 +109,11 @@ class File(unittest.TestCase):
             {'key': 'key2', 'value': 'value2'}
         ]
         properties = self.file.properties.update(data=properties)
+        time.sleep(0.5)
 
         # Assertion
-        self.assertEqual(len(properties["properties"]), 2)
-        for prop in properties["properties"]:
+        self.assertEqual(len(properties['properties']), 2)
+        for prop in properties['properties']:
             self.assertIn(prop["key"], ["key1", "key2"])
             self.assertIn(prop["value"], ["value1", "value2"])
 
@@ -169,10 +124,11 @@ class File(unittest.TestCase):
             {'key': 'key3', 'value': 'value3'} # add property
         ]
         properties = self.file.properties.update(data=properties)
+        time.sleep(0.5)
 
         # Assertion
-        self.assertEqual(len(properties["properties"]), 2)
-        for prop in properties["properties"]:
+        self.assertEqual(len(properties['properties']), 2)
+        for prop in properties['properties']:
             self.assertIn(prop["key"], ["key3", "key2"])
             self.assertIn(prop["value"], ["value3", "hello"])
 

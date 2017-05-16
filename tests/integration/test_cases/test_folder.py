@@ -4,6 +4,8 @@ import random
 
 import utils
 import sdk
+import helpers
+
 
 class Folder(unittest.TestCase):
 
@@ -28,12 +30,11 @@ class Folder(unittest.TestCase):
             params={'conflict_if_exists': 'false'})
         self.assertEqual(new_folder.name, folder_name)
 
-        if acc['service'] != "gdrive":
-            with self.assertRaises(sdk.exceptions.KloudlessException) as cm:
-                acc.folders.create(
-                    data={'parent_id': self.test_folder.id, 'name': folder_name},
-                    params={'conflict_if_exists': 'true'})
-                self.assertEqual(cm.exception.status, 409)
+        with self.assertRaises(sdk.exceptions.KloudlessException) as cm:
+            acc.folders.create(
+                data={'parent_id': self.test_folder.id, 'name': folder_name},
+                params={'conflict_if_exists': 'true'})
+            self.assertEqual(cm.exception.status, 409)
 
     def test_retrieve_folder_metadata(self):
         test_folder = self.test_folder
@@ -140,55 +141,7 @@ class Folder(unittest.TestCase):
 
     @utils.allow(services=['box', 'gdrive'])
     def test_permissions(self):
-        # GET Permissions of Folder
-        permissions = self.test_folder.permissions.all()
-
-        # Assertion
-        self.assertEqual(len(permissions["permissions"]), 1)
-        for permission in permissions["permissions"]:
-            self.assertEqual(permission['role'], 'owner')
-            self.assertEqual(permission['type'], 'user')
-
-        # Create Permissions of Folder
-        permissions = [{
-            'type': 'user',
-            'role': 'reader',
-            'email': 'gchiou@kloudless.com'
-        }]
-        self.test_folder.permissions.create(data=permissions)
-
-        # Assertion
-        permissions = self.test_folder.permissions.all()
-        self.assertEqual(len(permissions["permissions"]), 2)
-        for permission in permissions["permissions"]:
-            self.assertIn(permission['role'], ['owner', 'reader'])
-            self.assertEqual(permission['type'], 'user')
-
-        # Update Permissions of Folder
-        permissions = [{
-            'type': 'user',
-            'role': 'writer',
-            'email': 'gchiou@kloudless.com'
-        }]
-        self.test_folder.permissions.update(data=permissions)
-
-        # Assertion
-        permissions = self.test_folder.permissions.all()
-        self.assertEqual(len(permissions["permissions"]), 2)
-        for permission in permissions["permissions"]:
-            self.assertIn(permission['role'], ['owner', 'writer'])
-            self.assertEqual(permission['type'], 'user')
-
-        # Test Update to clear all extra Permissions of Folder
-        permissions = []
-        self.test_folder.permissions.update(data=permissions)
-
-        # Assertion
-        permissions = self.test_folder.permissions.all()
-        self.assertEqual(len(permissions["permissions"]), 1)
-        for permission in permissions["permissions"]:
-            self.assertEqual(permission['role'], 'owner')
-            self.assertEqual(permission['type'], 'user')
+        helpers.permission_testing(self, self.test_folder)
 
 def test_cases():
     return [utils.create_test_case(acc, Folder) for acc in utils.accounts]
