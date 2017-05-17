@@ -460,6 +460,10 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
         return self._get_proxy('recent')
 
     @property
+    def calendars(self):
+        return self._get_proxy('calendars')
+
+    @property
     def events(self):
         return self._get_proxy('events')
 
@@ -675,6 +679,18 @@ class Search(AccountBaseResource, ListMixin):
 
 class Recent(AccountBaseResource, ListMixin):
     _path_segment = 'storage/recent'
+
+
+class Calendar(AccountBaseResource, ReadMixin, WriteMixin, Proxy):
+    _path_segment = 'cal/calendars'
+
+    @property
+    def events(self):
+        return self._get_proxy('calendar_events')
+
+
+class CalendarEvents(Calendar):
+    _path_segment = 'events'
 
 
 class Events(AccountBaseResource, ListMixin):
@@ -989,6 +1005,8 @@ resources = {
     'link': Link,
     'search': Search,
     'recent': Recent,
+    'calendars': Calendar,
+    'calendar_events': CalendarEvents,
     'events': Events,
     'multipart': Multipart,
     'permission': Permission,
