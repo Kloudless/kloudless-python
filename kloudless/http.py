@@ -6,8 +6,10 @@ import functools
 import json
 import time
 import six
+
 from abc import ABCMeta, abstractproperty
 from requests.structures import CaseInsensitiveDict
+
 
 class BaseAuth:
     __metaclass__ = ABCMeta
@@ -65,7 +67,6 @@ def request(method, path, configuration=None, **kwargs):
     url = "%s/v%s/%s" % (configuration['base_url'],
                          configuration['api_version'],
                          path)
-
 
     headers = kwargs['headers'] = CaseInsensitiveDict(kwargs.get('headers') or {})
 

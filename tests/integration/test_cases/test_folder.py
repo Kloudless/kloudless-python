@@ -4,6 +4,8 @@ import random
 
 import utils
 import sdk
+import helpers
+
 
 class Folder(unittest.TestCase):
 
@@ -32,7 +34,7 @@ class Folder(unittest.TestCase):
             acc.folders.create(
                 data={'parent_id': self.test_folder.id, 'name': folder_name},
                 params={'conflict_if_exists': 'true'})
-        self.assertEqual(cm.exception.status, 409)
+            self.assertEqual(cm.exception.status, 409)
 
     def test_retrieve_folder_metadata(self):
         test_folder = self.test_folder
@@ -137,10 +139,13 @@ class Folder(unittest.TestCase):
         folder1.delete(recursive=True)
         self.assertFalse(utils.is_folder_present(folder1_name, test_folder))
 
+    @utils.allow(services=['box', 'gdrive'])
+    def test_permissions(self):
+        helpers.permission_testing(self, self.test_folder)
+
 def test_cases():
     return [utils.create_test_case(acc, Folder) for acc in utils.accounts]
 
 if __name__ == '__main__':
     suite = utils.create_suite(test_cases())
     unittest.TextTestRunner(verbosity=2).run(suite)
-

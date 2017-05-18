@@ -182,7 +182,7 @@ class AnnotatedList(list):
 
         objects = None
         for k, v in six.iteritems(all_data):
-            if k in ['objects', 'permissions'] and isinstance(v, list):
+            if k in ['objects', 'permissions', 'properties'] and isinstance(v, list):
                 objects = v
             else:
                 setattr(self, k, v)
@@ -253,7 +253,10 @@ class CreateMixin(object):
         if not data:
             data = {}
 
-        data = cls.serialize(data)
+        if type(data) in [list, tuple]:
+            data = [cls.serialize(data_obj) for data_obj in data]
+        else:
+            data = cls.serialize(data)
 
         if not params:
             params = {}
@@ -775,19 +778,8 @@ class Permission(FileSystemBaseResource, ListMixin, CreateMixin):
                                              headers=headers)
 
 
-class Property(FileSystemBaseResource):
+class Property(FileSystemBaseResource, ListMixin, CreateMixin):
     _path_segment = 'properties'
-
-    @classmethod
-    @allow_proxy
-    def all(cls, parent_resource=None, configuration=None, headers=None):
-        """
-        Returns a full list of custom properties associated with this file.
-        """
-        response = request(cls._api_session.get,
-                           cls.list_path(parent_resource),
-                           configuration=configuration, headers=headers)
-        return response.json()
 
     @classmethod
     @allow_proxy
@@ -797,11 +789,11 @@ class Property(FileSystemBaseResource):
         Updates custom properties associated with this file.
         'data' should be a list of dicts containing key/value pairs.
         """
-        response = request(cls._api_session.patch,
-                           cls.list_path(parent_resource),
-                           configuration=configuration, headers=headers,
-                           data=data, params=params)
-        return response.json()
+        return super(Property, cls).create(params=params,
+                                           parent_resource=parent_resource,
+                                           configuration=configuration,
+                                           method='patch', data=data,
+                                           headers=headers)
 
     @classmethod
     @allow_proxy
