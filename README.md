@@ -96,6 +96,7 @@ The `Account` model has some helper attributes to make using class methods easie
 * `recent` references the Recent class
 * `events` references the Events class
 * `multipart` references the Multipart class
+* `calendars` references the Calendar class
 
 A full list can be viewed under the `Account` class in [resources.py](https://github.com/Kloudless/kloudless-python/blob/master/kloudless/resources.py).
 
@@ -177,6 +178,68 @@ Here's an example moving a file from one account to a folder in a different acco
 >>> f.save() # Makes the request to move the file.
 
 # 'f' now represents the new file object.
+```
+
+### Calendar API
+
+Here is an example calendar and calendar events in an account:
+
+```python
+>>> import kloudless; kloudless.configure(api_key="API_KEY")
+>>> accounts = kloudless.Account.all()
+>>> account = accounts[0]
+>>> calendars = account.calendars.all()
+
+# We can create a calendar in a account
+>>> calendar_data = {
+....    "name": "My Test Calendar",
+....    "description": "A test calendar for testing",
+....    "location": "San Francisco, CA",
+....    "timezone": "US/Pacific"
+....}
+>>> calendar = account.calendars.create(data=calendar_data)
+
+# We can retrieve a calendar in a account
+>>> calendar = account.calendars.retrieve(id=calendar_id)
+
+# Update the calendar with new information
+>>> calendar.name = "New Calendar name"
+>>> calendar.description = "New Calendar description"
+>>> calendar.save() # Makes the request to update the calendar.
+
+# Delete a calendar
+>>> calendar.delete()
+
+# We can retrieve list of calendar events in a account
+>>> events = calendar.events.all()
+
+# We can create a calendar event in a account
+>>> event_data = {
+....    "name": "Event 2",
+....    "start": "2017-09-01T12:30:00Z",
+....    "end": "2017-09-01T13:30:00Z",
+....    "creator": {
+....        "name": "Company Owner",
+....        "email": "owner@company.com"
+....    },
+....    "owner": {
+....        "name": "Company Owner",
+....        "email": "owner@company.com"
+....    }
+....}
+>>> event = calendar.events.create(data=event_data)
+
+# We can retrieve a calendar event in an account
+>>> event = calendar.events.retrieve(id=event_id)
+
+# Update the calendar event with new information
+>>> event.name = "Event 2 Update"
+>>> event.start = "2017-09-01T12:00:00Z"
+>>> event.end = "2017-09-01T13:00:00Z"
+>>> event.save() # Makes the request to update the calendar event.
+
+# Delete a calendar
+>>> event.delete()
 ```
 
 ## Apps using the Python SDK
