@@ -10,32 +10,33 @@ from test_cases import utils
 
 class CRMAccount(unittest.TestCase):
 
-    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
+    @utils.allow(apis=['crm'])
     def setUp(self):
         data = {
             'name': 'Test API Account Name'
         }
         self.obj = self.account.crm_accounts.create(data=data)
 
-    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
+    @utils.allow(apis=['crm'])
     def tearDown(self):
+        self.obj = self.account.crm_accounts.retrieve(id=self.obj.id)
         self.obj.delete()
 
-    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
+    @utils.allow(apis=['crm'], capabilities=['can_crud_crm_accounts'])
     def test_list_object(self):
         objects = self.account.crm_accounts.all()
         # assert properties
         if objects:
             obj = objects[0]
-            self.assertEqual(obj.type, 'Account')
+            self.assertEqual(obj.type, 'account')
             self.assertTrue('raw' in obj)
 
-    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
+    @utils.allow(apis=['crm'], capabilities=['can_crud_crm_accounts'])
     def test_read_object(self):
         obj = self.account.crm_accounts.retrieve(self.obj.id)
         # assert Account properties
         self.assertEqual(obj.id, self.obj.id)
-        self.assertEqual(obj.type, 'Account')
+        self.assertEqual(obj.type, 'account')
         self.assertTrue('raw' in obj)
 
         # Account specific properties
@@ -55,7 +56,7 @@ class CRMAccount(unittest.TestCase):
         self.assertTrue('modified' in obj)
         self.assertTrue('description' in obj)
 
-    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
+    @utils.allow(apis=['crm'], capabilities=['can_crud_crm_accounts'])
     def test_update_object(self):
         obj = self.obj
         obj.description = 'test account description'

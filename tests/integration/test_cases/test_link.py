@@ -17,6 +17,7 @@ import sdk
 
 class Link(unittest.TestCase):
 
+    @utils.allow(apis=['storage'])
     def setUp(self):
         self.test_file = utils.create_test_file(self.account)
         self.link = self.account.links.create(data={'file_id': self.test_file.id})
@@ -24,9 +25,11 @@ class Link(unittest.TestCase):
     def tearDown(self):
         self.link.delete()
 
+    @utils.allow(apis=['storage'])
     def test_create_link(self):
         self.assertEqual(self.link.file_id, self.test_file.id)
 
+    @utils.allow(apis=['storage'])
     def test_create_direct_link(self):
         self.link2 = self.account.links.create(data={
             'file_id': self.test_file.id, 'direct': True})
@@ -34,23 +37,28 @@ class Link(unittest.TestCase):
         self.assertEqual(r.text, 'test')
         self.link2.delete()
 
+    @utils.allow(apis=['storage'])
     def test_list_links(self):
         names = [f.id for f in self.account.links.all()]
         self.assertTrue(self.link.id in names)
 
+    @utils.allow(apis=['storage'])
     def test_create_bad_link(self):
         with self.assertRaises(sdk.exceptions.APIException) as e:
             self.link = self.account.links.create(data={'file_id': 'bad_file_id'})
 
+    @utils.allow(apis=['storage'])
     def test_list_links_page_size(self):
         links = self.account.links.all(page_size=1)
         self.assertEqual(1, len(links))
 
+    @utils.allow(apis=['storage'])
     def test_list_active_links(self):
         links = self.account.links.all(active=True)
         for link in links:
             self.assertTrue(link.active)
 
+    @utils.allow(apis=['storage'])
     def test_create_password_link(self):
         if skipSeleniumTests:
             skipSeleniumTests()
@@ -58,17 +66,19 @@ class Link(unittest.TestCase):
         self.link = self.account.links.create(data={
             'file_id': self.test_file.id, 'password': 'testytest'})
         self.assertTrue(self.link.password)
-        driver = webdriver.Firefox()
+        driver = webdriver.PhantomJS()
         driver.get(self.link.url)
         driver.find_element_by_id('id_password').send_keys('testytest')
         driver.find_element_by_name('form-submit').click()
         self.assertTrue('password entered is incorrect' not in driver.page_source)
         driver.close()
 
+    @utils.allow(apis=['storage'])
     def test_retrieve_link(self):
         retrieved = self.account.links.retrieve(id=self.link.id)
         self.assertEqual(self.link.id, retrieved.id)
 
+    @utils.allow(apis=['storage'])
     def test_update_password_link(self):
         if skipSeleniumTests:
             skipSeleniumTests()
@@ -77,13 +87,14 @@ class Link(unittest.TestCase):
         current_time = datetime.datetime.now().isoformat()
         self.link.save(file_id=self.test_file.id)
         link = self.account.links.retrieve(id=self.link.id)
-        driver = webdriver.Firefox()
+        driver = webdriver.PhantomJS()
         driver.get(link.url)
         driver.find_element_by_id('id_password').send_keys('testytest')
         driver.find_element_by_name('form-submit').click()
         self.assertTrue('password entered is incorrect' not in driver.page_source)
         driver.close()
 
+    @utils.allow(apis=['storage'])
     def test_update_active_link(self):
         self.link.active = False
         self.link.save(file_id=self.test_file.id)
@@ -91,6 +102,7 @@ class Link(unittest.TestCase):
         self.assertFalse(self.link.active)
         self.assertIn(r.status_code, [403, 404])
 
+    @utils.allow(apis=['storage'])
     def test_update_expired_link(self):
         self.link.expiration = datetime.datetime.utcnow().isoformat()
         self.link.save(file_id=self.test_file.id)

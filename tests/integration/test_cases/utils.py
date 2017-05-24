@@ -18,6 +18,7 @@ import sdk
 API_KEY = os.environ.get('API_KEY')
 DEV_KEY = os.environ.get('DEV_KEY')
 BASE_URL = os.environ.get('BASE_URL')
+
 if not BASE_URL:
     BASE_URL = 'https://api.kloudless.com'
 
@@ -106,6 +107,26 @@ def get_account_for_each_service():
 
 if API_KEY:
     accounts = get_account_for_each_service()
+    account_capabilities = {}
+    account_apis = {}
+    for acc in accounts:
+        account_metadata = acc.retrieve(id=acc.id, retrieve_full=True)
+        account_apis[acc.id] = account_metadata.get('apis', [])
+
+        properties = account_metadata.get('properties')
+        if properties:
+            capabilities_dict = properties.get('capabilities', {})
+        else:
+            capabilities_dict = {}
+
+        capabilities_list = []
+        if capabilities_dict:
+            for cap, val in capabilities_dict.iteritems():
+                if val and val['supported']:
+                    capabilities_list.append(cap)
+            account_capabilities[acc.id] = capabilities_list
+        else:
+            account_capabilities[acc.id] = capabilities_list
 
 
 def create_suite(test_cases):
@@ -140,7 +161,7 @@ def create_suite(test_cases):
     return unittest.TestSuite(suites)
 
 
-def allow(services=[], services_to_exclude=[]):
+def allow(services=[], services_to_exclude=[], apis=[], capabilities=[]):
     """
     Decorator to explicitly specify which services to run the decorated
     test on.
@@ -148,15 +169,27 @@ def allow(services=[], services_to_exclude=[]):
     'services_to_exclude' specifies the services the test should skip.
     Note: The actual include/exclude logic is in create_suite().
     """
-    if (services and services_to_exclude
-            or not services and not services_to_exclude):
-        raise ValueError("Please specify 'services' or "
-                         "'services_to_exclude', and not both")
 
     def allow_decorator(func):
         @wraps(func)
         def test_method(*args, **kwargs):
             self = args[0]
+
+            if (services and services_to_exclude):
+                raise ValueError("Please specify 'services' or "
+                         "'services_to_exclude'")
+
+            if account_apis.get(self.account.id):
+                for api in apis:
+                    if api not in account_apis[self.account.id]:
+                        self.skipTest("%s not in list of apis." % api)
+
+            if account_capabilities.get(self.account.id):
+                for capability in capabilities:
+                    if capability not in account_capabilities[self.account.id]:
+                        self.skipTest("%s not in %s account's capabilities." %
+                                      (capability, self.account.service))
+
             if (hasattr(self, 'account') and self.account and
                     self.account.service):
                 if services and self.account.service not in services:

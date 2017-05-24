@@ -8,12 +8,14 @@ class Users(unittest.TestCase):
 
     users = None
 
+    @utils.allow(apis=['storage'])
     def setUp(self):
         self.users = self.account.users.all()
 
     def not_admin(self):
         return not self.account.admin
 
+    @utils.allow(apis=['storage'], capabilities=['can_list_users'])
     def test_list_users(self):
         if self.not_admin():
             return
@@ -22,6 +24,7 @@ class Users(unittest.TestCase):
         for user in self.users:
             self.assertIsInstance(user, sdk.resources.User)
 
+    @utils.allow(apis=['storage'], capabilities=['can_retrieve_user'])
     def test_retrieve_user(self):
         if self.not_admin():
             return
@@ -29,6 +32,7 @@ class Users(unittest.TestCase):
         self.assertEqual(type(user), sdk.resources.User)
         self.assertEqual(user.id, self.users[0].id)
 
+    @utils.allow(apis=['storage'], capabilities=['can_list_group_members'])
     def test_user_membership(self):
         if self.not_admin():
             return

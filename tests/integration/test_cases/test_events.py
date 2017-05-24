@@ -1,5 +1,4 @@
 import unittest
-import os
 import time
 
 import utils
@@ -19,6 +18,7 @@ LIMITED_EVENTS_SERVICES = ['gdrive']
 SUPPORTED_SERVICES = ['dropbox', 'box', 'gdrive', 'skydrive', 'evernote',
                       'sharepoint', 'onedrivebiz', 'sharefile', 'egnyte',
                       'cmis', 'alfresco', 'salesforce', 'hubspot']
+
 
 class Events(unittest.TestCase):
 
@@ -52,7 +52,8 @@ class Events(unittest.TestCase):
     def get_latest_cursor(self):
         cursor = self.account.events.latest_cursor()
         if isinstance(cursor, dict):
-            raise self.failureException("Unable to get latest cursor: %s" % cursor)
+            raise self.failureException(
+                "Unable to get latest cursor: %s" % cursor)
         return cursor
 
     def get_most_recent_events(self, cursor=0, return_one=False, retry=0):
@@ -67,9 +68,10 @@ class Events(unittest.TestCase):
                 return events
         else:
             if retry <= self.max_retries:
-                return self.get_most_recent_events(cursor, return_one, retry+1)
+                return self.get_most_recent_events(
+                    cursor, return_one, retry + 1)
             raise self.failureException("No events found in the event stream "
-                    "using cursor %s." % cursor)
+                                        "using cursor %s." % cursor)
 
     @staticmethod
     def _get_nested_dict_value(dictionary, keys):
@@ -94,8 +96,9 @@ class Events(unittest.TestCase):
         for k, v in filter_dict.iteritems():
             if isinstance(v, str):
                 v = [v]
-            events_to_return = ([event for event in events_to_return if
-                self._get_nested_dict_value(event, k.split('.')) in v])
+            events_to_return = (
+                [event for event in events_to_return if
+                 self._get_nested_dict_value(event, k.split('.')) in v])
         if expect_one:
             self.assertEqual(len(events_to_return), 1)
             if events_to_return:
@@ -107,7 +110,6 @@ class Events(unittest.TestCase):
     def test_event_page_size(self):
         events = self.account.events.all(page_size=1)
         self.assertEqual(len(events), 1)
-
 
     def test_event_invalid_page_size(self):
         with self.assertRaises(sdk.exceptions.APIException):
@@ -137,9 +139,9 @@ class Events(unittest.TestCase):
     def test_add(self):
         events = self.get_most_recent_events(self.cursor)
         event_filter = {
-                'metadata.id': self.file.id,
-                'type': 'add',
-                }
+            'metadata.id': self.file.id,
+            'type': 'add',
+        }
         event = self.filter_events(events, event_filter, expect_one=True)
         if event:
             self.assertEqual(event.metadata.id, self.file.id)
@@ -152,12 +154,12 @@ class Events(unittest.TestCase):
         self.cursor = self.get_latest_cursor()
         file_id = self.file.id
         self.file.delete()
-        self.file = None # To prevent tearDown from erroring.
+        self.file = None  # To prevent tearDown from erroring.
         events = self.get_most_recent_events(self.cursor)
         event_filter = {
-                'id': file_id,
-                'type': 'delete',
-                }
+            'id': file_id,
+            'type': 'delete',
+        }
         event = self.filter_events(events, event_filter, expect_one=True)
         if event:
             self.assertEqual(event.id, file_id)
@@ -172,8 +174,6 @@ class Events(unittest.TestCase):
     #     self.assertEqual(event.metadata.id, self.file.id)
     #     self.assertEqual(event.type, 'update')
 
-
-
     # RENAME
     @utils.skip_long_test(services=SUPPORTED_SERVICES)
     def test_rename(self):
@@ -183,9 +183,9 @@ class Events(unittest.TestCase):
         self.file.save()
         events = self.get_most_recent_events(self.cursor)
         event_filter = {
-                'metadata.id': self.file.id,
-                'type': 'rename',
-                }
+            'metadata.id': self.file.id,
+            'type': 'rename',
+        }
         if self.account.service in LIMITED_EVENTS_SERVICES:
             event_filter['type'] = 'add'
         event = self.filter_events(events, event_filter, expect_one=True)
@@ -205,9 +205,9 @@ class Events(unittest.TestCase):
         self.file.save()
         events = self.get_most_recent_events(self.cursor)
         event_filter = {
-                'metadata.id': self.file.id,
-                'type': 'move',
-                }
+            'metadata.id': self.file.id,
+            'type': 'move',
+        }
         if self.account.service in LIMITED_EVENTS_SERVICES:
             event_filter['type'] = 'add'
         event = self.filter_events(events, event_filter, expect_one=True)
@@ -223,9 +223,11 @@ class Events(unittest.TestCase):
     # Need the Python SDK to support enterprise actions.
     ###################
 
+
 def test_cases():
     return [utils.create_test_case(acc, Events) for
             acc in utils.accounts if acc.service in SUPPORTED_SERVICES]
+
 
 if __name__ == '__main__':
     suite = utils.create_suite(test_cases())

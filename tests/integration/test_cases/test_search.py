@@ -9,6 +9,7 @@ import sdk
 
 class Search(unittest.TestCase):
 
+    @utils.allow(apis=['storage'], capabilities=['can_search_file_name'])
     @utils.skip_long_test(services=['box'])
     def test_simple_search(self):
         acc = self.account
@@ -21,14 +22,17 @@ class Search(unittest.TestCase):
         if results:
             self.assertEqual(results[0].id, test_file.id)
 
+    @utils.allow(apis=['storage'], capabilities=['can_search_file_name'])
     def test_bad_search(self):
         q = base64.b64encode(os.urandom(40))
         self.assertEqual(self.account.search.all(q=q), [])
 
+    @utils.allow(apis=['storage'], capabilities=['can_search_file_name'])
     def test_empty_str_search(self):
         with self.assertRaises(sdk.exceptions.APIException) as cm:
             self.account.search.all(q='')
 
+    @utils.allow(apis=['storage'], capabilities=['can_search_file_name'])
     @utils.skip_long_test(services=['box'])
     def test_mult_results_search(self):
         acc = self.account

@@ -11,8 +11,10 @@ require_file_size = ['gdrive', 'egnyte', 'skydrive']
 
 
 class Multipart(unittest.TestCase):
-    file_size = 15728640 # 15 MB
+    file_size = 15728640  # 15 MB
 
+    @utils.allow(apis=['storage'],
+                 capabilities=['multipart_uploads_supported_for_files'])
     def test_multipart(self):
         if self.account.service not in allow_multipart:
             self.skipTest("Multipart not allowed.")
@@ -37,8 +39,9 @@ class Multipart(unittest.TestCase):
         num_parts = int(math.ceil(1.0 * self.file_size / chunk_size))
 
         # Upload Chunk
-        for x in range(1, num_parts+1):
-            data = os.urandom(min(chunk_size, self.file_size - chunk_size*(x-1)))
+        for x in range(1, num_parts + 1):
+            data = os.urandom(min(chunk_size,
+                                  self.file_size - chunk_size * (x - 1)))
             response = multipart.upload_chunk(part_number=x, data=data)
             self.assertTrue(response)
 
@@ -87,6 +90,7 @@ class Multipart(unittest.TestCase):
 
 def test_cases():
     return [utils.create_test_case(acc, Multipart) for acc in utils.accounts]
+
 
 if __name__ == '__main__':
     suite = utils.create_suite(test_cases())

@@ -10,7 +10,7 @@ from test_cases import utils
 
 class CRMObject(unittest.TestCase):
 
-    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
+    @utils.allow(apis=['crm'])
     def setUp(self):
         self.raw_type = 'Account'
         params = {
@@ -20,35 +20,41 @@ class CRMObject(unittest.TestCase):
             'name': 'Test API Account Name'
         }
         self.obj = self.account.crm_objects.create(params=params, data=data)
+        self.obj = self.account.crm_objects.retrieve(
+            id=self.obj.raw.object.Id, raw_type=self.raw_type
+        )
 
-    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
+    @utils.allow(apis=['crm'])
     def tearDown(self):
         self.obj.delete(raw_type=self.raw_type)
 
-    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
+    @utils.allow(apis=['crm'], capabilities=['can_crud_crm_objects'])
     def test_list_object(self):
         objects = self.account.crm_objects.all(raw_type=self.raw_type)
         # assert properties
         if objects:
             obj = objects[0]
-            self.assertEqual(obj.type, self.raw_type)
             self.assertTrue('raw' in obj)
+            self.assertEqual(obj.raw.type, self.raw_type)
 
-    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
+    @utils.allow(apis=['crm'], capabilities=['can_crud_crm_objects'])
     def test_read_object(self):
-        obj = self.account.crm_objects.retrieve(self.obj.id,
-                                                raw_type=self.raw_type)
+        obj = self.account.crm_objects.retrieve(
+            self.obj.id, raw_type=self.raw_type
+        )
         # assert properties
         self.assertEqual(obj.id, self.obj.id)
         self.assertTrue('raw' in obj)
         self.assertEqual(obj.id, self.obj.id)
 
-    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
+    @utils.allow(apis=['crm'], capabilities=['can_crud_crm_objects'])
     def test_update_object(self):
         obj = self.obj
-        obj.description = 'test description'
+        obj.name = 'Test API Account Name Updated'
+        obj.description = 'Test Description'
         obj.save(raw_type='Account')
-        self.assertEqual('test description', obj.description)
+        self.assertEqual('Test API Account Name Updated', obj.raw.object.Name)
+        self.assertEqual('Test Description', obj.raw.object.Description)
 
 
 def test_cases():

@@ -1,10 +1,9 @@
 import unittest
-import os
-import random
 import time
 
 import utils
 import sdk
+
 
 class Recent(unittest.TestCase):
 
@@ -17,15 +16,17 @@ class Recent(unittest.TestCase):
         time.sleep(0.5)
         results = self.account.recent.all()
         for i in xrange(len(results) - 1):
-            if results[i].modified and results[i+1].modified:
-                self.assertGreaterEqual(results[i].modified, results[i+1].modified)
+            if results[i].modified and results[i + 1].modified:
+                self.assertGreaterEqual(results[i].modified,
+                                        results[i + 1].modified)
 
     def test_recent_page_size(self):
         results = self.account.recent.all(page_size=1)
         self.assertEqual(len(results), 1)
 
     def test_bad_recent_page_size(self):
-        with self.assertRaises(sdk.exceptions.APIException) as e:
+        # TODO: This is not working right now
+        with self.assertRaises(sdk.exceptions.APIException):
             self.account.recent.all(page_size=1001)
 
     def test_simple_recent_page(self):
@@ -57,13 +58,13 @@ class Recent(unittest.TestCase):
         self.assertEqual(results[0].id, files['test_file_1'].id)
 
     def test_bad_recent_page(self):
-        with self.assertRaises(sdk.exceptions.APIException) as e:
+        with self.assertRaises(sdk.exceptions.APIException):
             self.account.recent.all(page_size=1, page=0)
 
     def test_outofbounds_recent_page(self):
         length = self.account.recent.all().total
-        with self.assertRaises(sdk.exceptions.APIException) as e:
-            self.account.recent.all(page_size=1, page=length+1)
+        with self.assertRaises(sdk.exceptions.APIException):
+            self.account.recent.all(page_size=1, page=length + 1)
 
     def test_bad_after_timestamp(self):
         self.assertEqual(self.account.recent.all(after="00/00/00"), [])
@@ -81,8 +82,10 @@ class Recent(unittest.TestCase):
         results = acc.recent.all(after=test_file_5.modified)
         self.assertNotIn(test_file_5.id, [r.id for r in results])
 
+
 def test_cases():
     return [utils.create_test_case(acc, Recent) for acc in utils.accounts]
+
 
 if __name__ == '__main__':
     suite = utils.create_suite(test_cases())

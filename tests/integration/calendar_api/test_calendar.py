@@ -10,7 +10,7 @@ from test_cases import utils
 
 class Calendar(unittest.TestCase):
 
-    @utils.allow(services=['google_calendar'])
+    @utils.allow(apis=['calendar'])
     def setUp(self):
         self.test_calendar_data = {
             "name": "My Test Calendar",
@@ -34,12 +34,12 @@ class Calendar(unittest.TestCase):
         }
         self.test_event = self.test_calendar.events.create(data=self.test_event_data)
 
-    @utils.allow(services=['google_calendar'])
+    @utils.allow(apis=['calendar'])
     def tearDown(self):
         self.test_event.delete()
         self.test_calendar.delete()
 
-    @utils.allow(services=['google_calendar'])
+    @utils.allow(apis=['calendar'])
     def test_list_calendar(self):
         test_calendars = self.account.calendars.all()
         # Assertion
@@ -47,7 +47,7 @@ class Calendar(unittest.TestCase):
             test_calendar = test_calendars[0]
             self.assertEqual(int(test_calendar.account_id), self.account.id)
 
-    @utils.allow(services=['google_calendar'])
+    @utils.allow(apis=['calendar'])
     def test_list_event(self):
         test_events = self.test_calendar.events.all()
         # Assertion
@@ -56,7 +56,7 @@ class Calendar(unittest.TestCase):
             self.assertEqual(int(test_event.account_id), self.account.id)
             self.assertEqual(test_event.calendar_id, self.test_calendar.id)
 
-    @utils.allow(services=['google_calendar'])
+    @utils.allow(apis=['calendar'])
     def test_read_calendar(self):
         test_calendar = self.account.calendars.retrieve(self.test_calendar.id)
 
@@ -67,7 +67,7 @@ class Calendar(unittest.TestCase):
         self.assertEqual(test_calendar.description, self.test_calendar.description)
         self.assertEqual(test_calendar.location, self.test_calendar.location)
 
-    @utils.allow(services=['google_calendar'])
+    @utils.allow(apis=['calendar'])
     def test_read_event(self):
         test_event = self.test_calendar.events.retrieve(id=self.test_event.id)
 
@@ -83,7 +83,7 @@ class Calendar(unittest.TestCase):
         self.assertEqual(test_event.organizer, self.test_event.organizer)
         self.assertEqual(test_event.attachments, self.test_event.attachments)
 
-    @utils.allow(services=['google_calendar'])
+    @utils.allow(apis=['calendar'])
     def test_update_calender(self):
         test_calendar = self.test_calendar
         test_calendar.name = 'My Test Calendar updated'
@@ -92,7 +92,7 @@ class Calendar(unittest.TestCase):
         self.assertEqual('My Test Calendar updated', test_calendar.name)
         self.assertEqual('A test calendar for testing updated', test_calendar.description)
 
-    @utils.allow(services=['google_calendar'])
+    @utils.allow(apis=['calendar'])
     def test_update_event(self):
         test_event = self.test_event
         test_event.name = 'Test Event Updated'

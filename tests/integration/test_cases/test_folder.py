@@ -9,6 +9,7 @@ import helpers
 
 class Folder(unittest.TestCase):
 
+    @utils.allow(apis=['storage'])
     def setUp(self):
         self.test_folder = utils.create_or_get_test_folder(self.account)
         self.assertTrue(hasattr(self.test_folder, 'id'))
@@ -17,6 +18,7 @@ class Folder(unittest.TestCase):
     def _rand(self):
         return 'folder %s' % random.randint(0, 10e10)
 
+    @utils.allow(apis=['storage'], capabilities=['can_create_folder'])
     def test_create_folder(self):
         acc = self.account
         folder_name = '%s sub-%s' % (self.test_folder.name, self._rand())
@@ -34,8 +36,9 @@ class Folder(unittest.TestCase):
             acc.folders.create(
                 data={'parent_id': self.test_folder.id, 'name': folder_name},
                 params={'conflict_if_exists': 'true'})
-            self.assertEqual(cm.exception.status, 409)
+        self.assertEqual(cm.exception.status, 409)
 
+    @utils.allow(apis=['storage'])
     def test_retrieve_folder_metadata(self):
         test_folder = self.test_folder
         self.assertTrue(hasattr(test_folder, 'account'))
@@ -47,6 +50,7 @@ class Folder(unittest.TestCase):
         self.assertTrue(hasattr(test_folder, 'path'))
         self.assertTrue(hasattr(test_folder, 'type'))
 
+    @utils.allow(apis=['storage'])
     def test_retrieve_folder_contents(self):
         acc = self.account
         test_folder = self.test_folder
@@ -59,6 +63,7 @@ class Folder(unittest.TestCase):
             'parent_id': test_folder.id, 'name': self._rand()})
         self.assertTrue(utils.is_folder_present(new_folder.name, test_folder))
 
+    @utils.allow(apis=['storage'], capabilities=['can_rename_folder'])
     def test_rename_folder(self):
         result = None
         folder = self.account.folders.create(data={
@@ -71,6 +76,7 @@ class Folder(unittest.TestCase):
         self.assertEqual(folder.name, new_folder_name)
         self.assertEqual(old_folder_parent, folder.parent)
 
+    @utils.allow(apis=['storage'], capabilities=['can_move_folder'])
     def test_move_folder(self):
         acc = self.account
         test_folder = self.test_folder
@@ -84,6 +90,7 @@ class Folder(unittest.TestCase):
         folder2.save()
         self.assertFalse(utils.is_folder_present(folder2.name, test_folder))
 
+    @utils.allow(apis=['storage'], capabilities=['can_copy_folder'])
     def test_copy_folder(self):
         acc = self.account
         test_folder = self.test_folder
@@ -100,6 +107,7 @@ class Folder(unittest.TestCase):
         self.assertTrue(utils.is_folder_present(folder1.name, test_folder))
         self.assertTrue(utils.is_folder_present(folder2.name, copy))
 
+    @utils.allow(apis=['storage'], capabilities=['can_delete_folder'])
     def test_delete_folder(self):
         acc = self.account
         test_folder = self.test_folder
@@ -139,7 +147,7 @@ class Folder(unittest.TestCase):
         folder1.delete(recursive=True)
         self.assertFalse(utils.is_folder_present(folder1_name, test_folder))
 
-    @utils.allow(services=['box', 'gdrive'])
+    @utils.allow(services=['box', 'gdrive'], apis=['storage'])
     def test_permissions(self):
         helpers.permission_testing(self, self.test_folder)
 

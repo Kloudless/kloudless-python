@@ -91,7 +91,13 @@ class BaseResource(dict):
             data = data.copy()
 
             klass = cls
-            if data.get('type') in resources:
+            data_type = None
+            if data.get('api') and data.get('type'):
+                data_type = data['api'] + '_' + data['type']
+
+            if data_type in resources:
+                klass = resources[data_type]
+            elif data.get('type') in resources:
                 klass = resources[data['type']]
 
             instance = klass(id=data.get('id'),

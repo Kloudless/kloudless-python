@@ -10,7 +10,7 @@ from test_cases import utils
 
 class CRMSearch(unittest.TestCase):
 
-    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
+    @utils.allow(apis=['crm'], capabilities=['can_crm_search'])
     def test_search(self):
         query = ''
         lang = ''

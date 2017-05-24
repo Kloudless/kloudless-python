@@ -8,12 +8,14 @@ class Group(unittest.TestCase):
 
     groups = None
 
+    @utils.allow(apis=['storage'])
     def setUp(self):
         self.groups = self.account.groups.all()
 
     def not_admin(self):
         return not self.account.admin
 
+    @utils.allow(apis=['storage'], capabilities=['can_list_groups'])
     def test_list_groups(self):
         if self.not_admin():
             return
@@ -23,6 +25,7 @@ class Group(unittest.TestCase):
         for group in self.groups:
             self.assertIsInstance(group, sdk.resources.Group)
 
+    @utils.allow(apis=['storage'], capabilities=['can_retrieve_group'])
     def test_retrieve_group(self):
         if self.not_admin():
             return
@@ -32,6 +35,7 @@ class Group(unittest.TestCase):
         self.assertEqual(type(group), sdk.resources.Group)
         self.assertEqual(group.id, self.groups[0].id)
 
+    @utils.allow(apis=['storage'], capabilities=['can_list_group_members'])
     def test_group_members(self):
         if self.not_admin():
             return

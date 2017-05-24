@@ -10,7 +10,7 @@ from test_cases import utils
 
 class CRMBatch(unittest.TestCase):
 
-    @utils.allow(services=['salesforce', 'dynamics', 'oracle'])
+    @utils.allow(apis=['crm'], capabilities=['can_crm_batch'])
     def test_batch(self):
         data = {
             'requests': [{
