@@ -190,7 +190,7 @@ Here is an example calendar and calendar events in an account:
 >>> account = accounts[0]
 >>> calendars = account.calendars.all()
 
-# We can create a calendar in a account
+# Creating a calendar in an account
 >>> calendar_data = {
 ....    "name": "My Test Calendar",
 ....    "description": "A test calendar for testing",
@@ -199,21 +199,21 @@ Here is an example calendar and calendar events in an account:
 ....}
 >>> calendar = account.calendars.create(data=calendar_data)
 
-# We can retrieve a calendar in a account
+# Retrieving a calendar in an account
 >>> calendar = account.calendars.retrieve(id=calendar_id)
 
-# Update the calendar with new information
+# Updating the calendar with new information
 >>> calendar.name = "New Calendar name"
 >>> calendar.description = "New Calendar description"
 >>> calendar.save() # Makes the request to update the calendar.
 
-# Delete a calendar
+# Deleting a calendar
 >>> calendar.delete()
 
-# We can retrieve list of calendar events in a account
+# Retrieving a list of calendar events
 >>> events = calendar.events.all()
 
-# We can create a calendar event in a account
+# Creating a calendar event
 >>> event_data = {
 ....    "name": "Event 2",
 ....    "start": "2017-09-01T12:30:00Z",
@@ -229,16 +229,16 @@ Here is an example calendar and calendar events in an account:
 ....}
 >>> event = calendar.events.create(data=event_data)
 
-# We can retrieve a calendar event in an account
+# Retrieving a calendar event
 >>> event = calendar.events.retrieve(id=event_id)
 
-# Update the calendar event with new information
+# Updating the calendar event with new information
 >>> event.name = "Event 2 Update"
 >>> event.start = "2017-09-01T12:00:00Z"
 >>> event.end = "2017-09-01T13:00:00Z"
 >>> event.save() # Makes the request to update the calendar event.
 
-# Delete a calendar
+# Deleting a calendar
 >>> event.delete()
 ```
 
