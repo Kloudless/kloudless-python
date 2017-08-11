@@ -122,7 +122,7 @@ if API_KEY:
         capabilities_list = []
         if capabilities_dict:
             for cap, val in capabilities_dict.iteritems():
-                if val and val['supported']:
+                if val and val['value']:
                     capabilities_list.append(cap)
             account_capabilities[acc.id] = capabilities_list
         else:

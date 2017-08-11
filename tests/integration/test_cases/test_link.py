@@ -9,7 +9,7 @@ try:
     from selenium import webdriver
     from selenium.webdriver.common.keys import Keys
 except ImportError:
-    skipSeleniumTests = lambda: unittest.skipTest(
+    skipSeleniumTests = lambda test: test.skipTest(
         "Selenium not installed.")
 
 import utils
@@ -61,7 +61,7 @@ class Link(unittest.TestCase):
     @utils.allow(apis=['storage'])
     def test_create_password_link(self):
         if skipSeleniumTests:
-            skipSeleniumTests()
+            skipSeleniumTests(self)
 
         self.link = self.account.links.create(data={
             'file_id': self.test_file.id, 'password': 'testytest'})
@@ -81,7 +81,7 @@ class Link(unittest.TestCase):
     @utils.allow(apis=['storage'])
     def test_update_password_link(self):
         if skipSeleniumTests:
-            skipSeleniumTests()
+            skipSeleniumTests(self)
 
         self.link.password = 'testytest'
         current_time = datetime.datetime.now().isoformat()
