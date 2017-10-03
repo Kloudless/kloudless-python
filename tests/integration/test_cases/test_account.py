@@ -98,7 +98,9 @@ class Account(unittest.TestCase):
             account.delete()
 
     def test_convert(self):
-        account = sdk.Account.retrieve(id=self.account.id)
+        account = sdk.Account(self.account.id, configuration={
+            'headers': {'X-Kloudless-Raw-Data': True}
+        })
         contents = account.folders().contents()
         if contents:
             obj = contents[0]
@@ -106,7 +108,8 @@ class Account(unittest.TestCase):
             data['raw_id'] = obj.raw_id
             data['type'] = obj.type
             response = account.convert(data=data)
-            self.assertTrue('id' in response)
+            self.assertEqual(response.get('id'), obj.id)
+
 
 def test_cases():
     return [utils.create_test_case(acc, Account) for acc in utils.accounts]

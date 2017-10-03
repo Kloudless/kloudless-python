@@ -427,7 +427,15 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
                 serialized[k] = v
         return serialized
 
+    def save(self, headers=None, **params):
+        # TODO: add in fields token, token_secret, refresh_token
+        request(self._api_session.patch, self.detail_path(),
+                configuration=self._configuration, headers=headers,
+                data=self.serialize_account(self), params=params)
+
     def convert(self, headers=None, data=None, params=None):
+        # Deprecated in favor of encode_raw_id
+
         params = {} if params is None else params
         data = {} if data is None else data
 
@@ -439,11 +447,31 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
 
         return response.json()
 
-    def save(self, headers=None, **params):
-        # TODO: add in fields token, token_secret, refresh_token
-        request(self._api_session.patch, self.detail_path(),
-                configuration=self._configuration, headers=headers,
-                data=self.serialize_account(self), params=params)
+    def encode_raw_id(self, data=None, params=None, headers=None):
+        path = "%s/encode_raw_id" % self.detail_path()
+        return request(
+            self._api_session.post, path, data=data or {}, params=params or {},
+            headers=headers, configuration=self._configuration).json()
+
+    def raw(self, raw_uri='', raw_method='GET', data=None, params=None,
+            headers=None):
+        """
+        raw_uri: Upstream URI to make the pass-through API request to.
+        raw_method: HTTP Method to make the pass-through request with.
+        params: A dict containing query parameters.
+        data: A dict containing data.
+        """
+        data = data or {}
+        params = params or {}
+        headers = headers or {}
+
+        headers['X-Kloudless-Raw-URI'] = raw_uri
+        headers['X-Kloudless-Raw-Method'] = raw_method
+
+        return request(
+            self._api_session.post, "%s/raw" % self.detail_path(), data=data,
+            headers=headers, params=params, configuration=self._configuration)
+
 
     @property
     def links(self):
