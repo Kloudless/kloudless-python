@@ -2,6 +2,7 @@
 
 ## 1.1.2
 * Per-request and globally configurable headers now supported.
+* Support for the pass-through API and encoding raw IDs.
 
 ## 1.1.1
 
