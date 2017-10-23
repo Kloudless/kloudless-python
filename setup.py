@@ -34,6 +34,7 @@ install_requires=[
 test_requires = [
     'selenium>=2.48.0',
     'pytz>=2013d',
+    'unittest-xml-reporting==2.1.0',
 ]
 
 if __name__ == '__main__':

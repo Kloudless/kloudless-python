@@ -50,4 +50,12 @@ def test_cases():
 
 if __name__ == '__main__':
     suite = utils.create_suite(test_cases())
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    if len(sys.argv) == 3 and sys.argv[1] == '-x':
+        import xmlrunner
+        with open(sys.argv[2], 'wb') as output:
+            xmlrunner.XMLTestRunner(
+                output=output,
+                verbosity=2
+            ).run(suite)
+    else:
+        unittest.TextTestRunner(verbosity=2).run(suite)
