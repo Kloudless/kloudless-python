@@ -16,7 +16,7 @@ class CRMOpportunity(unittest.TestCase):
         data = {
             'name': 'API Test Opportunity Name',
             'stage_name': 'open',
-            'close_date': datetime.datetime.today().strftime(
+            'closing_date': datetime.datetime.today().strftime(
                 "%Y-%m-%dT%H:%M:%SZ")
         }
         self.obj = self.account.crm_opportunities.create(data=data)
