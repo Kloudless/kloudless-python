@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.1.3
+* Support for Calendar Availability.
+
 ## 1.1.2
 * Per-request and globally configurable headers now supported.
 * Support for the pass-through API and encoding raw IDs.
