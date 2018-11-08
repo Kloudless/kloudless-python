@@ -7,7 +7,6 @@ import inspect
 import json
 import requests
 import six
-import warnings
 
 
 class BaseResource(dict):
@@ -20,7 +19,7 @@ class BaseResource(dict):
         'expiry': (to_iso, to_datetime),
         'token_expiry': (to_iso, to_datetime),
         'refresh_token_expiry': (to_iso, to_datetime),
-        }
+    }
 
     _path_segment = None
 
@@ -135,6 +134,18 @@ class BaseResource(dict):
             raise KException("The detail_path cannot be obtained since the ID "
                              "is unknown.")
         return "%s/%s" % (self.list_path(self._parent_resource), self['id'])
+
+    @classmethod
+    def _get_request_body(cls, data):
+        if not data:
+            data = {}
+
+        if type(data) in [list, tuple]:
+            data = [cls.serialize(data_obj) for data_obj in data]
+        else:
+            data = cls.serialize(data)
+
+        return data
 
     # Getter/Setter methods
 
@@ -256,13 +267,7 @@ class CreateMixin(object):
         """
         method = getattr(cls._api_session, method)
 
-        if not data:
-            data = {}
-
-        if type(data) in [list, tuple]:
-            data = [cls.serialize(data_obj) for data_obj in data]
-        else:
-            data = cls.serialize(data)
+        data = cls._get_request_body(data)
 
         if not params:
             params = {}
@@ -472,7 +477,6 @@ class Account(BaseResource, ReadMixin, WriteMixin, Proxy):
             self._api_session.post, "%s/raw" % self.detail_path(), data=data,
             headers=headers, params=params, configuration=self._configuration)
 
-
     @property
     def links(self):
         return self._get_proxy('link')
@@ -632,7 +636,7 @@ class File(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
 
     def update(self, file_data='', params=None, headers=None):
         """
-        This overwites the file specified by 'file_id' with the contents of
+        This overwrites the file specified by 'file_id' with the contents of
         `file_data`.
         `file_data` can be either a string with file data in it or a
         file-like object.
@@ -721,6 +725,33 @@ class Calendar(AccountBaseResource, ReadMixin, WriteMixin, Proxy):
     @property
     def events(self):
         return self._get_proxy('calendar_events')
+
+    @classmethod
+    @allow_proxy
+    def find_availability(cls, data=None, parent_resource=None,
+                          configuration=None, headers=None):
+        """
+        data: A dict containing data.
+        """
+        method = getattr(cls._api_session, 'post')
+        data = cls._get_request_body(data)
+
+        # translate datetime object to ISO string
+        for time_windows in data['constraints']['time_windows']:
+            time_windows['start'] = to_iso(time_windows['start'])
+            time_windows['end'] = to_iso(time_windows['end'])
+
+        path = "%s/cal/availability" % parent_resource.detail_path()
+
+        response = request(method, path, configuration=configuration,
+                           headers=headers, data=data, params={}).json()
+
+        # translate ISO string to datetime object
+        for time_windows in response['time_windows']:
+            time_windows['start'] = to_datetime(time_windows['start'])
+            time_windows['end'] = to_datetime(time_windows['end'])
+
+        return response
 
 
 class CalendarEvents(Calendar):
@@ -1031,6 +1062,7 @@ class WebHook(ApplicationBaseResource, ListMixin, CreateMixin, RetrieveMixin,
             raise KException("The detail_path cannot be obtained since the id "
                              "is unknown.")
         return "%s/%s" % (self.list_path(self._parent_resource), self['id'])
+
 
 resources = {
     'account': Account,

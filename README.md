@@ -64,6 +64,7 @@ Here are some of the popular resource classes available:
 * `Property`
 * `Permission`
 * `CRMObject`
+* `Calendar`
 
 A full list can be viewed in [resources.py](https://github.com/Kloudless/kloudless-python/blob/master/kloudless/resources.py).
 
@@ -99,6 +100,14 @@ The `Account` model has some helper attributes to make using class methods easie
 * `calendars` references the Calendar class
 
 A full list can be viewed under the `Account` class in [resources.py](https://github.com/Kloudless/kloudless-python/blob/master/kloudless/resources.py).
+
+Some API endpoints are namespaced under resource-specific classes to make
+their purpose clearer. Assuming `account` is an instance of the `Account`
+model, the following methods can be accessed:
+
+* `account.calendars.find_availability(**data)` makes a POST request to query
+  for available time ranges across calendars.
+
 
 ## Examples
 
@@ -238,8 +247,30 @@ Here is an example calendar and calendar events in an account:
 >>> event.end = "2017-09-01T13:00:00Z"
 >>> event.save() # Makes the request to update the calendar event.
 
-# Deleting a calendar
+# Deleting a calendar event
 >>> event.delete()
+
+# Find availability
+# start, end can be ISO 8601 strings or datetime objects.
+>>> constraint = {
+....   'calendars': [calendar_id],
+....   'constraints': {
+....       'time_windows': [{
+....           'end': '2018-11-07T12:00:00+00:00',
+....           'start': '2018-11-06T00:00:00+00:00'}
+....       ]},
+....   'meeting_duration': 'PT1H'
+....}
+>>> available_time = acc.calendars.find_availability(constraint)
+>>> available_time
+{
+  u'time_windows': [
+    u'start': datetime.datetime(2018, 11, 6, 4, 0, tzinfo=tzlocal()), 
+    u'end': datetime.datetime(2018, 11, 6, 16, 0, tzinfo=tzlocal())
+  }], 
+  u'api': u'calendar', 
+  u'type': u'availability'
+}
 ```
 
 ## Apps using the Python SDK
