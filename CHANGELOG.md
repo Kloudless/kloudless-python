@@ -1,5 +1,10 @@
 # Change Log
 
+## 2.0.0
+* The 2.0.0 version is NOT backwards compatible with previous versions. The
+  README has been updated on how to install and use this version of the
+  Kloudless Python SDK.
+
 ## 1.1.3
 * Support for Calendar Availability.
 
@@ -19,17 +24,3 @@
   incompatible changes. Please review the
   [migration guide](https://developers.kloudless.com/docs/v1/migration)
   for more information on migrating from `v0` to `v1`.
-
-### Backwards-incompatible SDK changes
-
-* The `create()` method requires all data attributes to be provided via a
-  dictionary passed in through the `data` keyward argument rather than via
-  arbitrary keyword arguments. This may vary based on specific implementations,
-  such as for file uploads via `File.create()`.
-
-* The `File` class's `create()` method requires all query parameters to be
-  provided via a dictionary passed in through the `params` keyward argument
-  rather than via arbitrary keyword arguments.
-
-* The `Account.file_upload_url` instance method has been moved to be a
-  class method at `File.upload_url` instead.

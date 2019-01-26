@@ -1,6 +1,7 @@
 #!/bin/bash
-
-pandoc -s -r markdown -w rst README.md -o README.rst
+set -euo pipefail
 rm -rf dist/
-python setup.py sdist
+# Make sure setuptools>=38.6.0, twine>=1.11.0 and wheel>= 0.31.0
+# See https://stackoverflow.com/questions/26737222/pypi-description-markdown-doesnt-work
+python setup.py sdist bdist_wheel --universal
 twine upload dist/*
