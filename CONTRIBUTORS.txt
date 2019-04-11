@@ -14,11 +14,5 @@ Contribution, under the MIT License.
 
 Contributors
 ------------
-Vinod Chandru
-Timothy Liu
-Brian Tang
-David Thorman
-Steven Cheng
-Alice Cai
 Travis Cunningham (SmartFile), 2017/03/01
 Clifton Barnes (SmartFile), 2017/03/01
