@@ -14,7 +14,7 @@ Navigate to [App Details page](https://developers.kloudless.com/applications/*/d
 
 Add `http://localhost:8020/callback` to OAuth settings. 
 
-![Add Redirect URI](docs/source/_static/redirect_uri_input.png)
+![Add Redirect URI](/docs/source/_static/redirect_uri_input.png)
 
 ## Get App ID and API Key
 
@@ -22,7 +22,7 @@ Navigate to [App Details page](https://developers.kloudless.com/applications/*/d
 
 App ID and API Key can be copied from the text input.
 
-![Get APP ID and API Key](docs/source/_static/app_id_and_api_key_input.png)
+![Get APP ID and API Key](/docs/source/_static/app_id_and_api_key_input.png)
 
 ## Run the Demo Server
 
