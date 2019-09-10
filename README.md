@@ -11,9 +11,9 @@ Table of Contents
 *   [Requirements](#requirements)
 *   [Installation](#installation)
 *   [Getting Started](#getting-started)
+*   [Full Documentation](#full-documentation)
 *   [Making API Requests](#making-api-requests)
 *   [Integrating OAuth Flow](#integrating-oauth-flow)
-*   [Documentation](#documentation)
 
 Requirements
 -----------
@@ -54,6 +54,13 @@ and use it to initialize an Account object:
 from kloudless import Account
 account = Account(token="YOUR_BEARER_TOKEN")
 ```
+
+Full Documentation
+-------------------
+
+**Full documentation is hosted at
+[Read the docs](https://kloudless.readthedocs.io/en/latest/).**
+A quick-start is included below.
 
 Making API Requests
 -------------------
@@ -172,9 +179,3 @@ def callback(request):
     request.user.save()
     return HttpResponse('Account connects successfully.')
 ```
-
-Documentation
--------------
-
-Full documentation is hosted at
-[Read the docs](https://kloudless.readthedocs.io/en/latest/).
