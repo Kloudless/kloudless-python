@@ -72,7 +72,7 @@ You can now make an API request with the account instance you've created.
 ```python
 # retrieve folder contents
 root_folder_contents = account.get('storage/folders/root/contents')
-for resource in root_folder_contents:
+for resource in root_folder_contents.get_paging_iterator():
     print(resource.data)
 
 # download the first file in root_folder

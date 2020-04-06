@@ -13,9 +13,9 @@ Table of Contents
 -  `Requirements <#requirements>`__
 -  `Installation <#installation>`__
 -  `Getting Started <#getting-started>`__
+-  `Full Documentation <#full-documentation>`__
 -  `Making API Requests <#making-api-requests>`__
 -  `Integrating OAuth Flow <#integrating-oauth-flow>`__
--  `Documentation <#documentation>`__
 
 Requirements
 ------------
@@ -60,6 +60,13 @@ text box and use it to initialize an Account object:
    from kloudless import Account
    account = Account(token="YOUR_BEARER_TOKEN")
 
+Full Documentation
+------------------
+
+**Full documentation is hosted at**\ `Read the
+docs <https://kloudless.readthedocs.io/en/latest/>`__\ **.** A
+quick-start is included below.
+
 Making API Requests
 -------------------
 
@@ -73,7 +80,7 @@ If Connecting to a Storage Service
 
    # retrieve folder contents
    root_folder_contents = account.get('storage/folders/root/contents')
-   for resource in root_folder_contents:
+   for resource in root_folder_contents.get_paging_iterator():
        print(resource.data)
 
    # download the first file in root_folder
@@ -184,9 +191,3 @@ and calling it via ``urls.py``.
        request.user.kloudless_token = token
        request.user.save()
        return HttpResponse('Account connects successfully.')
-
-Documentation
--------------
-
-Full documentation is hosted at `Read the
-docs <https://kloudless.readthedocs.io/en/latest/>`__.
