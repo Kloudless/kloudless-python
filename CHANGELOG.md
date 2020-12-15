@@ -1,5 +1,10 @@
 # Change Log
 
+## 2.0.1
+* Fix demo_server authorization scope to render correct services and also
+  improve its error handling.
+* Fix JSON parsing issue for HTTP 204 response.
+
 ## 2.0.0
 * The 2.0.0 version is NOT backwards compatible with previous versions. The
   README has been updated on how to install and use this version of the
