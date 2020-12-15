@@ -157,7 +157,7 @@ def start_authorization_flow(request):
     """
     url, state = get_authorization_url(app_id=settings.KLOUDLESS_APP_ID,
                                        redirect_uri=settings.KLOUDLESS_REDIRECT_URL,
-                                       scope='any:normal.storage')
+                                       scope='storage')
 
     request.session['authorization_state'] = state
     return HttpResponseRedirect(url)
