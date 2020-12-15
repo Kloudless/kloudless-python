@@ -8,6 +8,7 @@ from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from six.moves.urllib.parse import parse_qs, urlparse
 
 from kloudless import get_authorization_url, get_token_from_code, Account
+from kloudless.exceptions import APIException
 from kloudless.util import logger
 
 logger.setLevel('DEBUG')
@@ -32,6 +33,12 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header('Location', url)
         self.send_header("Cache-Control", "no-store, must-revalidate")
         self.end_headers()
+
+    def http_json_response(self, status_code, data):
+        self.send_response(status_code)
+        self.send_header("Content-type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode('utf8'))
 
     def do_GET(self):
 
@@ -75,7 +82,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             url, state = get_authorization_url(app_id,
                                                redirect_uri=redirect_url,
-                                               scope='any:normal.storage')
+                                               scope='storage')
             state_holder = state  # Store state for security check later
 
             # Redirect user to start first leg of authorization flow
@@ -87,7 +94,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             ###############################
             url, state = get_authorization_url(app_id,
                                                redirect_uri=redirect_url,
-                                               scope='any:normal.calendar')
+                                               scope='calendar')
             state_holder = state  # Store state for security check later
 
             # Redirect user to start first leg of authorization flow
@@ -97,44 +104,42 @@ class RequestHandler(BaseHTTPRequestHandler):
             ######################
             #  Callback endpoint
             ######################
+            try:
+                params = self.get_query_params(self.path)
 
-            params = self.get_query_params(self.path)
+                # Exchange token from authorization code
+                token = get_token_from_code(app_id=app_id, api_key=api_key,
+                                            orig_state=state_holder,
+                                            orig_redirect_uri=redirect_url,
+                                            **params)
 
-            # Exchange token from authorization code
-            token = get_token_from_code(app_id=app_id, api_key=api_key,
-                                        orig_state=state_holder,
-                                        orig_redirect_uri=redirect_url,
-                                        **params)
+                account = Account(token=token)
+                # Request to https://api.kloudless.com/account/me
+                account_resp = account.get()
+                resp_data = {
+                    'msg': 'Successfully retrieving JSON data after connecting'
+                           ' your account.',
+                    'account': account_resp.data
+                }
 
-            account = Account(token=token)
-            # Request to https://api.kloudless.com/account/me
-            account_resp = account.get()
-            resp_data = {
-                'msg': 'Successfully retrieving JSON data after connecting'
-                       ' your account.',
-                'account': account_resp.data
-            }
-
-            apis = account_resp.data['apis']
-            if 'storage' in apis:
-                # Request to https://api.kloudless.com/account/me/storage/folders/root/contents
-                root_folder_contents = account.get(
-                    'storage/folders/root/contents'
-                )
-                resp_data['root_folder_contents'] = root_folder_contents.data
-
-            elif 'calendar' in apis:
-                # Request to https://api.kloudless.com/account/me/cal/calendars/primary/events
-                primary_calendar_events = account.get(
-                    'cal/calendars/primary/events'
-                )
-                resp_data['primary_calendar_events'] = (
-                    primary_calendar_events.data)
-
-            self.send_response(200)
-            self.send_header("Content-type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(resp_data).encode('utf8'))
+                apis = account_resp.data['apis']
+                if 'calendar' in apis:
+                    # Request to https://api.kloudless.com/account/me/cal/calendars/primary/events
+                    primary_calendar_events = account.get(
+                        'cal/calendars/primary/events'
+                    )
+                    resp_data['primary_calendar_events'] = (
+                        primary_calendar_events.data)
+                elif 'storage' in apis:
+                    # Request to https://api.kloudless.com/account/me/storage/folders/root/contents
+                    root_folder_contents = account.get(
+                        'storage/folders/root/contents'
+                    )
+                    resp_data['root_folder_contents'] = root_folder_contents.data
+            except APIException as e:
+                self.http_json_response(e.status, e.error_data)
+            else:
+                self.http_json_response(200, resp_data)
 
 
 if __name__ == '__main__':
