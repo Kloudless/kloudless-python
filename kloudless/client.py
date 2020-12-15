@@ -149,7 +149,8 @@ class Client(Session):
 
         url = response.url
 
-        if 'application/json' not in response.headers.get('content-type', ''):
+        if ('application/json' not in response.headers.get('content-type', '')
+                or not response.content):
             return Response(self, url, response)
 
         try:
